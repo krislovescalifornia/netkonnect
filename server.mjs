@@ -3,6 +3,7 @@ import { execFile, spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
 import { enrichSnapshot } from './lib/network.mjs';
 import { TrafficStore } from './lib/traffic.mjs';
+import { AnalyticsStore } from './lib/analytics.mjs';
 
 import { randomUUID } from 'node:crypto';
 import { createAppServer } from './lib/http.mjs';
@@ -16,13 +17,15 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('Choose
 let snapshot = null, busy = false, collectorError = null;
 const sightings = new Map();
 const traffic = new TrafficStore();
+const analytics = new AnalyticsStore(fileURLToPath(new URL('./data/analytics/', import.meta.url)));
+await analytics.load();
 let trafficWorker;
 function startTraffic() {
   if (process.platform !== 'win32') { traffic.ingest({ type:'status', available:false, message:'Detailed traffic capture requires Windows.' }); return; }
   trafficWorker = spawn('powershell.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', fileURLToPath(new URL('./traffic.ps1', import.meta.url)), '-ParentId', String(process.pid)], { windowsHide:true, stdio:['pipe','pipe','pipe'] });
   trafficWorker.stdin.on('error', () => {});
   createInterface({ input:trafficWorker.stdout }).on('line', line => {
-    try { traffic.ingest(JSON.parse(line), Date.now(), snapshot); } catch { traffic.ingest({ type:'status', available:false, message:'Detailed collector returned invalid data.' }); }
+    try { const batch=JSON.parse(line),now=Date.now();traffic.ingest(batch,now,snapshot);analytics.ingest(batch,now,snapshot); } catch { traffic.ingest({ type:'status', available:false, message:'Detailed collector returned invalid data.' }); }
   });
   let errorText = '';
   trafficWorker.stderr.on('data', chunk => { errorText = (errorText + chunk).slice(-2000); });
@@ -45,6 +48,7 @@ async function collect() {
   finally { busy = false; }
 }
 const server = createAppServer({
+  getAnalytics: options => analytics.query(options),
   getSnapshot: () => ({ snapshot: traffic.decorate(snapshot), collecting: busy, error: collectorError, interval: 2000,
     service: { instanceId, pid: process.pid, restarting } }),
   requestRestart: async () => {
@@ -61,10 +65,12 @@ const server = createAppServer({
 });
 server.listen(port, '127.0.0.1', () => { console.log(`netKonnect is ready at http://127.0.0.1:${port}`); collect(); startTraffic(); });
 const timer = setInterval(collect, 8000);
+const historyTimer = setInterval(() => analytics.flush(), 15000);
 function stop() {
   if (stopping) return;
   stopping = true;
   clearInterval(timer);
+  clearInterval(historyTimer);
   snapshotWorker?.kill();
   const closed = new Promise(resolve => server.close(resolve));
   server.closeAllConnections();
@@ -73,7 +79,7 @@ function stop() {
     trafficWorker.once('exit', resolve);
     trafficWorker.stdin.end('stop\n');
   });
-  Promise.all([closed, traceStopped]).then(() => process.exit(0));
+  Promise.all([closed, traceStopped]).then(() => analytics.flush()).then(() => process.exit(0));
   // Parent-exit detection remains a fallback if a broken collector ignores stdin.
   setTimeout(() => process.exit(0), 10000).unref();
 }
