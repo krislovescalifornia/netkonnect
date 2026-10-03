@@ -123,3 +123,47 @@ export class RouteTrafficView {
     };
   }
 }
+
+const JOURNEY_MS = 12000;
+
+// A departure owns its type and arrival time for its entire journey. Samples
+// only change the departure schedule, never an existing vehicle's position.
+export class JourneyQueue {
+  constructor() { this.now = 0; this.serial = 0; this.lanes = new Map(); }
+  configure(configurations) {
+    const visible = new Set();
+    for (const {key, rate, type, incoming} of configurations) {
+      visible.add(key);
+      const count = fleet(rate,type).count;
+      let lane = this.lanes.get(key);
+      if (!lane) {
+        lane = {vehicles:[], lastDeparture:null, nextDeparture:null, count:0};
+        this.lanes.set(key,lane);
+      }
+      if (count !== lane.count) {
+        const next = count ? Math.max(this.now, (lane.lastDeparture ?? this.now-JOURNEY_MS) + JOURNEY_MS/count) : null;
+        // Slower traffic must not postpone an already scheduled departure on
+        // every sample. Apply the slower interval after that vehicle leaves.
+        lane.nextDeparture = count && lane.nextDeparture !== null ? Math.min(lane.nextDeparture,next) : next;
+      }
+      Object.assign(lane,{count,type,incoming,visible:true});
+    }
+    for (const [key,lane] of this.lanes) if (!visible.has(key)) {
+      lane.count = 0; lane.nextDeparture = null; lane.visible = false;
+    }
+  }
+  advance(elapsed, depart = true) {
+    this.now += Math.max(0,elapsed);
+    for (const [key,lane] of this.lanes) {
+      lane.vehicles = lane.vehicles.filter(v=>this.now < v.arrives);
+      if (depart && lane.count && lane.nextDeparture <= this.now) {
+        lane.vehicles.push({id:++this.serial, type:lane.type, incoming:lane.incoming, started:this.now, arrives:this.now+JOURNEY_MS});
+        lane.lastDeparture = this.now;
+        // No catch-up burst after a background tab, pause, or slow frame.
+        lane.nextDeparture = this.now + JOURNEY_MS/lane.count;
+      }
+      if (!lane.visible && !lane.vehicles.length) this.lanes.delete(key);
+    }
+  }
+  progress(journey) { return Math.max(0,Math.min(1,(this.now-journey.started)/(journey.arrives-journey.started))); }
+}

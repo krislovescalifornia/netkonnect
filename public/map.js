@@ -1,4 +1,4 @@
-import { buildRoutes, fleet, transportForRate } from './routes.js';
+import { buildRoutes, transportForRate, JourneyQueue } from './routes.js';
 
 function wheel(x, y, bicycle = false) {
   const r = bicycle ? 6 : 2.4;
@@ -9,57 +9,87 @@ export function vehicle(type, incoming = false) {
   if (type === 'bicycle') return `<g class="bicycle">${wheel(-11,5,true)}${wheel(11,5,true)}<g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M-11 5-5-6 1 5H-11L5-6H-5M1 5 5-6 11 5M5-6l-1-4h4M-5-6l-1-3m-3 0h6"/><path d="M-1-13-5-9 1-5-1 3M-1-13l5 3 3 .5"/></g><circle cx="0" cy="-17" r="2.2" fill="currentColor"/><path d="M-1-13-5-9" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></g>`;
   return `<g><rect x="-13" y="-7" width="17" height="11" rx="1.6" fill="currentColor"/><path d="M5-4h5l5 5v3H5z" fill="currentColor"/><path d="M7-3h3l3 4H7z" fill="#e9eff5"/><path d="M-11-5H1" stroke="#fff" opacity=".35" stroke-width=".6"/><path d="M-13 4h28" stroke="#263344" stroke-width=".8"/>${wheel(-8,5)}${wheel(10,5)}</g>`;
 }
-function convoy(route, type, speed, incoming, active) {
-  const {count,duration} = fleet(route.measured ? speed : null,type);
-  const phase = [...route.key].reduce((s,c)=>s+c.charCodeAt(0),0)%100 / 100;
-  return Array.from({length:count},(_,i)=>{
-    const y = (incoming ? 19 : 51) + (type==='truck' ? (i%2 ? 5 : -5) : 0);
-    const from = incoming ? 566 : 34, to = incoming ? 34 : 566;
-    // Stable slot spacing means adding a vehicle does not redistribute the fleet.
-    const position = (i*.61803398875+phase)%1;
-    const delay = -(Date.now()/1000 + position*duration)%duration;
-    const x = from + (to-from)*position;
-    const scale = type==='plane' ? .72 : .85;
-    return `<g class="transport-vehicle ${incoming?'incoming-fleet':'outgoing-fleet'}" data-slot="${incoming?'in':'out'}-${i}" data-transport="${type}" transform="translate(${active?from:x} ${y})">${active?`<animateTransform attributeName="transform" type="translate" from="${from} ${y}" to="${to} ${y}" dur="${duration.toFixed(2)}s" begin="${delay.toFixed(2)}s" repeatCount="indefinite"/>`:''}<g transform="scale(${incoming?-scale:scale} ${scale})">${vehicle(type,incoming)}</g></g>`;
-  }).join('');
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+export class TransportAnimator {
+  constructor({clock=()=>performance.now(), requestFrame=callback=>requestAnimationFrame(callback), cancelFrame=id=>cancelAnimationFrame(id)} = {}) {
+    this.clock = clock; this.requestFrame = requestFrame; this.cancelFrame = cancelFrame;
+    this.queue = new JourneyQueue(); this.svgs = new Map(); this.source = null;
+    this.lastTime = this.clock(); this.active = false; this.frame = null;
+  }
+  tick() {
+    const now = this.clock();
+    this.queue.advance(this.active ? now-this.lastTime : 0, this.active);
+    this.lastTime = now;
+  }
+  // Keep the actual SVGs and vehicle nodes out of the part of the page whose
+  // innerHTML gets replaced. Reattach those same nodes after updating the labels.
+  detach() { for (const svg of this.svgs.values()) svg.remove(); }
+  mount(root,{source,active}) {
+    this.tick();
+    if (source !== this.source) { this.queue = new JourneyQueue(); this.svgs.clear(); this.source = source; }
+    this.active = active;
+    const configurations = [], visible = new Map();
+    for (const placeholder of root.querySelectorAll('.convoy-svg')) {
+      const key = placeholder.dataset.routeKey;
+      const retained = this.svgs.get(key);
+      const svg = retained || placeholder;
+      if (retained) {
+        svg.setAttribute('aria-label',placeholder.getAttribute('aria-label'));
+        for (const name of ['downloadRate','uploadRate','downloadType','uploadType']) svg.dataset[name] = placeholder.dataset[name];
+        placeholder.replaceWith(svg);
+      }
+      for (const [direction,incoming] of [['download',true],['upload',false]]) {
+        configurations.push({key:`${key}|${direction}`, incoming,
+          rate:placeholder.dataset[`${direction}Rate`] === '' ? null : Number(placeholder.dataset[`${direction}Rate`]),
+          type:placeholder.dataset[`${direction}Type`]});
+      }
+      visible.set(key,svg);
+    }
+    this.svgs = visible;
+    this.queue.configure(configurations);
+    this.queue.advance(0,this.active || (this.queue.serial === 0 && this.queue.now === 0));
+    this.draw();
+    if (this.frame !== null) { this.cancelFrame(this.frame); this.frame = null; }
+    if (this.active && this.svgs.size) this.schedule();
+  }
+  schedule() {
+    this.frame = this.requestFrame(()=>{
+      this.frame = null;
+      this.tick(); this.draw();
+      if (this.active && this.svgs.size) this.schedule();
+    });
+  }
+  draw() {
+    for (const [key,svg] of this.svgs) {
+      const journeys = ['download','upload'].flatMap(direction=>this.queue.lanes.get(`${key}|${direction}`)?.vehicles || []);
+      const existing = new Map([...svg.querySelectorAll('.transport-vehicle')].map(g=>[Number(g.dataset.journeyId),g]));
+      for (const journey of journeys) {
+        let group = existing.get(journey.id);
+        if (!group) {
+          group = svg.ownerDocument.createElementNS(SVG_NS,'g');
+          group.setAttribute('class',`transport-vehicle ${journey.incoming?'incoming-fleet':'outgoing-fleet'}`);
+          group.dataset.journeyId = journey.id;
+          group.dataset.transport = journey.type;
+          const scale = journey.type === 'plane' ? .72 : .85;
+          group.innerHTML = `<g transform="scale(${journey.incoming?-scale:scale} ${scale})">${vehicle(journey.type,journey.incoming)}</g>`;
+          svg.append(group);
+        }
+        existing.delete(journey.id);
+        const progress = this.queue.progress(journey);
+        const x = journey.incoming ? 566-532*progress : 34+532*progress;
+        group.dataset.progress = progress.toFixed(6);
+        group.setAttribute('transform',`translate(${x.toFixed(3)} ${journey.incoming?19:51})`);
+      }
+      for (const group of existing.values()) group.remove();
+      const idle = svg.parentElement.querySelector('.road-idle');
+      if (idle) idle.hidden = journeys.length > 0;
+    }
+  }
 }
+
 const terminal = `<svg viewBox="0 0 38 38" class="terminal-icon" aria-hidden="true"><path d="M5 31V14h28v17M10 14V8h18v6M3 32h32M10 20h4m6 0h4m5 0h1M10 25h4m6 0h4" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M17 31v-5h5v5" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>`;
 
-// The page refreshes its labels every sample. Carry the rendered positions across
-// that refresh so existing vehicles never teleport when speed or density changes.
-export function captureTransportPositions(root) {
-  const positions = new Map();
-  for (const svg of root.querySelectorAll('.convoy-svg')) {
-    const slots = new Map();
-    for (const group of svg.querySelectorAll('.transport-vehicle')) {
-      const transform = group.transform.animVal;
-      if (transform.numberOfItems) slots.set(group.dataset.slot, transform.getItem(0).matrix.e);
-    }
-    positions.set(svg.dataset.routeKey, slots);
-  }
-  return positions;
-}
-export function restoreTransportPositions(root, positions) {
-  for (const svg of root.querySelectorAll('.convoy-svg')) {
-    const slots = positions.get(svg.dataset.routeKey);
-    if (!slots) continue;
-    for (const group of svg.querySelectorAll('.transport-vehicle')) {
-      const x = slots.get(group.dataset.slot);
-      if (!Number.isFinite(x)) continue;
-      const animation = group.querySelector('animateTransform');
-      if (animation) {
-        const [from] = animation.getAttribute('from').split(' ').map(Number);
-        const [to] = animation.getAttribute('to').split(' ').map(Number);
-        const progress = Math.max(0, Math.min(1, (x-from)/(to-from)));
-        animation.setAttribute('begin', 'indefinite');
-        animation.beginElementAt(-progress * parseFloat(animation.getAttribute('dur')));
-      } else {
-        const y = group.transform.baseVal.getItem(0).matrix.f;
-        group.setAttribute('transform', `translate(${x} ${y})`);
-      }
-    }
-  }
-}
 export function renderNetworkMap({state,icon,rate,bytes,esc}) {
   const filters = {app:state.mapApp, query:state.mapQuery, detail:state.mapDetail, usageConnections:state.snapshot?.traffic?.usageConnections || [], sort:state.mapSort, direction:state.mapSortDirection};
   const routes = buildRoutes(state.snapshot?.connections || [],filters);
@@ -77,7 +107,7 @@ export function renderNetworkMap({state,icon,rate,bytes,esc}) {
     const uploadType = state.mapVehicle==='auto' ? upload.type : state.mapVehicle;
     const protocols = [...new Set((r.connections.length?r.connections:[r.endpoint]).map(c=>c.protocol))].join(' + ');
     const endpoint = state.mapDetail==='endpoint' ? `${r.endpoint.remoteAddress}:${r.endpoint.remotePort}` : `${r.addresses.size} IP${r.addresses.size===1?'':'s'} · ${r.connections.length} active connection${r.connections.length===1?'':'s'}`;
-    return `<article class="transport-route" role="row"><div role="cell"><button class="route-origin" data-app="${esc(r.app)}"><span class="origin-mark">${icon('laptop',18)}</span><strong>${esc(r.app)}</strong><small>PID ${[...r.pids].join(', ')} · ${protocols}${protocols==='UDP'&&r.connections.some(c=>c.remotePort===443)?' / possible QUIC':''}</small></button></div><div class="route-road" role="cell"><div class="route-speeds" title="Smooth average · approximately 10 seconds"><span class="download-rate">↓ ${rate(download.rate)}</span><span class="upload-rate">↑ ${rate(upload.rate)}</span></div><svg class="convoy-svg" data-route-key="${esc(state.mapDetail+'|'+r.key)}" viewBox="0 0 600 76" role="img" aria-label="${esc(r.app)} to ${esc(r.service.label)}: ${r.measured?`${Math.round(download.rate)} bytes per second average download, ${Math.round(upload.rate)} average upload`:'route bandwidth unavailable'}"><path d="M20 19h560" class="road incoming-road"/><path d="M20 51h560" class="road outgoing-road"/><path d="M20 35h560" class="road-divider"/>${convoy(r,downloadType,download.rate,true,active)}${convoy(r,uploadType,upload.rate,false,active)}</svg>${r.measured && !download.rate && !upload.rate?`<span class="road-idle">${r.connections.length?'Idle':'No active connections'}</span>`:!r.measured?'<span class="road-idle">Awaiting byte-level capture</span>':''}</div><div role="cell"><button class="route-terminal" data-route="${esc(r.key)}">${terminal}<span><strong>${esc(r.service.label)}</strong><small>${esc(endpoint)}</small><em>${r.service.confidence}</em></span>${icon('chevron',14)}</button></div><span role="cell" class="route-usage route-total">${bytes(r.totalBytes60m)}</span><span role="cell" class="route-usage download-rate">${bytes(r.receivedBytes60m)}</span><span role="cell" class="route-usage upload-rate">${bytes(r.sentBytes60m)}</span></article>`;
+    return `<article class="transport-route" role="row"><div role="cell"><button class="route-origin" data-app="${esc(r.app)}"><span class="origin-mark">${icon('laptop',18)}</span><strong>${esc(r.app)}</strong><small>PID ${[...r.pids].join(', ')} · ${protocols}${protocols==='UDP'&&r.connections.some(c=>c.remotePort===443)?' / possible QUIC':''}</small></button></div><div class="route-road" role="cell"><div class="route-speeds" title="Smooth average · approximately 10 seconds"><span class="download-rate">↓ ${rate(download.rate)}</span><span class="upload-rate">↑ ${rate(upload.rate)}</span></div><svg class="convoy-svg" data-route-key="${esc(state.mapDetail+'|'+r.key)}" data-download-rate="${r.measured?download.rate:''}" data-upload-rate="${r.measured?upload.rate:''}" data-download-type="${downloadType}" data-upload-type="${uploadType}" viewBox="0 0 600 76" role="img" aria-label="${esc(r.app)} to ${esc(r.service.label)}: ${r.measured?`${Math.round(download.rate)} bytes per second average download, ${Math.round(upload.rate)} average upload`:'route bandwidth unavailable'}"><path d="M20 19h560" class="road incoming-road"/><path d="M20 51h560" class="road outgoing-road"/><path d="M20 35h560" class="road-divider"/></svg>${r.measured && !download.rate && !upload.rate?`<span class="road-idle">${r.connections.length?'Idle':'No active connections'}</span>`:!r.measured?'<span class="road-idle">Awaiting byte-level capture</span>':''}</div><div role="cell"><button class="route-terminal" data-route="${esc(r.key)}">${terminal}<span><strong>${esc(r.service.label)}</strong><small>${esc(endpoint)}</small><em>${r.service.confidence}</em></span>${icon('chevron',14)}</button></div><span role="cell" class="route-usage route-total">${bytes(r.totalBytes60m)}</span><span role="cell" class="route-usage download-rate">${bytes(r.receivedBytes60m)}</span><span role="cell" class="route-usage upload-rate">${bytes(r.sentBytes60m)}</span></article>`;
   }).join('')||`<div class="empty-cell">${state.snapshot?'No routes match this view.':'Waiting for your network…'}</div>`}</div></div><div class="transport-foot"><span>${routes.length} routes${routes.length>visible.length?` · showing ${visible.length}`:''} · usage: last 60 minutes${coverage}. Click a column to sort; click again to reverse.</span>${routes.length>visible.length?'<button class="text-button" data-action="more-routes">Show more routes ↓</button>':''}<span>${state.mode==='demo'?'Illustrative traffic':traffic?.available?'10-second smooth average · sampled every 2 seconds':'Speeds unavailable'}</span></div></section>`;
 }
 export function routeDetails(route,{esc,rate,bytes,icon},snapshot) {

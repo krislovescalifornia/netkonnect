@@ -95,14 +95,13 @@ test('Service lanes render smoothed labels and independent fleets while details 
   const state = {snapshot,trafficView:view,mode:'live',mapApp:'all',mapQuery:'',mapDetail:'service',mapLimit:10,mapSort:'total',mapSortDirection:'desc',mapVehicle:'auto',motion:true};
   const html = renderNetworkMap({state,icon:()=>'',rate:n=>String(n),bytes:n=>String(n),esc:s=>String(s)});
   assert.match(html,new RegExp(String(lane(view,snapshot).rate)));
-  assert.match(html,/incoming-fleet[^>]*data-transport="plane"/);
-  assert.match(html,/outgoing-fleet[^>]*data-transport="bicycle"/);
-  assert.match(html,/byte-contrail/);
-  assert.match(html,/bicycle-spokes/);
+  assert.match(html,/data-download-type="plane"/);
+  assert.match(html,/data-upload-type="bicycle"/);
   assert.doesNotMatch(html,/train|Idle this interval|road-idle/);
   assert.match(html,/987655555/);
-  assert.match(html,/scale\(-0.72 0.72\)/);
-  assert.match(html,/scale\(0.85 0.85\)/);
+  // The map only renders lane settings. Persistent vehicles belong to the
+  // separate animator and must never be rebuilt by a sample refresh.
+  assert.doesNotMatch(html,/transport-vehicle|animateTransform/);
   const details = routeDetails(buildRoutes(snapshot.connections)[0],{esc:String,rate:String,bytes:String,icon:()=>''},snapshot);
   assert.match(details,/Download<strong>0<\/strong>/);
   assert.match(details,/Upload<strong>2000<\/strong>/);
