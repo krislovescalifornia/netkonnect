@@ -1,23 +1,15 @@
-const matches = (name, domain) => name === domain || name.endsWith('.' + domain);
+import { appName, hostnameIdentity } from './brands.js';
 export function serviceIdentity(connection) {
   const names = (connection.domainCandidates || []).map(n => n.toLowerCase().replace(/\.$/, ''));
-  const labels = names.map(name => {
-    if (matches(name, 'googlevideo.com')) return ['youtube-video', 'YouTube · video CDN'];
-    if (matches(name, 'tv.youtube.com')) return ['youtube-tv', 'YouTube TV'];
-    if (matches(name, 'youtube.com') || matches(name, 'ytimg.com') || matches(name, 'youtubei.googleapis.com')) return ['youtube', 'YouTube'];
-    if (matches(name, 'spotify.com') || matches(name, 'scdn.co')) return ['spotify', 'Spotify'];
-    if (matches(name, 'chatgpt.com') || matches(name, 'openai.com')) return ['openai', 'OpenAI'];
-    if (matches(name, 'anthropic.com') || matches(name, 'claude.ai')) return ['anthropic', 'Anthropic'];
-    return [name, name];
-  });
+  const labels = names.map(hostnameIdentity).map(identity=>[identity.key, identity]);
   const unique = new Map(labels);
-  if (unique.size === 1) { const [key, label] = [...unique][0]; return {key, label, hint: names.join(', '), confidence:'DNS clue'}; }
+  if (unique.size === 1) { const [, identity] = [...unique][0]; return {...identity, hint: names.join(', '), confidence:'DNS clue'}; }
   if (unique.size > 1) return {key:connection.remoteAddress, label:connection.remoteAddress, hint:`Shared IP · ${names.join(', ')}`, confidence:'Ambiguous DNS'};
   return {key:connection.remoteAddress, label:connection.remoteAddress, hint:'No cached hostname', confidence:'IP only'};
 }
 export function sortRoutes(routes, sort = 'total', direction = 'desc') {
   const numeric = {total:r=>r.totalBytes60m, download:r=>r.receivedBytes60m, upload:r=>r.sentBytes60m, connections:r=>r.connections.length};
-  const value = numeric[sort] || (sort === 'app' ? r=>r.app : r=>r.service.label);
+  const value = numeric[sort] || (sort === 'app' ? r=>appName(r.app) : r=>r.service.label);
   const sign = direction === 'asc' ? 1 : -1;
   return routes.sort((a,b) => {
     const av = value(a), bv = value(b);
@@ -32,7 +24,7 @@ export function buildRoutes(connections, { app = 'all', query = '', detail = 'se
   function routeFor(c) {
     if (c.scope !== 'Internet' || c.pid === 0 || c.state === 'Listen' || (app !== 'all' && c.app !== app)) return null;
     const service = serviceIdentity(c);
-    if (![c.app, service.label, service.hint, c.remoteAddress, c.pid].join(' ').toLowerCase().includes(query.toLowerCase())) return null;
+    if (![c.app, appName(c.app), service.label, service.hint, c.remoteAddress, c.pid].join(' ').toLowerCase().includes(query.toLowerCase())) return null;
     const destination = detail === 'endpoint' ? `${c.remoteAddress}|${c.remotePort}|${c.protocol}` : service.key;
     const key = `${c.app}|${destination}`;
     if (!routes.has(key)) routes.set(key, {key, app:c.app, service, endpoint:c, connections:[], addresses:new Set(), pids:new Set(), receiveRate:0, sendRate:0, measured:false, receivedBytes60m:null, sentBytes60m:null, totalBytes60m:null});

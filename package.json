@@ -4,6 +4,6 @@
   "private": true,
   "type": "module",
   "description": "A little window into your network. Local Windows network observatory.",
-  "scripts": { "start": "node server.mjs", "test": "node --test", "test:windows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File test/traffic-trace.ps1", "check": "node --check server.mjs && node --check restart-service.mjs && node --check lib/http.mjs && node --check lib/restart.mjs && node --check public/app.js && node --check public/map.js && node --check public/routes.js && node --check public/demo.js && node --check lib/traffic.mjs" },
+  "scripts": { "start": "node server.mjs", "test": "node --test", "test:windows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File test/traffic-trace.ps1", "check": "node --check server.mjs && node --check restart-service.mjs && node --check lib/http.mjs && node --check lib/restart.mjs && node --check public/brands.js && node --check public/app.js && node --check public/map.js && node --check public/routes.js && node --check public/demo.js && node --check lib/traffic.mjs" },
   "engines": { "node": ">=20" }
 }

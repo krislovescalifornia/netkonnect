@@ -9,6 +9,7 @@ export function demoSnapshot() {
     ['Code',10524,'140.82.112.4','github.com','TCP',2,220000,7500],
     ['firefox',8236,'104.18.32.7','figma.com','TCP',2,28000,3000],
     ['codex',1948,'104.18.32.8','chatgpt.com','TCP',3,125000,45000],
+    ['claude',7812,'160.79.104.10','claude.ai','TCP',2,35000,12000],
     ['OneDrive',6740,'20.190.154.15','login.microsoftonline.com','TCP',1,0,0]
   ];
   const connections = specs.flatMap(([app,pid,ip,domain,protocol,count,download,upload],i)=>Array.from({length:count},(_,j)=>({

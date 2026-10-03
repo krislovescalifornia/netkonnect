@@ -22,6 +22,7 @@ After startup, click **Restart Service** beside the live status on any dashboard
 
 ## Live transport
 
+- Each route appears in a separate service card, with local brand logos and consistent application names such as Firefox and Claude. The cards stack their traffic and usage details on smaller screens. The same identities appear in connection tables and application dossiers; unknown apps use an initial, and ambiguous DNS destinations retain their IP label.
 - View all applications, filter by application or destination, and expand the initial ten routes with **Show more routes**.
 - Switch between **App to service** and **App to IP / port** for individual destination addresses, ports, and protocols.
 - Services default to highest **Total · 60 min** (download + upload bytes), keeping brief speed spikes from reshuffling the list. Click the Application, Service / destination, Total, Download, or Upload column to sort; click again to reverse for lowest usage or reverse alphabetical order. **Sort by** also offers connection count. Your choice is saved in browser preferences.
