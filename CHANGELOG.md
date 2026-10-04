@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.1 — 2026-10-03
+
+- Remove the repeated Traffic Management heading and introductory copy.
+- Feature wider traffic graphs in compact summary cards.
+- Rename the transport panel to Live Data Transport and place filters and search beside their labels in a compact toolbar.
+- Reduce application and service row padding so seven application rows fit at 1440×900, up from two.
+
 ## 1.3.0 — 2026-10-03
 
 - Keep the completed Easy Button and its seven checks in Preferences, with a red exclamation beside Preferences when collection needs repair.
