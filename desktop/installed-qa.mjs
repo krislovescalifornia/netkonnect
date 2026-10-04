@@ -13,15 +13,16 @@ export async function checkInstalledSetupUI(window, saveScreenshot) {
     await saveScreenshot('installed-setup-failure.png');
     throw new Error(message+': '+await evaluate(`document.querySelector('.easy-setup')?.innerText`));
   };
-  await until(`!!document.querySelector('.easy-button:not(:disabled)')`, 'Installed Easy Button did not become available');
-  await evaluate(`document.querySelector('.easy-button').click()`);
+  await evaluate(`document.querySelector('[data-action="settings"]').click()`);
+  await until(`!!document.querySelector('.drawer .easy-button:not(:disabled)')`, 'Installed Easy Button did not become available');
+  await evaluate(`document.querySelector('.drawer .easy-button').click()`);
   await until(`document.querySelector('.setup-journey.landed') && !document.querySelector('.easy-button').disabled`, 'Real installed setup did not finish');
   const evidence = () => evaluate(`(async()=>{
     const status=await window.netKonnect.setupStatus(), data=await window.netKonnect.snapshot();
     return {complete:status.complete,checks:status.checks,startupStatus:status.startupStatus,
-      progress:status.progress,visibleChecks:[...document.querySelectorAll('.sidebar [data-setup-check]')].map(e=>({id:e.dataset.setupCheck,ready:e.classList.contains('ready')})),
-      percent:document.querySelector('.sidebar [role="progressbar"]')?.getAttribute('aria-valuenow'),
-      pending:document.querySelectorAll('.sidebar .setup-checks .pending').length,
+      progress:status.progress,visibleChecks:[...document.querySelectorAll('.drawer [data-setup-check]')].map(e=>({id:e.dataset.setupCheck,ready:e.classList.contains('ready')})),
+      percent:document.querySelector('.drawer [role="progressbar"]')?.getAttribute('aria-valuenow'),
+      pending:document.querySelectorAll('.drawer .setup-checks .pending').length,
       instanceId:data.service.instanceId,collectorError:data.error,storageError:data.service.storageError,trafficAvailable:data.snapshot?.traffic.available,
       trafficTimestamp:data.snapshot?.traffic.timestamp};
   })()`);
@@ -39,7 +40,9 @@ export async function checkInstalledSetupUI(window, saveScreenshot) {
   // all the same setup checks to recover. Recheck setup through the same button.
   await evaluate(`document.querySelector('[data-action="restart-service"]').click()`);
   await until(`(async()=>{const s=await window.netKonnect.setupStatus(),d=await window.netKonnect.snapshot();return d.service.instanceId!==${JSON.stringify(result.instanceId)} && s.complete && s.checks.length===7 && s.checks.every(c=>c.ready) && !document.querySelector('[data-action="restart-service"]').disabled})()`, 'Installed capture did not recover after Restart Service',30000);
-  await evaluate(`document.querySelector('.easy-button').click()`);
+  await evaluate(`document.querySelector('[data-action="settings"]').click()`);
+  await until(`!!document.querySelector('.drawer .easy-button:not(:disabled)')`, 'Preferences repair button did not become available');
+  await evaluate(`document.querySelector('.drawer .easy-button').click()`);
   await until(`document.querySelector('.setup-journey.landed') && !document.querySelector('.easy-button').disabled`, 'Installed setup recheck did not finish');
   // Wait across multiple real collector intervals and UI refreshes.
   for(let i=0;i<3;i++) { await new Promise(resolve=>setTimeout(resolve,4000));result=await evidence();assertReady(result); }

@@ -16,64 +16,71 @@ async function renderer(t, initial = {}) {
   return {ui,storage,setStatus:value=> {status=value;},setFailure:value=> {failure=value;}};
 }
 
-test('first-run setup moves to the sidebar only after live verification succeeds',async t=>{
+test('first-run setup disappears after verification and stays available in Preferences',async t=>{
   const {ui,storage,setStatus} = await renderer(t);
   await ui.refreshSetupStatus(true);
   assert.match(ui.setupSlot('main'),/Set up everything/);
   assert.doesNotMatch(ui.setupSlot('sidebar'),/easy-button/);
-  assert.equal(storage.get('netkonnect-setup-established'),undefined);
+  assert.equal(ui.preferencesAlert(),'');
   setStatus(ready());await ui.refreshSetupStatus(true);
   assert.doesNotMatch(ui.setupSlot('main'),/easy-setup/);
-  const sidebar = ui.setupSlot('sidebar');
-  assert.match(sidebar,/Easy Button · Ready/);
-  assert.match(sidebar,/7 of 7 checks ready/);
-  assert.equal((sidebar.match(/data-setup-check=/g)||[]).length,7);
-  assert.doesNotMatch(sidebar,/<details[^>]*\sopen[\s>]/);
+  assert.doesNotMatch(ui.setupSlot('sidebar'),/easy-button/);
+  const preferences = await ui.companionPreferences();
+  assert.match(preferences,/Easy Button · Check setup/);
+  assert.equal((preferences.match(/data-setup-check=/g)||[]).length,7);
+  assert.equal(ui.preferencesAlert(),'');
   assert.equal(storage.get('netkonnect-setup-established'),'true');
   assert.equal(ui.setupVersion(),appVersion);
 });
 
-test('a saved layout starts compact but cannot claim readiness before startup checks',async t=>{
+test('a saved setup stays out of navigation while live checks run',async t=>{
   const {ui,setStatus} = await renderer(t,{'netkonnect-setup-established':'true'});
   assert.doesNotMatch(ui.setupSlot('main'),/easy-setup/);
-  assert.match(ui.setupSlot('sidebar'),/Easy Button · Checking…/);
-  assert.doesNotMatch(ui.setupSlot('sidebar'),/All collection checks passed/);
+  assert.doesNotMatch(ui.setupSlot('sidebar'),/easy-button/);
+  assert.doesNotMatch(ui.setupPanel(),/Verified against live collection/);
+  assert.equal(ui.preferencesAlert(),'');
   setStatus(ready());await ui.refreshSetupStatus(true);
-  assert.match(ui.setupSlot('sidebar'),/Easy Button · Ready/);
+  assert.equal(ui.preferencesAlert(),'');
+  assert.match(ui.setupPanel(),/Easy Button · Check setup/);
 });
 
-test('a failed check stays in the sidebar, prompts repair, and clears stale completion',async t=>{
+test('a lost check flags Preferences, prompts repair there, and clears stale completion',async t=>{
   const {ui,setStatus} = await renderer(t,{'netkonnect-setup-established':'true'});
   setStatus({...ready(),progress:{step:6,state:'complete',percent:100}});
   await ui.refreshSetupStatus(true);
   setStatus({...ready(),complete:false,checks:ready().checks.map(c=>({...c,ready:c.id!=='capture'})),
     progress:{step:6,state:'complete',percent:100}});
   await ui.refreshSetupStatus(true);
-  const sidebar = ui.setupSlot('sidebar');
   assert.doesNotMatch(ui.setupSlot('main'),/easy-setup/);
-  assert.match(sidebar,/needs-attention/);
-  assert.match(sidebar,/Easy Button · Repair setup/);
-  assert.match(sidebar,/Run the Easy Button again/);
-  assert.match(sidebar,/data-setup-check="capture" class="pending"/);
-  assert.match(sidebar,/<details[^>]*\sopen[\s>]/);
-  assert.doesNotMatch(sidebar,/100% verified|All collection checks passed/);
+  assert.doesNotMatch(ui.setupSlot('sidebar'),/easy-button/);
+  assert.match(ui.preferencesAlert(),/preferences-alert/);
+  assert.match(ui.preferencesAlert(),/Open Preferences and run the Easy Button/);
+  const preferences=await ui.companionPreferences();
+  assert.match(preferences,/Easy Button · Repair setup/);
+  assert.match(preferences,/Run the Easy Button again/);
+  assert.match(preferences,/data-setup-check="capture" class="pending"/);
+  assert.doesNotMatch(preferences,/100% verified|Verified against live collection/);
   setStatus(ready());await ui.refreshSetupStatus(true);
-  assert.doesNotMatch(ui.setupSlot('sidebar'),/needs-attention/);
+  assert.equal(ui.preferencesAlert(),'');
+  assert.doesNotMatch(ui.setupPanel(),/needs-attention/);
 });
 
-test('a status error cannot leave a previously healthy Easy Button green',async t=>{
+test('an unavailable companion flags Preferences even after healthy completion',async t=>{
   const {ui,setStatus,setFailure} = await renderer(t,{'netkonnect-setup-established':'true'});
   setStatus({...ready(),progress:{step:6,state:'complete',percent:100}});await ui.refreshSetupStatus(true);
   setFailure(new Error('Companion unavailable'));await ui.refreshSetupStatus(true);
-  assert.match(ui.setupSlot('sidebar'),/needs-attention/);
-  assert.match(ui.setupSlot('sidebar'),/Companion unavailable/);
-  assert.doesNotMatch(ui.setupSlot('sidebar'),/All collection checks passed|100% verified/);
+  assert.match(ui.preferencesAlert(),/preferences-alert/);
+  assert.match(ui.setupPanel(),/Companion unavailable/);
+  assert.doesNotMatch(ui.setupPanel(),/Verified against live collection|100% verified/);
+  setFailure(null);await ui.refreshSetupStatus(true);
+  assert.equal(ui.preferencesAlert(),'');
 });
 
-test('unavailable preference storage still retains compact setup within the session',async t=>{
+test('unavailable storage still keeps completed setup in Preferences for the session',async t=>{
   const {ui,setStatus} = await renderer(t);
   globalThis.localStorage.setItem = () => {throw new Error('Storage unavailable');};
   setStatus(ready());await ui.refreshSetupStatus(true);
   assert.doesNotMatch(ui.setupSlot('main'),/easy-setup/);
-  assert.match(ui.setupSlot('sidebar'),/Easy Button · Ready/);
+  assert.doesNotMatch(ui.setupSlot('sidebar'),/easy-button/);
+  assert.match(await ui.companionPreferences(),/Easy Button · Check setup/);
 });

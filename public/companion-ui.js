@@ -4,11 +4,8 @@ import { appVersion } from './version.js';
 let settings = null, changing = false, setupError = '', checkedAt = 0, checking = null, setupProgress = null;
 // This remembers presentation only. Every launch still verifies live readiness.
 const establishedKey = 'netkonnect-setup-established';
-let established = false, sidebarDetailsOpen = false;
+let established = false;
 try { established = localStorage.getItem(establishedKey) === 'true'; } catch { /* Session-only layout if storage is unavailable. */ }
-globalThis.document?.addEventListener?.('toggle', event => {
-  if (event.target.matches('.sidebar .setup-details') && event.target.dataset.forcedOpen !== 'true') sidebarDetailsOpen = event.target.open;
-}, true);
 function rememberSetup() {
   if (!settings?.complete) return;
   established = true;
@@ -19,7 +16,11 @@ export function setupSlot(location) {
   return `<div data-setup-slot="${location}">${setupSlotContent(location)}</div>`;
 }
 function setupSlotContent(location) {
-  return (location === 'sidebar' ? established : !established) ? setupPanel(location) : '';
+  return location === 'main' && !established ? setupPanel() : '';
+}
+export function preferencesAlert() {
+  const attention = !changing && (!!setupError || (established && !!settings && !settings.complete));
+  return attention ? '<span class="preferences-alert" role="status" aria-label="Collection setup needs attention. Open Preferences and run the Easy Button." title="Collection setup needs attention">!</span>' : '';
 }
 
 function progressPanel() {
@@ -37,8 +38,6 @@ function progressPanel() {
 function repaintSetup() {
   if (typeof document === 'undefined') return;
   document.querySelectorAll('[data-setup-slot]').forEach(slot => {
-    const details = slot.querySelector('.setup-details');
-    if (details && details.dataset.forcedOpen !== 'true') sidebarDetailsOpen = details.open;
     const markup = setupSlotContent(slot.dataset.setupSlot);
     if (slot.setupMarkup !== markup) {
       const focused = slot.contains(document.activeElement) ? document.activeElement : null;
@@ -48,6 +47,7 @@ function repaintSetup() {
     }
   });
   document.querySelectorAll('.drawer .easy-setup').forEach(panel => { panel.outerHTML = setupPanel(); });
+  document.querySelectorAll('[data-preferences-alert]').forEach(label => { label.innerHTML = preferencesAlert(); });
   document.querySelectorAll('[data-app-version]').forEach(label => { label.textContent = `v${setupVersion()}`; });
 }
 export async function refreshSetupStatus(force = false) {
@@ -64,24 +64,19 @@ export async function refreshSetupStatus(force = false) {
     .finally(() => { checking = null; repaintSetup(); });
   return checking;
 }
-export function setupPanel(location = 'full') {
+export function setupPanel() {
   if (!window.netKonnect) return '';
   const complete = settings?.complete && !setupError;
   const installNeeded = settings && !settings.startupAvailable;
   const checks = setupProgress?.checks?.length ? setupProgress.checks : settings?.checks || [];
   const attention = !changing && (!!setupError || (established && !!settings && !complete));
   const checkList = `<ul class="setup-checks">${checks.map(check=>`<li data-setup-check="${esc(check.id)}" class="${check.ready?'ready':'pending'}"><span aria-hidden="true">${check.ready?'✓':'○'}</span>${esc(check.label)}<small>${check.ready?'Ready':'Pending'}</small></li>`).join('')}</ul>`;
-  if (location === 'sidebar') return `<section class="easy-setup compact ${complete?'complete':''} ${attention?'needs-attention':''}" aria-label="Network collection setup" aria-busy="${changing}">
-    <button class="easy-button" data-companion-action="setup" ${changing||!settings||installNeeded?'disabled':''}><span aria-hidden="true">${changing?'↗':attention?'!':complete?'✓':'○'}</span>${changing?'Easy Button · Working…':attention?'Easy Button · Repair setup':complete?'Easy Button · Ready':'Easy Button · Checking…'}</button>
-    <p class="setup-status" role="status">${setupError?esc(setupError):attention?'A collection check needs attention. Run the Easy Button again.':changing?'Checking and repairing collection…':complete?'All collection checks passed.':'Checking collection setup…'}</p>
-    <details class="setup-details" data-forced-open="${changing||attention}" ${sidebarDetailsOpen||changing||attention?'open':''}><summary>${changing?'Setup progress & checks':`${checks.filter(c=>c.ready).length} of ${checks.length || 7} checks ready`}</summary>${progressPanel()}${checkList}</details>
-  </section>`;
   return `<section class="easy-setup ${complete?'complete':''} ${attention?'needs-attention':''}" aria-label="Network collection setup" aria-busy="${changing}">
     <div class="easy-setup-heading"><div><span class="tiny-label">ONE BUTTON. EVERYTHING READY.</span><h2>${complete?'Detailed collection is ready.':'Get the full picture.'}</h2><p>${complete?'Background collection and automatic sign-in are enabled.':'Set up the companion, privileged helper, automatic startup and local history together. Approve Windows Administrator access if asked.'}</p></div>
-    <button class="easy-button" data-companion-action="setup" ${changing||!settings||installNeeded?'disabled':''}><span aria-hidden="true">${complete?'✓':'↗'}</span>${changing?'Tiny crew at work…':installNeeded?'Available after installation':complete?'Easy Button · Check setup':setupError?'Easy Button · Try again':'Easy Button · Set up everything'}</button></div>
+    <button class="easy-button" data-companion-action="setup" ${changing||!settings||installNeeded?'disabled':''}><span aria-hidden="true">${attention?'!':complete?'✓':'↗'}</span>${changing?'Tiny crew at work…':installNeeded?'Available after installation':attention?'Easy Button · Repair setup':complete?'Easy Button · Check setup':'Easy Button · Set up everything'}</button></div>
     ${progressPanel()}
     ${checkList}
-    <p class="setup-status" role="status">${setupError?esc(setupError):changing?'The progress above follows the actual setup work. Collection checks can take up to 45 seconds after Windows approval.':!settings?'Checking collection setup…':installNeeded?'Run the netKonnect installer to enable the Easy Button, protected capture and automatic sign-in collection. This preview keeps its companion separate from the installed app.':complete?'Verified against live collection. No scripts or terminal commands needed.':'Setup is complete only when all checks pass. Already completed steps are kept if Windows approval is canceled.'}</p>
+    <p class="setup-status" role="status">${setupError?esc(setupError):changing?'The progress above follows the actual setup work. Collection checks can take up to 45 seconds after Windows approval.':!settings?'Checking collection setup…':installNeeded?'Run the netKonnect installer to enable the Easy Button, protected capture and automatic sign-in collection. This preview keeps its companion separate from the installed app.':attention?'A collection check needs attention. Run the Easy Button again.':complete?'Verified against live collection. No scripts or terminal commands needed.':'Setup is complete only when all checks pass. Already completed steps are kept if Windows approval is canceled.'}</p>
     ${!complete?'<p class="setup-limits">Collects app traffic, IPs, ports, protocols and available hostname clues. Encrypted content and browser tabs are not exposed by Windows network metadata.</p>':''}
   </section>`;
 }

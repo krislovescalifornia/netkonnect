@@ -3,7 +3,9 @@ import { renderNetworkMap, routeDetails, TransportAnimator } from './map.js';
 import { buildRoutes, RouteTrafficView, serviceIdentity } from './routes.js';
 import { AnalyticsView } from './analytics.js';
 import { localRequest } from './client.js';
-import { companionPreferences, handleCompanionAction, setupSlot, setupVersion, refreshSetupStatus } from './companion-ui.js';
+import { companionPreferences, handleCompanionAction, setupSlot, setupVersion, refreshSetupStatus, preferencesAlert } from './companion-ui.js';
+import { speedUnit, nextSpeedUnit, speedButton } from './speed.js';
+import { releaseYear } from './version.js';
 const analyticsView = new AnalyticsView();
 const transportAnimator = new TransportAnimator();
 const trafficSource = () => state.mode+'|'+(state.service?.instanceId || '')+'|'+(state.snapshot?.traffic?.usageStartedAt || '');
@@ -18,23 +20,23 @@ try { prefs = JSON.parse(localStorage.getItem('netkonnect-preferences') || '{}')
 const state = { trafficView:new RouteTrafficView(), page:'overview', mode:'live', snapshot:null, paused:false, query:'', scope:'all', protocol:'all', secretApp:null, watched:new Set(prefs.watched || []), motion:prefs.motion !== false, range:60, error:null, collecting:true, interval:2000, detail:null, mapApp:'all', mapDetail:'service', mapVehicle:'auto', mapQuery:'', mapLimit:10, mapExpanded:new Set(), mapSort:['total','download','upload','app','service','connections'].includes(prefs.mapSort)?prefs.mapSort:'total', mapSortDirection:prefs.mapSortDirection==='asc'?'asc':'desc', service:null, restarting:false };
 const pages = [['overview','Traffic Management'],['activity','Data Analytics'],['connections','Connections'],['secrets','Little Secrets'],['adapters','Network adapters']];
 const bytes = n => { if (n == null) return '—'; const units=['B','KB','MB','GB','TB']; let i=0; while(n>=1024 && i<4){n/=1024;i++;} return `${n.toFixed(i ? 1 : 0)} <small>${units[i]}</small>`; };
-const plainBytes = n => bytes(n).replace(/<\/?small>/g,'');
-const rate = n => `${bytes(n)}<small>/s</small>`;
+let rateUnit = speedUnit(prefs.speedUnit);
+const rate = n => speedButton(n, rateUnit);
 const time = s => new Date(s).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' });
 const relative = s => { const seconds = Math.max(0, Math.round((Date.now()-Date.parse(s))/1000)); return seconds < 60 ? `${seconds}s ago` : `${Math.floor(seconds/60)}m ago`; };
 const connections = () => state.snapshot?.connections || [];
 const outbound = () => connections().filter(c => c.scope === 'Internet' && c.state !== 'Listen');
 const grouped = () => { const apps=new Map(); for(const c of outbound()){ if(c.pid===0)continue; if(!apps.has(c.app))apps.set(c.app,{ name:c.app, connections:[], destinations:new Set(), pids:new Set() }); const a=apps.get(c.app);a.connections.push(c);a.destinations.add(c.remoteAddress);a.pids.add(c.pid); } return [...apps.values()].sort((a,b)=>b.connections.length-a.connections.length); };
 const appBadge = name => brandBadge(appIdentity(name));
-function persist(){ try { localStorage.setItem('netkonnect-preferences',JSON.stringify({ watched:[...state.watched],motion:state.motion,mapSort:state.mapSort,mapSortDirection:state.mapSortDirection })); } catch { toast('Local preference storage is unavailable; this setting lasts for this session.'); } }
+function persist(){ try { localStorage.setItem('netkonnect-preferences',JSON.stringify({ watched:[...state.watched],motion:state.motion,mapSort:state.mapSort,mapSortDirection:state.mapSortDirection,speedUnit:rateUnit })); } catch { toast('Local preference storage is unavailable; this setting lasts for this session.'); } }
 function toast(message){ $('#toast').textContent=message;$('#toast').classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').classList.remove('show'),3500); }
 
 function shell(){
   $('#app').innerHTML=`<aside class="sidebar"><a class="brand" href="#overview" aria-label="netKonnect Traffic Management"><span class="brand-mark" aria-hidden="true"></span>net<span class="brand-light">Konnect</span><span class="brand-dot">®</span></a>
     <label class="global-search">${icon('search',17)}<input id="global-search" placeholder="Find an app or destination" aria-label="Find an app or destination" value="${esc(state.query)}"><kbd>/</kbd></label>
     <nav aria-label="Dashboard">${pages.map(([id,label])=>`<button aria-label="${label}" data-page="${id}" class="nav-item ${state.page===id?'active':''}">${icon(id)}<span>${label}</span>${id==='secrets'?'<span class="nav-new">NEW</span>':''}</button>`).join('')}</nav>
-    <div class="sidebar-collection">${setupSlot('sidebar')}<div id="network-controls">${networkControls()}</div></div>
-    <div class="side-bottom"><button aria-label="Preferences" data-action="settings" class="nav-item">${icon('settings')}<span>Preferences</span></button><div class="version">MADE FOR THE KURIOUS <span data-app-version>v${esc(setupVersion())}</span></div></div>
+    <div class="sidebar-collection"><div id="network-controls">${networkControls()}</div></div>
+    <div class="side-bottom"><button aria-label="Preferences" data-action="settings" class="nav-item">${icon('settings')}<span>Preferences</span><span data-preferences-alert>${preferencesAlert()}</span></button><div class="version">kneurons made this for you <span>© ${releaseYear} kneurons · <span data-app-version>v${esc(setupVersion())}</span></span></div></div>
     </aside><div class="workspace"><main id="main"></main><footer><span><i class="tiny-dot"></i> Collected locally · Nothing leaves this app</span><span>Take the scenic route. <span class="footer-arrow">↗</span></span></footer></div><div id="overlay"></div>`;
   renderContent();
 }
@@ -68,7 +70,7 @@ function renderContent(){
 function navigate(page){state.page=pages.some(p=>p[0]===page)?page:'overview';location.hash=state.page;shell();window.scrollTo({top:0});}
 function drawer(title,body){ $('#overlay').innerHTML=`<div class="overlay-backdrop" data-action="close"></div><section class="drawer" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="drawer-top"><span class="eyebrow">A CLOSER LOOK</span><button class="icon-button button" data-action="close" aria-label="Close panel">${icon('close',18)}</button></div><h2>${title}</h2>${body}</section>`; $('#overlay .drawer').querySelector('button')?.focus();document.body.classList.add('drawer-open'); }
 function closeDrawer(){ $('#overlay').innerHTML='';state.detail=null;document.body.classList.remove('drawer-open');$('.sidebar [data-action="settings"]')?.focus();}
-function inspect(id){ const c=connections().find(c=>c.id===id);if(!c){toast('That connection has departed. Try a current route.');return;}state.detail=c;drawer('Connection field notes',`<div class="detail-app">${appBadge(c.app)}<div><strong>${esc(appName(c.app))}</strong><span>PID ${c.pid}</span></div><span class="status-tag ${c.state==='Established'?'connected':''}">${esc(c.state)}</span></div><div class="detail-route">${appBadge(c.app)}<span>······· ${icon('arrow',22)} ·······</span>${brandBadge(serviceIdentity(c))}</div><dl class="detail-list">${[['Remote IP',c.remoteAddress],['Remote port',c.remotePort||'No remote endpoint'],['Local address',c.localAddress],['Local port',c.localPort],['Protocol',c.protocol],['Download',plainBytes(c.receiveRate)+'/s'],['Upload',plainBytes(c.sendRate)+'/s'],['Traffic source',c.trafficSource||'Connection table only'],['Network scope',c.scope],['First observed',new Date(c.firstSeen).toLocaleString()],['Snapshot',new Date(state.snapshot.timestamp).toLocaleString()]].map(([k,v])=>`<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl><h3>Hostname clues</h3><p class="drawer-copy">${c.domainCandidates?.length?c.domainCandidates.map(esc).join('<br>'):'No hostname match in the local DNS cache.'}</p><div class="notice">${icon('info',17)} A DNS cache match doesn’t prove this app requested that hostname. Connections are sampled; short-lived routes may be missed.</div><button class="dark-button full-width" data-watch="${esc(c.app)}">${icon('star',16)} ${state.watched.has(c.app)?'Remove from watchlist':'Watch this application'}</button>`);}
+function inspect(id){ const c=connections().find(c=>c.id===id);if(!c){toast('That connection has departed. Try a current route.');return;}state.detail=c;drawer('Connection field notes',`<div class="detail-app">${appBadge(c.app)}<div><strong>${esc(appName(c.app))}</strong><span>PID ${c.pid}</span></div><span class="status-tag ${c.state==='Established'?'connected':''}">${esc(c.state)}</span></div><div class="detail-route">${appBadge(c.app)}<span>······· ${icon('arrow',22)} ·······</span>${brandBadge(serviceIdentity(c))}</div><dl class="detail-list">${[['Remote IP',c.remoteAddress],['Remote port',c.remotePort||'No remote endpoint'],['Local address',c.localAddress],['Local port',c.localPort],['Protocol',c.protocol],['Download',rate(c.receiveRate)],['Upload',rate(c.sendRate)],['Traffic source',c.trafficSource||'Connection table only'],['Network scope',c.scope],['First observed',new Date(c.firstSeen).toLocaleString()],['Snapshot',new Date(state.snapshot.timestamp).toLocaleString()]].map(([k,v])=>`<div><dt>${k}</dt><dd>${['Download','Upload'].includes(k)?v:esc(v)}</dd></div>`).join('')}</dl><h3>Hostname clues</h3><p class="drawer-copy">${c.domainCandidates?.length?c.domainCandidates.map(esc).join('<br>'):'No hostname match in the local DNS cache.'}</p><div class="notice">${icon('info',17)} A DNS cache match doesn’t prove this app requested that hostname. Connections are sampled; short-lived routes may be missed.</div><button class="dark-button full-width" data-watch="${esc(c.app)}">${icon('star',16)} ${state.watched.has(c.app)?'Remove from watchlist':'Watch this application'}</button>`);}
 async function preferences(){const companion=await companionPreferences();drawer('Make yourself at home.',`<p class="drawer-copy">A few small things to make your observatory feel like yours.</p>${companion}<div class="preference-row"><div><strong>Little vehicles in motion</strong><p>Let bicycles, trucks, and jumbo jets take the scenic route.</p></div><button class="switch ${state.motion?'on':''}" data-action="motion" role="switch" aria-checked="${state.motion}" aria-label="Animate vehicles"><span></span></button></div><h3>Your watchlist</h3><p class="drawer-copy">${state.watched.size?`Watching ${[...state.watched].map(name=>esc(appName(name))).join(', ')}.`:'No applications on your watchlist yet. Add one from Little Secrets.'}</p>${state.watched.size?'<button class="button" data-action="clear-watch">Clear watchlist</button>':''}<div class="privacy-card">${icon('laptop',28)}<strong>Home is where your data stays.</strong><p>The collector runs on this computer. No accounts, remote telemetry, packet uploads, or external lookups. ${window.netKonnect?"The app uses local IPC and blocks outbound network requests. The installer adds a Windows Firewall outbound block. Preferences stay in the local app profile; the companion saves history to SQLite on this computer.":"Preferences stay in local browser storage; measured analytics history is saved locally for searches across restarts."}</p></div>`);}
 function csvCell(s){let v=String(s??'');if(/^[=+\-@\t\r]/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"';}
 function exportCSV(){ const rows=[['Application','PID','Protocol','Local address','Local port','Remote address','Remote port','State','Scope','DNS cache candidates','First observed','Snapshot','Source'],...filtered().map(c=>[c.app,c.pid,c.protocol,c.localAddress,c.localPort,c.remoteAddress,c.remotePort,c.state,c.scope,c.domainCandidates?.join('; '),c.firstSeen,state.snapshot.timestamp,state.mode])]; const blob=new Blob(['\uFEFF'+rows.map(r=>r.map(csvCell).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`netkonnect-${state.mode}-${new Date().toISOString().slice(0,10)}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast(`Exported ${rows.length-1} connection routes.`); }
@@ -147,6 +149,17 @@ function handleAnalyticsClick(e){
   refreshAnalytics();return true;
 }
 document.addEventListener('click',e=>{
+  const speed = e.target.closest('[data-action="speed-unit"]');
+  if(speed){
+    e.preventDefault();
+    const speeds = [...document.querySelectorAll('.speed-value')], index = speeds.indexOf(speed);
+    rateUnit=nextSpeedUnit(rateUnit);persist();renderContent();
+    if(state.detail?.connections)drawer('Route details',routeDetails(state.detail,{esc,rate,bytes,icon},state.snapshot));
+    else if(state.detail)inspect(state.detail.id);
+    document.querySelectorAll('.speed-value')[index]?.focus({preventScroll:true});
+    toast(`Traffic speeds shown in ${rateUnit}. Click any speed to change units.`);
+    return;
+  }
   if(handleCompanionAction(e,()=> { if($('.drawer')&&!state.detail)preferences(); renderContent(); },toast))return;
   if(handleAnalyticsClick(e))return;
   const expand=e.target.closest('[data-map-expand]')?.dataset.mapExpand;

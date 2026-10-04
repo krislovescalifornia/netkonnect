@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.0 — 2026-10-03
+
+- Keep the completed Easy Button and its seven checks in Preferences, with a red exclamation beside Preferences when collection needs repair.
+- Default traffic speeds to decimal Mbit/s; click any speed to cycle bit/byte units and save the choice across launches.
+- Replace the sidebar tagline with “kneurons made this for you” and a copyright year fixed to the release metadata.
+- Update native setup acceptance checks for the Preferences flow and verify speed switching and persistence.
+
 ## 1.2.0 — 2026-10-03
 
 - Move the Easy Button into the left navigation after the first successful setup, keeping its progress and seven readiness checks available to expand.

@@ -53,6 +53,7 @@ test('all bundled brand assets are served as SVGs and arbitrary paths remain ina
     assert.doesNotMatch(svg,/<script|<foreignObject|(?:href|src)=["']https?:/i);
   }
   assert.equal((await fetch(`${url}/brands.js`)).status,200);
+  assert.equal((await fetch(`${url}/speed.js`)).status,200);
   assert.equal((await fetch(`${url}/icons/LICENSE`)).status,404);
   assert.equal((await fetch(`${url}/icons/not-a-brand.svg`)).status,404);
   assert.equal((await fetch(`${url}/package.json`)).status,404);
