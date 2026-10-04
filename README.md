@@ -6,7 +6,7 @@ Brand colors are white (`#ffffff`) and neon green (`#b6ff00`). The app, tray, an
 
 ## Run
 
-Launch the built **netKonnect-Setup-1.1.3.exe** installer. Installation uses its Windows Administrator approval to set up the background companion, privileged capture helper, sign-in startup and outbound app protection together. There are no customer scripts, terminals, dependency downloads or separate setup switches.
+Launch the built **netKonnect-Setup-1.2.0.exe** installer. Installation uses its Windows Administrator approval to set up the background companion, privileged capture helper, sign-in startup and outbound app protection together. There are no customer scripts, terminals, dependency downloads or separate setup switches.
 
 The dashboard's large **Easy Button · Set up everything** performs the same setup if installation could not finish, and repairs or checks it later. A six-stage progress trail follows the real work: companion, checkup, helper, sign-in, live data and local journal. The tiny network crew explains each step, shows elapsed time and calls out Windows approval or live-data waits. Ready/Pending checks update during setup, including in Preferences or with dashboard updates paused. Progress reaches 100% only after fresh observations, measured TCP/UDP capture and a successful local history checkpoint. Windows may ask for Administrator approval to install or repair privileged components. A healthy recheck does not need another approval. Completed steps survive canceled approval; click the same button to retry. Reduced-motion preferences disable the trail and mascot animations.
 
@@ -16,7 +16,7 @@ Version 1.1.2 rejects legacy or mismatched companions, recognizes Windows accoun
 
 Version 1.1.3 verifies the named, enabled companion startup entry through Electron's native launch-item API, including its executable and positional `collector` argument. This avoids the app-ID-only `openAtLogin` check, path-with-spaces lookup bug, and omitted switch arguments in Electron 44.5.1. The installer and Easy Button use the same command; manual `--collector` launches remain supported. All seven readiness checkmarks remain available after completion. A failed startup write fails at the Sign-in stage instead of waiting on live data.
 
-The first verified setup moves the Easy Button into the left navigation. Future launches keep it there while checking live readiness again; a failed check turns the button red and prompts a repair. Expand its checks to inspect all seven results and setup progress. Search, live network status, Pause/Resume and Restart Service also live in the left navigation. The dashboard always uses the live network and displays the full app version alongside **MADE FOR THE KURIOUS**.
+Version 1.2.0 moves the Easy Button into the left navigation after the first verified setup. Future launches keep it there while checking live readiness again; a failed check turns the button red and prompts a repair. Expand its checks to inspect all seven results and setup progress. Search, live network status, Pause/Resume and Restart Service also live in the left navigation. The dashboard always uses the live network and displays the full app version alongside **MADE FOR THE KURIOUS**.
 
 Closing the dashboard leaves collection running in the notification area. **Quit companion** stops collection. Optional switches under **Preferences → Background collection controls** let you disable startup or detailed capture. Sleep, sign-out and stopped collection leave visible gaps. The installer identifies the current desktop owner, while button setup passes the customer's SID through elevation rather than configuring the account used to approve UAC.
 
@@ -36,6 +36,10 @@ Development startup controls are disabled. Profiles/history live under `data/des
 The original browser server remains a developer compatibility path (`npm run start:web`, then http://127.0.0.1:4317). Persistent one-button setup belongs to the installed desktop app. Detailed capture observes network event metadata: owner PID, addresses, ports, direction, and byte counts. It does not collect packet payloads or write ETL traces.
 
 After startup, click **Restart Service** in the left navigation. The button shows **Restarting…** and reconnects automatically at the same URL. The replacement inherits existing Windows permissions, so an elevated service needs no new Administrator prompt. The old collector releases its trace before the new collector starts. Live rates and rolling route history reset; saved Data Analytics history, browser preferences, sorting, and watchlists remain. Restart is disabled while a restart is underway or the companion is unavailable.
+
+## Release versions
+
+`package.json` is the release version source for Electron, companion identity and installer filenames. Run `npm version <version> --no-git-tag-version` to update it and the lockfile together; the version hook regenerates `public/version.js` for the dashboard. Builds also synchronize that file, and syntax checks reject inconsistent version metadata. Use patch versions for fixes, minor versions for features and major versions for breaking changes. Record release changes in [CHANGELOG.md](CHANGELOG.md), build and verify the installer, then commit and create the matching `v<version>` Git tag.
 
 ## Live transport
 

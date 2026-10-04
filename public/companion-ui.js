@@ -1,5 +1,6 @@
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 import { setupSteps, progressView } from './setup-progress.js';
+import { appVersion } from './version.js';
 let settings = null, changing = false, setupError = '', checkedAt = 0, checking = null, setupProgress = null;
 // This remembers presentation only. Every launch still verifies live readiness.
 const establishedKey = 'netkonnect-setup-established';
@@ -13,7 +14,7 @@ function rememberSetup() {
   established = true;
   try { localStorage.setItem(establishedKey, 'true'); } catch { /* Keep the compact layout for this session. */ }
 }
-export const setupVersion = () => settings?.version || '1.1.3';
+export const setupVersion = () => settings?.version || appVersion;
 export function setupSlot(location) {
   return `<div data-setup-slot="${location}">${setupSlotContent(location)}</div>`;
 }

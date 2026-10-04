@@ -1,6 +1,7 @@
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
+execFileSync(process.execPath,['scripts/version.mjs','--check'],{stdio:'inherit'});
 async function check(directory) {
   for (const item of await readdir(directory,{withFileTypes:true})) {
     const path=join(directory,item.name);

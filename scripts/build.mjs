@@ -15,6 +15,7 @@ async function run(script, args = [], executable = process.execPath) {
     child.once('exit', code => code === 0 ? resolve() : reject(new Error(`Build check failed (${code}): ${script}`)));
   });
 }
+await run('scripts/version.mjs');
 await run('scripts/check.mjs');
 await run('--test');
 await run('-NoProfile', ['-NonInteractive','-ExecutionPolicy','Bypass','-File','test/traffic-trace.ps1'], 'powershell.exe');

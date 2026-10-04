@@ -217,8 +217,9 @@ async function start() {
     await new Promise(resolve=>setTimeout(resolve,1000));
     const deadline=Date.now()+30000;
     while(Date.now()<deadline && !(await callCompanion(directory,'snapshot')).snapshot) await new Promise(resolve=>setTimeout(resolve,500));
-    const result = await window.webContents.executeJavaScript(`(async()=>({title:document.title,bridge:!!window.netKonnect,snapshot:await window.netKonnect.snapshot(),cards:document.querySelectorAll('.metric').length}))()`);
-    console.log('DESKTOP_SMOKE '+JSON.stringify({title:result.title,bridge:result.bridge,cards:result.cards,collectorPid:result.snapshot.service.pid,connections:result.snapshot.snapshot?.connections.length,error:result.snapshot.error,storageError:result.snapshot.service.storageError}));
+    const result = await window.webContents.executeJavaScript(`(async()=>({title:document.title,version:document.querySelector('[data-app-version]')?.textContent,bridge:!!window.netKonnect,snapshot:await window.netKonnect.snapshot(),cards:document.querySelectorAll('.metric').length}))()`);
+    console.log('DESKTOP_SMOKE '+JSON.stringify({title:result.title,version:result.version,bridge:result.bridge,cards:result.cards,collectorPid:result.snapshot.service.pid,connections:result.snapshot.snapshot?.connections.length,error:result.snapshot.error,storageError:result.snapshot.service.storageError}));
+    if (result.version !== `v${app.getVersion()}`) throw new Error('Dashboard version does not match the desktop release.');
     if (!result.bridge || result.cards!==4 || !result.snapshot.snapshot || result.snapshot.error || result.snapshot.service.storageError) throw new Error('Desktop data smoke check failed.');
     const remote = await window.webContents.executeJavaScript(`fetch('https://example.com').then(()=>false,()=>true)`);
     console.log('DESKTOP_REMOTE_BLOCKED '+remote);

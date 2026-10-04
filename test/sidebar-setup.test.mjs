@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { appVersion } from '../public/version.js';
 
 const ids = ['companion','startup','helper','firewall','snapshots','capture','history'];
-const ready = () => ({startupAvailable:true,version:'1.1.3',complete:true,
+const ready = () => ({startupAvailable:true,version:appVersion,complete:true,
   checks:ids.map(id=>({id,label:id,ready:true}))});
 async function renderer(t, initial = {}) {
   const saved = {window:globalThis.window,localStorage:globalThis.localStorage};
@@ -29,7 +30,7 @@ test('first-run setup moves to the sidebar only after live verification succeeds
   assert.equal((sidebar.match(/data-setup-check=/g)||[]).length,7);
   assert.doesNotMatch(sidebar,/<details[^>]*\sopen[\s>]/);
   assert.equal(storage.get('netkonnect-setup-established'),'true');
-  assert.equal(ui.setupVersion(),'1.1.3');
+  assert.equal(ui.setupVersion(),appVersion);
 });
 
 test('a saved layout starts compact but cannot claim readiness before startup checks',async t=>{
