@@ -81,6 +81,9 @@ namespace NetKonnect {
       }
     }
     public static void Run(int parentId, int seconds) {
+      Run(parentId, seconds, false);
+    }
+    public static void Run(int parentId, int seconds, bool recoverOwnedSession) {
       if (IntPtr.Size != 8) throw new Exception("Detailed traffic capture requires 64-bit PowerShell.");
       foreach (var adapter in NetworkInterface.GetAllNetworkInterfaces())
         foreach (var a in adapter.GetIPProperties().UnicastAddresses) local.Add(a.Address.ToString());
@@ -96,9 +99,16 @@ namespace NetKonnect {
       Marshal.WriteInt32(properties,72,0x00010000); // Network TCP/IP (includes UDP)
       Marshal.WriteInt32(properties,116,120);
       uint result = StartTraceW(out session,SessionName,properties);
+      // Only the authenticated installed helper may recover this app's reserved
+      // trace after Task Scheduler forcibly ends an earlier helper on upgrade.
+      // Ordinary/development collectors still report conflicts without stopping it.
+      if (result == 183 && recoverOwnedSession) {
+        uint stopped = ControlTraceW(0,SessionName,properties,1);
+        if (stopped == 0) result = StartTraceW(out session,SessionName,properties);
+      }
       if (result != 0) {
         Marshal.FreeHGlobal(properties);
-        if (result == 5) throw new Exception("Detailed traffic capture needs Administrator access. Run start-live.ps1 to enable per-route speeds and UDP/QUIC destinations.");
+        if (result == 5) throw new Exception("Detailed traffic capture needs Windows Administrator approval. Click Easy Button in netKonnect to set up measured app traffic and UDP/QUIC destinations.");
         if (result == 183) throw new Exception("A netKonnect traffic collector is already running. Close that instance before starting another.");
         throw new Exception("Windows could not start network tracing (error "+result+").");
       }

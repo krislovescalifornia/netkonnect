@@ -1,10 +1,12 @@
 import { appName, appIdentity, brandBadge } from './brands.js';
 import { defaults, parseSearch, weekdays, months } from './analytics-model.js';
 import { demoAnalytics } from './analytics-demo.js';
+import { localRequest } from './client.js';
+import { coverageRibbon, observationCard } from './companion-ui.js';
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const size=n=>{const units=['B','KB','MB','GB','TB'];let i=0;while(n>=1024&&i<4){n/=1024;i++;}return `${n.toFixed(i?1:0)} ${units[i]}`;};
-const palette=['#4267ef','#53a984','#a58acb','#eebc33','#ef6456','#bcc6b1'];
+const palette=['#4267ef','#b6ff00','#a58acb','#eebc33','#ef6456','#bcc6b1'];
 const sum=r=>r.received+r.sent;
 const stamp=n=>n==null?'—':new Date(n).toLocaleString([], {dateStyle:'medium',timeStyle:'short'});
 const dateLabel=s=>new Date(s+'T12:00:00').toLocaleDateString([], {month:'short',day:'numeric',year:'numeric'});
@@ -25,7 +27,7 @@ export class AnalyticsView {
       if(options.min!==''&&options.max!==''&&Number(options.min)>=Number(options.max))throw new Error('Minimum usage must be lower than maximum usage.');
       let data;
       if(mode==='demo')data=demoAnalytics(options);
-      else {const response=await fetch('/api/analytics?'+new URLSearchParams(options),{signal:AbortSignal.timeout(20000)});data=await response.json();if(!response.ok)throw new Error(data.error||'History could not be loaded.');}
+      else {const response=await localRequest('/api/analytics?'+new URLSearchParams(options),{signal:AbortSignal.timeout(20000)});data=await response.json();if(!response.ok)throw new Error(data.error||'History could not be loaded.');}
       if(request!==this.request)return;
       this.result=data;this.loadedAt=Date.now();
     } catch(error){if(request!==this.request)return;this.error=error.message;}
@@ -37,6 +39,11 @@ export class AnalyticsView {
   drillInto(type,key,label){if(!this.drill)this.savedFilters={...this.filters};this.drill={type,key,label};this.filters={...this.filters,query:'',min:'',max:'',[type]:key};this.offset=0;this.result=null;this.loadedAt=0;}
   back(){this.filters=this.savedFilters||defaults();this.drill=null;this.savedFilters=null;this.offset=0;this.result=null;this.loadedAt=0;}
   async export(mode){
+    if(mode!=='demo'&&window.netKonnect){
+      try { const {csv}=await window.netKonnect.analytics({...this.filters,export:'csv'});const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='netkonnect-analytics.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000); }
+      catch(error){this.error=error.message;document.querySelector('#toast').textContent=error.message;document.querySelector('#toast').classList.add('show');}
+      return;
+    }
     if(mode!=='demo'){const a=document.createElement('a');a.href='/api/analytics?'+new URLSearchParams({...this.filters,export:'csv'});a.download='netkonnect-analytics.csv';a.click();return;}
     const data=demoAnalytics({...this.filters,export:'csv'});
     const cell=v=>'"'+String(v??'').replace(/^[=+\-@\t\r]/,"'$&").replace(/"/g,'""')+'"';
@@ -47,7 +54,7 @@ export class AnalyticsView {
     const f=this.filters,r=this.result;
     const catalog=r?.catalog||{apps:[],services:[]};
     const selectedApp=f.app&&!catalog.apps.includes(f.app)?[f.app]:[];
-    return `<div class="analytics-page"><div class="analytics-toolbar"><div class="segmented" aria-label="Analytics time range">${[['day','Day'],['week','Week'],['month','Month'],['year','Year'],['all','All history']].map(([v,l])=>`<button data-analytics-range="${v}" class="${f.range===v?'selected':''}" aria-pressed="${f.range===v}">${l}</button>`).join('')}</div><span class="analytics-timezone">${esc(f.timezone)} · Calendar periods</span><button class="button" data-analytics-action="refresh" ${this.loading?'disabled':''}>Refresh</button><button class="button" data-analytics-action="export" ${!r?.matchCount?'disabled':''}>Export results ↓</button></div>
+    return `<div class="analytics-page">${this.mode==='live'?coverageRibbon(r?.collectionTimeline)+observationCard(r?.observationSummary):''}<div class="analytics-toolbar"><div class="segmented" aria-label="Analytics time range">${[['day','Day'],['week','Week'],['month','Month'],['year','Year'],['all','All history']].map(([v,l])=>`<button data-analytics-range="${v}" class="${f.range===v?'selected':''}" aria-pressed="${f.range===v}">${l}</button>`).join('')}</div><span class="analytics-timezone">${esc(f.timezone)} · Calendar periods</span><button class="button" data-analytics-action="refresh" ${this.loading?'disabled':''}>Refresh</button><button class="button" data-analytics-action="export" ${!r?.matchCount?'disabled':''}>Export results ↓</button></div>
       <section class="panel analytics-search-panel"><div class="analytics-section-top"><div><h2>Ask your traffic history</h2><p>Find an app, service, IP, or a pattern across your days.</p></div><button class="text-button" data-analytics-action="reset">Reset filters</button></div>
       <form id="analytics-form"><div class="analytics-search"><span aria-hidden="true">⌕</span><input name="query" type="search" aria-label="Search traffic history" placeholder="Firefox used more than 1GB on a Tuesday in October" value="${esc(f.query)}"><button class="dark-button" type="submit">Search history →</button></div><div class="analytics-example"><span>TRY A QUESTION</span><button type="button" data-analytics-action="example">Firefox · over 1 GB · Tuesdays in October ↗</button></div>
       <details class="analytics-filters" ${this.filtersOpen?'open':''}><summary>Refine your search <span>Date, application, service, traffic, and usage</span></summary><div class="analytics-filter-grid">

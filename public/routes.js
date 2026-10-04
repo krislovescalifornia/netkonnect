@@ -1,4 +1,4 @@
-import { appName, hostnameIdentity } from './brands.js';
+import { appIdentity, appName, hostnameIdentity } from './brands.js';
 export function serviceIdentity(connection) {
   const names = (connection.domainCandidates || []).map(n => n.toLowerCase().replace(/\.$/, ''));
   const labels = names.map(hostnameIdentity).map(identity=>[identity.key, identity]);
@@ -27,9 +27,9 @@ export function buildRoutes(connections, { app = 'all', query = '', detail = 'se
     if (![c.app, appName(c.app), service.label, service.hint, c.remoteAddress, c.pid].join(' ').toLowerCase().includes(query.toLowerCase())) return null;
     const destination = detail === 'endpoint' ? `${c.remoteAddress}|${c.remotePort}|${c.protocol}` : service.key;
     const key = `${c.app}|${destination}`;
-    if (!routes.has(key)) routes.set(key, {key, app:c.app, service, endpoint:c, connections:[], addresses:new Set(), pids:new Set(), receiveRate:0, sendRate:0, measured:false, receivedBytes60m:null, sentBytes60m:null, totalBytes60m:null});
+    if (!routes.has(key)) routes.set(key, {key, app:c.app, service, endpoint:c, connections:[], addresses:new Set(), pids:new Set(), protocols:new Set(), receiveRate:0, sendRate:0, measured:false, receivedBytes60m:null, sentBytes60m:null, totalBytes60m:null});
     const route = routes.get(key);
-    route.addresses.add(c.remoteAddress); route.pids.add(c.pid);
+    route.addresses.add(c.remoteAddress); route.pids.add(c.pid); route.protocols.add(c.protocol);
     return route;
   }
   function addUsage(route, c) {
@@ -67,6 +67,32 @@ export function fleet(rate, type = 'truck') {
   return {count:Math.min(type === 'bicycle' ? 12 : 24,Math.max(1,Math.ceil(load*2))), duration};
 }
 
+// Group already filtered routes, so parent totals always describe the children
+// shown underneath them. Keep raw route keys for the connection detail drawer.
+export function groupApplicationRoutes(routes, {sort = 'total', direction = 'desc'} = {}) {
+  const groups = new Map();
+  for (const route of routes) {
+    const key = appIdentity(route.app).key;
+    // Destination sorting uses the first child in the selected route order.
+    if (!groups.has(key)) groups.set(key, {key, app:route.app, service:route.service, routes:[], connections:[], addresses:new Set(), pids:new Set(), protocols:new Set(), receiveRate:0, sendRate:0, measured:false, receivedBytes60m:null, sentBytes60m:null, totalBytes60m:null});
+    const group = groups.get(key);
+    group.routes.push(route);
+    group.connections.push(...route.connections);
+    for (const address of route.addresses) group.addresses.add(address);
+    for (const pid of route.pids) group.pids.add(pid);
+    for (const protocol of route.protocols) group.protocols.add(protocol);
+    group.receiveRate += route.receiveRate;
+    group.sendRate += route.sendRate;
+    group.measured ||= route.measured;
+    if (route.totalBytes60m !== null) {
+      group.receivedBytes60m = (group.receivedBytes60m ?? 0) + route.receivedBytes60m;
+      group.sentBytes60m = (group.sentBytes60m ?? 0) + route.sentBytes60m;
+      group.totalBytes60m = group.receivedBytes60m + group.sentBytes60m;
+    }
+  }
+  return sortRoutes([...groups.values()], sort, direction);
+}
+
 export const LOW_TRAFFIC_LIMIT = 64 * 1024;
 export const HIGH_TRAFFIC_LIMIT = 1024 * 1024;
 export function transportForRate(rate, previous) {
@@ -89,8 +115,9 @@ export class RouteTrafficView {
     if (this.at !== null && (at < this.at || at - this.at > 30000)) this.lanes.clear();
     this.at = at;
     const seen = new Set();
-    for (const detail of ['service', 'endpoint']) {
-      const routes = buildRoutes(snapshot.connections || [], {detail, usageConnections:snapshot.traffic.usageConnections || []});
+    for (const detail of ['application', 'service', 'endpoint']) {
+      const children = buildRoutes(snapshot.connections || [], {detail:detail === 'application' ? 'service' : detail, usageConnections:snapshot.traffic.usageConnections || []});
+      const routes = detail === 'application' ? groupApplicationRoutes(children) : children;
       for (const route of routes) for (const direction of ['receiveRate', 'sendRate']) {
         const key = `${detail}|${route.key}|${direction}`;
         if (!route.measured) continue;

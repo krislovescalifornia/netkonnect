@@ -1,0 +1,31 @@
+appId: com.netkonnect.desktop
+productName: netKonnect
+asar: false
+directories:
+  output: dist
+files:
+  - desktop/**
+  - lib/**
+  - public/**
+  - collector.ps1
+  - traffic.ps1
+  - package.json
+  - '!**/*.md'
+  - '!desktop/installer.nsh'
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  executableName: netKonnect
+  icon: desktop/icon.ico
+  requestedExecutionLevel: asInvoker
+  signExecutable: false
+nsis:
+  oneClick: false
+  perMachine: true
+  allowToChangeInstallationDirectory: false
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  runAfterFinish: true
+  include: desktop/installer.nsh
+artifactName: netKonnect-Setup-${version}.${ext}

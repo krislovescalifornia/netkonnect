@@ -113,6 +113,15 @@
 .transport-table .route-terminal em { display:inline-block; padding:3px 6px; border:1px solid #e8edf3; border-radius:4px; background:#f8fafc; color:#78879b; }
 .route-origin:focus-visible,.route-terminal:focus-visible { outline:2px solid #4267ef; outline-offset:4px; border-radius:6px; }
 .usage-label { display:none; }
+.application-group { min-width:0; }
+.application-children { display:grid; gap:8px; margin:8px 0 4px 24px; padding-left:12px; border-left:2px solid #dfe6ef; }
+.application-children[hidden] { display:none; }
+.transport-table .application-child { min-height:116px; background:#fcfdff; }
+.route-child-origin strong { display:block; font-size:10px; color:#69798b; line-height:1.5; }
+.route-child-origin small { display:block; font-size:9px; color:#8793a2; margin-top:6px; overflow-wrap:anywhere; }
+.route-expand em { color:#4267a1; }
+.route-expand[aria-expanded="true"]>svg:last-child { transform:rotate(90deg); }
+.route-expand:focus-visible { outline:2px solid #4267ef; outline-offset:4px; border-radius:6px; }
 @media(max-width:1100px) {
   .transport-table .transport-header { display:none; }
   .transport-routes { min-width:0; padding-top:16px; }
@@ -127,6 +136,7 @@
   .route-usage .usage-label { display:block; color:#7f8da0; font-size:9px; font-weight:500; margin-bottom:7px; }
 }
 @media(max-width:520px) {
+  .application-children { margin-left:6px; padding-left:7px; }
   .transport-routes { padding:12px; }
   .transport-table .transport-route { padding:14px; gap:14px 8px; }
   .transport-table .route-origin { grid-template-columns:28px minmax(0,1fr); gap:6px; }

@@ -3,3 +3,8 @@ node_modules/
 *.pid
 test-results/
 data/analytics/
+dist/
+data/desktop/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm

@@ -3,3 +3,33 @@
 @media(max-width:800px){.analytics-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.analytics-chart-grid{grid-template-columns:1fr}.analytics-filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.analytics-context{align-items:flex-start;flex-direction:column;gap:12px}.analytics-tags{justify-content:flex-start}.analytics-timezone{margin-left:0}.analytics-toolbar .segmented{width:auto}.analytics-toolbar{gap:8px}.analytics-search .dark-button{font-size:10px;padding:11px}.analytics-filters summary span{display:none}.analytics-filter-foot{flex-wrap:wrap;gap:10px}.analytics-svg{padding:0 10px}}
 @media(max-width:520px){.analytics-section-top,.analytics-filter-grid{padding-left:16px;padding-right:16px}.analytics-search{margin:0 16px;flex-wrap:wrap;padding:9px}.analytics-search input{width:calc(100% - 35px)}.analytics-search .dark-button{width:100%;justify-content:center}.analytics-example{padding-left:16px;padding-right:16px}.analytics-field input,.analytics-field select{font-size:10px;padding:8px}.analytics-filter-grid{gap:12px}.analytics-metrics article{padding:17px 13px}.analytics-metrics strong{font-size:23px}.analytics-metrics .analytics-day-value{font-size:23px}.analytics-metrics small{font-size:9px}.analytics-section-top h2{font-size:14px}.analytics-section-top p{font-size:10px}.analytics-toolbar .segmented button{font-size:10px}.analytics-chart-note{padding-left:16px;padding-right:16px;font-size:9px}.analytics-heat-scroll,.analytics-rankings{padding-left:16px;padding-right:16px}.analytics-legend{font-size:9px;gap:13px}.analytics-pagination{padding:15px;flex-wrap:wrap}.analytics-dossier-grid{grid-template-columns:1fr}.analytics-drill-heading{align-items:flex-start;flex-direction:column;gap:12px}.analytics-context p{font-size:10px}}
 .analytics-service-list button{font-size:10px;color:#5c7d43;padding:2px 0;text-align:left}.analytics-service-list button:hover{text-decoration:underline}.analytics-metrics .analytics-day-value{font-size:23px;letter-spacing:-.6px}
+.field-journal { margin-bottom:22px; padding:24px; }
+.journal-heading { display:flex; align-items:center; justify-content:space-between; gap:20px; }
+.journal-heading h2 { margin:8px 0; font-size:24px; letter-spacing:-.6px; }
+.journal-heading p { margin:0; color:#7a8175; font-size:12px; line-height:1.6; }
+.journal-stamp { border:1px dashed #a6b98e; border-radius:50%; padding:14px; transform:rotate(9deg); color:#648151; font-size:10px; letter-spacing:1.5px; text-align:center; }
+.journal-days { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:14px; margin-top:24px; }
+.journal-day { display:flex; flex-direction:column; gap:9px; }
+.journal-day>span { color:#7a8175; font-size:11px; text-transform:uppercase; letter-spacing:1.3px; }
+.journal-day strong { font-size:12px; font-weight:500; }
+.journal-day small { color:#8d9387; font-size:10px; }
+.journal-track { height:5px; background:#ebeee6; border-radius:4px; position:relative; overflow:hidden; }
+.journal-track i,.journal-track b { position:absolute; inset:0 auto 0 0; background:#a7baff; border-radius:4px; }
+.journal-track b { background:var(--brand-green); }
+.journal-day.gap strong { color:#959b8e; }
+.companion-note { display:flex; gap:14px; background:#f2f6e8; border-radius:12px; padding:18px; margin-bottom:12px; }
+.companion-note p,.local-journal p { font-size:12px; line-height:1.7; color:#777f6f; margin:8px 0 0; }
+.companion-glyph { font-size:36px; color:#668248; }
+.local-journal { border:1px solid #e6eadd; border-radius:10px; padding:18px; margin:18px 0; }
+.local-journal strong { display:block; font-size:14px; margin:10px 0; }
+.local-journal code { display:block; overflow-wrap:anywhere; font-size:11px; color:#777f6f; }
+.switch:disabled { opacity:.45; cursor:default; }
+@media(max-width:1050px) { .journal-days { gap:8px; } .journal-heading h2 { font-size:20px; } }
+.background-footprints { padding:24px; margin-bottom:22px; }
+.footprint-metrics { display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin:22px 0; }
+.footprint-metrics strong { display:block;font-size:23px;font-weight:500;letter-spacing:-.5px; }
+.footprint-metrics span { display:block;color:#8d9387;font-size:11px;margin-top:8px; }
+.footprint-apps { display:flex;gap:8px;flex-wrap:wrap; }
+.footprint-apps>span { padding:8px 10px;border:1px solid #e6eadd;border-radius:7px;font-size:12px; }
+.footprint-apps small { color:#89917f;margin-left:8px; }
+.footprint-note { color:#8d9387;font-size:11px;line-height:1.7;margin:18px 0 0; }

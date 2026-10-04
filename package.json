@@ -1,16 +1,36 @@
 {
   "name": "netkonnect",
-  "version": "1.0.0",
+  "version": "1.1.3",
   "private": true,
   "type": "module",
-  "description": "A little window into your network. Local Windows network observatory.",
+  "description": "An offline Windows desktop network observatory with an independent tray companion.",
   "scripts": {
-    "start": "node server.mjs",
+    "start": "electron .",
     "test": "node --test",
     "test:windows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File test/traffic-trace.ps1",
-    "check": "node --check server.mjs && node --check restart-service.mjs && node --check lib/http.mjs && node --check lib/restart.mjs && node --check public/brands.js && node --check public/app.js && node --check public/map.js && node --check public/routes.js && node --check public/demo.js && node --check lib/traffic.mjs && node --check lib/analytics.mjs && node --check public/analytics.js && node --check public/analytics-model.js && node --check public/analytics-demo.js"
+    "check": "node scripts/check.mjs",
+    "start:collector": "electron . --collector",
+    "start:web": "node server.mjs",
+    "pack": "node scripts/build.mjs --dir",
+    "dist": "node scripts/build.mjs",
+    "verify:package": "node scripts/verify-package.mjs",
+    "test:desktop": "electron . --smoke-test",
+    "brand:icons": "node scripts/icon.mjs",
+    "test:release": "node scripts/qa-release.mjs",
+    "test:installed": "node scripts/qa-installed.mjs"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.13"
+  },
+  "devDependencies": {
+    "electron": "44.5.1",
+    "electron-builder": "26.15.3"
+  },
+  "main": "desktop/main.mjs",
+  "author": "netKonnect contributors",
+  "overrides": {
+    "app-builder-lib": {
+      "@electron/get": "5.1.0"
+    }
   }
 }

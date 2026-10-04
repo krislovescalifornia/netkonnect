@@ -148,6 +148,7 @@ test('renders sortable columns and completed endpoint routes with their usage de
   store.ingest({type:'traffic',timestamp:raw.timestamp,elapsed:2,flows:[]},now+32000,snapshot);
   const result=store.decorate(snapshot,now+32000);
   const state={snapshot:result,mode:'live',mapApp:'all',mapQuery:'',mapDetail:'endpoint',mapLimit:10,mapSort:'total',mapSortDirection:'desc',mapVehicle:'auto',motion:false};
+  state.mapExpanded=new Set(['firefox']);
   const format={state,icon:()=>'',rate:n=>String(n),bytes:n=>String(n),esc:s=>String(s)};
   const html=renderNetworkMap(format);
   assert.match(html,/aria-sort="descending"/);
