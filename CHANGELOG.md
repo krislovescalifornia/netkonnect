@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.0 — 2026-10-06
+
+- Make roomy service cities the default expanded service view, with colorful architectural line art and seven measured-data growth stages, from shack to metropolis.
+- Persist cumulative download + upload totals separately from rolling-hour traffic. Seed existing cities from retained measured history and preserve growth across idle periods, service restarts, and history pruning.
+- Replace bicycles with wood pushcarts, trucks with loaded pickups, and jets with supply planes and parachute airdrops.
+- Animate women and men receiving supplies, carrying timber, hammering, and operating cranes while traffic is active. Preserve animation nodes during refreshes and sorting; pause and reduced-motion settings apply to crews and vehicles.
+- Verify checkpoint rollback, saved growth, desktop/narrow layouts, refresh continuity, pause, and reduced-motion behavior.
+
 ## 1.3.1 — 2026-10-03
 
 - Remove the repeated Traffic Management heading and introductory copy.

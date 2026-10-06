@@ -21,7 +21,7 @@ export function demoSnapshot() {
   })));
   const receiveRate = specs.reduce((sum,s)=>sum+s[6],0), sendRate = specs.reduce((sum,s)=>sum+s[7],0);
   return {mode:'demo',computer:'KRIS-PC',timestamp:new Date(now).toISOString(),issues:[],connections,
-    traffic:{available:true,timestamp:new Date(now).toISOString(),eventsLost:0},totals:{receiveRate,sendRate,ready:true},
+    traffic:{available:true,timestamp:new Date(now).toISOString(),eventsLost:0,cityUsage:specs.map(([app,pid,remoteAddress,domain,protocol],i)=>({app,pid,remoteAddress,remotePort:443,protocol,scope:'Internet',domainCandidates:[domain],receivedBytesTotal:([140,0.015,0.12,8.4,0.04,0.18,0.7,3.5,1.2,0][i])*1024**3,sentBytesTotal:0}))},totals:{receiveRate,sendRate,ready:true},
     history:Array.from({length:75},(_,i)=>({timestamp:new Date(now-(74-i)*8000).toISOString(),receiveRate:receiveRate*(.8+.2*Math.sin(i*.3)),sendRate:sendRate*(.8+.2*Math.sin(i*.2)),connections:connections.length})),
     adapters:[{id:'demo-wifi',name:'Wi-Fi',description:'Intel Wi-Fi 6 AX201',status:'Up',speed:'866.7 Mbps',mac:'A4-B1-C1-28-61-9F',ipv4:['192.168.1.42'],ipv6:[],gateway:['192.168.1.1'],dns:['192.168.1.1'],receivedBytes:2581471232,sentBytes:371256320,receivedErrors:0,sentErrors:0,receiveRate,sendRate}]
   };

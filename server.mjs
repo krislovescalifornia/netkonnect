@@ -49,7 +49,7 @@ async function collect() {
 }
 const server = createAppServer({
   getAnalytics: options => analytics.query(options),
-  getSnapshot: () => ({ snapshot: traffic.decorate(snapshot), collecting: busy, error: collectorError, interval: 2000,
+  getSnapshot: () => ({ snapshot: traffic.decorate(snapshot, Date.now(), [...analytics.cityUsage.values()]), collecting: busy, error: collectorError, interval: 2000,
     service: { instanceId, pid: process.pid, restarting } }),
   requestRestart: async () => {
     if (restarting) throw new Error('The service is already restarting.');

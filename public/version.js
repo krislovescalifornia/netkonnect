@@ -1,3 +1,3 @@
 // Generated from package.json by scripts/version.mjs.
-export const appVersion = "1.3.1";
+export const appVersion = "1.4.0";
 export const releaseYear = 2026;

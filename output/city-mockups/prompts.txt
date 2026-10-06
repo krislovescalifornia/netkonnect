@@ -1,0 +1,46 @@
+netKonnect city mockups — concept artwork
+Generation: built-in imagegen. Preview concepts; application code is unchanged.
+
+Shared concept
+Minimal colorful line art on white. Thin dark blue-gray outlines, restrained lime,
+teal, sky blue, warm coral and ochre fills, abundant whitespace. Each service has
+a tiny settlement that grows with cumulative recorded download + upload bytes.
+Current traffic controls supply vehicle activity. Bicycles become wood pushcarts;
+trucks become pickups carrying planks and crates; planes drop parachute crates.
+Data volumes shown in artwork are illustrative. Preserve download/upload direction.
+
+01 — Compact service cities
+A polished desktop netKonnect dashboard concept with a narrow left sidebar,
+three roomy service rows, application labels on the left, dual traffic lanes in
+the center, and a miniature city beside each service on the right. Show YouTube
+as metropolis at 128 GB, OneDrive as village at 8.4 GB, and GitHub as house at
+180 MB. Include tiny wood pushcarts, loaded pickups, and a plane dropping supplies
+near the largest city. Use bright sparse flat color accents and crisp fine outlines.
+Keep real totals readable. Title: Service cities. Subtitle: Built from total data.
+Footer: Illustrative data. A clean readable UI, not a toy game or dense illustration.
+
+02 — Growth and supplies
+A spacious landscape concept sheet titled Every byte builds. Seven evenly spaced
+miniature settlements in a clear labeled sequence: Shack, House, Mansion,
+Neighborhood, Village, City, Metropolis. Same thin dark blue-gray line art and
+restrained lime, teal, blue, coral and ochre accents throughout. Architecture grows
+in both density and height. No numerical thresholds. Below the progression, show
+three larger illustrations: a small two-wheel hand pushcart piled with wooden
+planks; a pickup with an open bed full of crates, timber and building supplies;
+a propeller cargo plane releasing a crate on a parachute above a tiny building.
+Labels: Pushcart, Supply pickup, Airdrop. Bottom note: City size = total data.
+Vehicle activity = current traffic. Mostly white, generous gaps, minimal detail.
+
+03 — Service dioramas
+A netKonnect dashboard concept titled Service cities, using three horizontally
+stacked spacious service cards. Each card has a simple application icon and name
+at left, two thin supply traffic lanes through the middle, and a small colorful
+line-art settlement occupying the right third beside the service name and total.
+YouTube / 128 GB / Metropolis: tall slender towers and an airplane dropping two
+parachute supply crates. OneDrive / 8.4 GB / Village: small cottages, a shop,
+trees, and a loaded supply pickup. GitHub / 180 MB / House: one simple house,
+wood stack, and a two-wheel hand pushcart. Include small Download and Upload
+arrows. White background, very fine navy outlines, flat translucent color patches,
+subtle rounded card borders, generous whitespace. Settlements should feel like
+little architectural sketches anchored to the lane, not 3D game worlds.
+Small footer: Illustrative data. Total data builds the city; live traffic delivers.

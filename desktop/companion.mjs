@@ -81,7 +81,7 @@ export async function startCompanion({ directory, root, version, packaged, onSmo
       history.observe(snapshot, Math.min(8, (Date.now() - lastSnapshot) / 1000)); lastSnapshot = Date.now(); error = null;
     } catch (e) { error = e.message; } finally { collecting = false; }
   }
-  const getSnapshot = () => ({ snapshot: traffic.decorate(snapshot), collecting, error, interval:2000,
+  const getSnapshot = () => ({ snapshot: traffic.decorate(snapshot, Date.now(), [...history.cityUsage.values()]), collecting, error, interval:2000,
     service: { instanceId, pid:process.pid, restarting:false, companion:true, startedAt,
       identity:{ protocol:companionProtocol, root, version }, protection:{ firewall:!!traceSocket && privilegedFirewall },
       observations:{ processes:!!snapshot?.processes, dns:Array.isArray(snapshot?.dnsRecords) },

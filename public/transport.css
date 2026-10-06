@@ -117,6 +117,46 @@
 .transport-foot { padding:10px 16px; }
 .route-origin:focus-visible,.route-terminal:focus-visible { outline:2px solid #4267ef; outline-offset:4px; border-radius:6px; }
 .usage-label { display:none; }
+.service-city { display:block; width:100%; height:auto; overflow:visible; }
+.city-caption { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:0 10px 6px; font-size:10px; color:#8391a2; }
+.city-caption strong { font-size:11px; color:#526a7e; font-weight:550; }
+.city-caption span { white-space:nowrap; }
+.city-caption small { font-size:9px; }
+.transport-table .service-city-card { grid-template-columns:100px minmax(175px,1.25fr) minmax(270px,1fr); gap:0 18px; min-height:238px; padding:18px 20px 12px; background:#fff; }
+.transport-table .service-city-card>div:first-child { grid-column:1; grid-row:1/3; }
+.transport-table .service-city-card>.route-road { grid-column:2; grid-row:1/3; }
+.transport-table .service-city-card>div:nth-child(3) { grid-column:3; grid-row:1; align-self:start; }
+.transport-table .service-city-card .route-terminal { border:0; padding:0 10px; }
+.transport-table .service-city-card>.route-city { grid-column:3; grid-row:2; min-width:0; }
+.transport-table .service-city-card>.route-usage { grid-column:auto; grid-row:3; margin-top:10px; padding:10px 0 0; border-top:1px solid #edf0f3; text-align:left; font-size:12px; }
+.service-city-card .usage-label { display:block; margin-bottom:3px; color:#8996a4; font-size:9px; font-weight:450; }
+.transport-table .service-city-card .convoy-svg { height:78px; }
+.transport-table .service-city-card .route-speeds { top:-10px; font-size:11px; }
+.service-city .site-crane { opacity:.85; }
+.service-city[data-stage="0"] .site-crane,.service-city[data-stage="1"] .site-crane { display:none; }
+.city-airdrop { opacity:0; }
+.city-working.has-airdrop .city-airdrop { animation:city-parcel 12s ease-in-out infinite; }
+.city-working .crew-carrier { animation:city-carry 12s ease-in-out infinite; }
+.city-working .crew-receiver .helper-arms { animation:city-receive 4s ease-in-out infinite; transform-origin:0 -11px; }
+.city-working .crew-builder .helper-arms,.city-working .helper-hammer { animation:city-hammer 2.6s ease-in-out infinite; transform-origin:2px -11px; }
+.city-working .crane-load { animation:city-hoist 10s ease-in-out infinite; }
+.city-working .construction-beam { animation:city-build 10s ease-in-out infinite; }
+.city-new-stage .city-linework { animation:city-reveal 1.8s ease-out both; }
+.city-resting .construction-site { opacity:.35; }
+.city-unmeasured .city-linework { opacity:.4; }
+.supply-pushcart .helper-legs { animation:helper-step .8s ease-in-out infinite alternate; transform-origin:0 -5px; }
+.plane-propeller { animation:propeller-spin .3s linear infinite; transform-box:fill-box; transform-origin:center; }
+@keyframes city-carry { 0%,10%,100% { transform:translateX(0); } 42%,58% { transform:translateX(145px); } }
+@keyframes city-receive { 0%,100% { transform:rotate(0); } 45% { transform:rotate(-25deg); } }
+@keyframes city-hammer { 0%,100% { transform:rotate(0); } 40% { transform:rotate(-30deg); } 55% { transform:rotate(12deg); } }
+@keyframes city-hoist { 0%,100% { transform:translateY(0); } 45%,60% { transform:translateY(-25px); } }
+@keyframes city-build { 0%,100% { opacity:.4; transform:translateY(7px); } 60%,85% { opacity:1; transform:translateY(0); } }
+@keyframes city-parcel { 0%,8% { opacity:0; transform:translate(222px,12px); } 15% { opacity:1; } 75% { opacity:1; transform:translate(215px,93px); } 85%,100% { opacity:0; transform:translate(215px,93px); } }
+@keyframes city-reveal { from { opacity:.3; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+@keyframes helper-step { to { transform:skewX(12deg); } }
+@keyframes propeller-spin { to { transform:scaleY(.25); } }
+.still .service-city *,.no-motion .service-city *,.still .supply-pushcart *,.no-motion .supply-pushcart *,.still .plane-propeller,.no-motion .plane-propeller { animation-play-state:paused !important; }
+@media(prefers-reduced-motion:reduce) { .service-city *,.supply-pushcart *,.plane-propeller { animation:none !important; } }
 .application-group { min-width:0; }
 .application-children { display:grid; gap:8px; margin:8px 0 4px 24px; padding-left:12px; border-left:2px solid #dfe6ef; }
 .application-children[hidden] { display:none; }
@@ -151,4 +191,12 @@
   .transport-table .route-terminal { gap:6px; }
   .transport-table .route-terminal>svg:last-child { display:none; }
   .route-usage .usage-label { font-size:8px; }
+}
+@media(max-width:900px) {
+  .transport-table .service-city-card { grid-template-columns:repeat(6,minmax(0,1fr)); gap:12px; padding:16px; }
+  .transport-table .service-city-card>div:first-child { grid-column:1/4; grid-row:1; }
+  .transport-table .service-city-card>div:nth-child(3) { grid-column:4/-1; grid-row:1; }
+  .transport-table .service-city-card>.route-road { grid-column:1/-1; grid-row:2; padding-top:20px; }
+  .transport-table .service-city-card>.route-city { grid-column:1/-1; grid-row:3; width:min(100%,380px); justify-self:end; }
+  .transport-table .service-city-card>.route-usage { grid-column:span 2; grid-row:4; }
 }

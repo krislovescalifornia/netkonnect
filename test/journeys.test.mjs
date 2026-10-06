@@ -111,9 +111,12 @@ test('hidden routes drain without new departures, then release their queue',()=>
   assert.equal(queue.lanes.size,0);
 });
 
-test('journey sprites retain rotating bicycle spokes and a jet contrail behind its nose',()=>{
-  assert.match(vehicle('bicycle'),/bicycle-spokes/);
-  assert.match(vehicle('plane',true),/byte-contrail/);
-  assert.match(vehicle('plane',true),/translate\(-36 -3\) scale\(-1 1\)/);
-  assert.match(vehicle('plane',false),/translate\(-36 -3\) scale\(1 1\)/);
+test('supply sprites carry wood, crates and walking helpers in both directions',()=>{
+  for(const incoming of [true,false]) {
+    assert.match(vehicle('bicycle',incoming),/supply-pushcart/);
+    assert.match(vehicle('bicycle',incoming),/helper-legs/);
+    assert.doesNotMatch(vehicle('bicycle',incoming),/class="bicycle"|bicycle-spokes/);
+    assert.match(vehicle('truck',incoming),/supply-pickup/);
+    assert.match(vehicle('plane',incoming),/supply-plane/);
+  }
 });

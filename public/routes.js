@@ -19,7 +19,7 @@ export function sortRoutes(routes, sort = 'total', direction = 'desc') {
     return sign*order || a.app.localeCompare(b.app) || a.service.label.localeCompare(b.service.label) || a.key.localeCompare(b.key);
   });
 }
-export function buildRoutes(connections, { app = 'all', query = '', detail = 'service', usageConnections = [], sort = 'total', direction = 'desc' } = {}) {
+export function buildRoutes(connections, { app = 'all', query = '', detail = 'service', usageConnections = [], cityUsage = [], sort = 'total', direction = 'desc' } = {}) {
   const routes = new Map();
   function routeFor(c) {
     if (c.scope !== 'Internet' || c.pid === 0 || c.state === 'Listen' || (app !== 'all' && c.app !== app)) return null;
@@ -55,6 +55,12 @@ export function buildRoutes(connections, { app = 'all', query = '', detail = 'se
     route.measured ||= Number.isFinite(c.receiveRate) && Number.isFinite(c.sendRate);
     addUsage(route, c);
   }
+  for(const c of cityUsage) {
+    const destination=detail==='endpoint'?`${c.remoteAddress}|${c.remotePort}|${c.protocol}`:(c.service || serviceIdentity(c)).key;
+    const route=routes.get(`${c.app}|${destination}`);
+    if(!route || !Number.isFinite(c.receivedBytesTotal) || !Number.isFinite(c.sentBytesTotal))continue;
+    route.cityBytes=(route.cityBytes || 0)+c.receivedBytesTotal+c.sentBytesTotal;
+  }
   return sortRoutes([...routes.values()], sort, direction);
 }
 export function fleet(rate, type = 'truck') {
@@ -77,6 +83,7 @@ export function groupApplicationRoutes(routes, {sort = 'total', direction = 'des
     if (!groups.has(key)) groups.set(key, {key, app:route.app, service:route.service, routes:[], connections:[], addresses:new Set(), pids:new Set(), protocols:new Set(), receiveRate:0, sendRate:0, measured:false, receivedBytes60m:null, sentBytes60m:null, totalBytes60m:null});
     const group = groups.get(key);
     group.routes.push(route);
+    if(Number.isFinite(route.cityBytes))group.cityBytes=(group.cityBytes||0)+route.cityBytes;
     group.connections.push(...route.connections);
     for (const address of route.addresses) group.addresses.add(address);
     for (const pid of route.pids) group.pids.add(pid);
