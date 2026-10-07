@@ -87,15 +87,15 @@
 
 /* Shared local brand marks across routes, tables, and application dossiers. */
 .brand-badge { display:inline-grid; place-items:center; flex-shrink:0; width:36px; height:36px; border:1px solid #e5eaf0; border-radius:10px; background:#fff; color:#63758b; box-shadow:0 1px 2px #26334406; }
-.brand-badge img { display:block; width:24px; height:24px; object-fit:contain; }
+.brand-badge :is(img, .watercolor-brand) { display:block; width:24px; height:24px; object-fit:contain; }
 .brand-monogram { font-size:13px; font-weight:650; line-height:1; }
 .mini-apps .brand-badge { width:27px; height:27px; border-radius:8px; }
-.mini-apps .brand-badge img { width:19px; height:19px; }
+.mini-apps .brand-badge :is(img, .watercolor-brand) { width:19px; height:19px; }
 .dossier-heading .brand-badge { width:48px; height:48px; border-radius:13px; }
-.dossier-heading .brand-badge img { width:32px; height:32px; }
+.dossier-heading .brand-badge :is(img, .watercolor-brand) { width:32px; height:32px; }
 .service-destination { display:flex; align-items:center; gap:9px; }
 .service-destination .brand-badge { width:26px; height:26px; border-radius:7px; }
-.service-destination .brand-badge img { width:18px; height:18px; }
+.service-destination .brand-badge :is(img, .watercolor-brand) { width:18px; height:18px; }
 .route-detail-heading .brand-badge { width:40px; height:40px; }
 .route-detail-heading strong { flex:1; }
 
@@ -124,19 +124,15 @@
 .city-caption small { font-size:9px; }
 .lane-arrow { fill:none; stroke-width:1.5; }
 .application-city .site-crane { opacity:.88; }
-.city-established,.city-rising,.city-project,.building-cladding,.building-roof,.site-scaffolding { transition:opacity 1.4s ease; }
+.city-established,.city-rising,.city-project,.construction-phase,.site-scaffolding { transition:opacity 1.4s ease; }
 .application-city .site-vehicle { animation:site-shuttle 14s ease-in-out infinite; animation-delay:var(--machine-delay); }
-.application-city .excavator-arm { animation:site-dig 5s ease-in-out infinite; animation-delay:var(--machine-delay); transform-origin:6px -10px; }
-.application-city .mixer-drum { animation:site-mix 3s linear infinite; transform-origin:-7px -11px; }
 .city-resting .city-site-vehicles * { animation-play-state:paused; }
 .city-resting .site-scaffolding * { animation-play-state:paused; }
 .application-city.city-delivering .site-supplies { animation:site-delivery 1.2s ease-out; }
 @keyframes site-shuttle { 0%,15%,100% { transform:translateX(0); } 45%,65% { transform:translateX(calc(18px * var(--machine-direction))); } }
-@keyframes site-dig { 0%,100% { transform:rotate(0); } 35%,55% { transform:rotate(22deg); } 75% { transform:rotate(-12deg); } }
-@keyframes site-mix { 50% { transform:rotate(12deg); } }
 @keyframes site-delivery { 35% { transform:translate(267px,137px); } }
-@media(prefers-reduced-motion:reduce) { .city-established,.city-rising,.city-project,.building-cladding,.building-roof,.site-scaffolding { transition:none; } }
-.still .city-established,.still .city-rising,.still .city-project,.still .building-cladding,.still .building-roof,.still .site-scaffolding,.no-motion .city-established,.no-motion .city-rising,.no-motion .city-project,.no-motion .building-cladding,.no-motion .building-roof,.no-motion .site-scaffolding { transition:none; }
+@media(prefers-reduced-motion:reduce) { .city-established,.city-rising,.city-project,.construction-phase,.site-scaffolding { transition:none; } }
+.still .city-established,.still .city-rising,.still .city-project,.still .construction-phase,.still .site-scaffolding,.no-motion .city-established,.no-motion .city-rising,.no-motion .city-project,.no-motion .construction-phase,.no-motion .site-scaffolding { transition:none; }
 .city-airdrop { opacity:0; }
 .has-airdrop.city-working .city-airdrop { animation:city-parcel 12s linear infinite; }
 .city-resting .city-airdrop { animation-play-state:paused; }
@@ -216,7 +212,7 @@
   .transport-table .route-origin { grid-template-columns:28px minmax(0,1fr); gap:6px; }
   .transport-table .origin-mark,.transport-table .route-terminal .terminal-icon { width:28px; height:28px; border-radius:8px; }
   .transport-table .route-terminal .terminal-icon { flex-basis:28px; }
-  .transport-table .brand-badge img { width:20px; height:20px; }
+  .transport-table .brand-badge :is(img, .watercolor-brand) { width:20px; height:20px; }
   .transport-table .route-terminal { gap:6px; }
   .transport-table .route-terminal>svg:last-child { display:none; }
   .route-usage .usage-label { font-size:8px; }

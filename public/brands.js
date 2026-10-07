@@ -1,5 +1,6 @@
 // Display identities only. Raw process names remain the keys for filtering,
 // watchlists, traffic history, and connection ownership.
+import { BRAND_ART } from './artwork/manifest.js';
 export const brands = {
   firefox: ['Firefox', 'firefox'],
   claude: ['Claude', 'claude'],
@@ -61,5 +62,14 @@ export function hostnameIdentity(hostname) {
 }
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function brandBadge(identity, className = '') {
-  return `<span class="app-badge brand-badge ${escape(className)}" aria-hidden="true">${identity.logo ? `<img src="/icons/${escape(identity.logo)}.svg" width="24" height="24" alt="">` : `<span class="brand-monogram">${escape(identity.label.charAt(0).toUpperCase() || '?')}</span>`}</span>`;
+  const art = Object.hasOwn(BRAND_ART, identity.logo) ? BRAND_ART[identity.logo] : null;
+  let content = `<span class="brand-monogram">${escape(identity.label.charAt(0).toUpperCase() || '?')}</span>`;
+  if (art) {
+    // Normalize transparent padding without resampling the generated pixels.
+    const [x, y, w, h] = art.frames[0];
+    const side = Math.max(w, h) * 1.06;
+    const view = [x + w/2 - side/2, y + h/2 - side/2, side, side].join(' ');
+    content = `<svg class="watercolor-brand" width="24" height="24" viewBox="${view}" focusable="false"><image href="/artwork/brands/${escape(identity.logo)}.png" width="${art.size[0]}" height="${art.size[1]}"/></svg>`;
+  }
+  return `<span class="app-badge brand-badge ${escape(className)}" aria-hidden="true">${content}</span>`;
 }

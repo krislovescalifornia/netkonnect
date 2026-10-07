@@ -2,6 +2,7 @@ import {formatEndpoint} from './address.js';
 import { appIdentity, appName, brandBadge } from './brands.js';
 import { buildRoutes, groupApplicationRoutes, sortRoutes, transportForRate, JourneyQueue } from './routes.js';
 import { renderCity, cityStage, cityConstruction, CITY_ROUTE_SCENE } from './cities.js';
+import {illustratedDetail} from './illustration-art.js';
 import {vehicle,VEHICLE_STAGES,transportSpec} from './vehicles.js';
 import { serviceDisplayLabel, transportHint } from './service-evidence.js';
 import {evidenceDetails} from './enrichment.js';
@@ -123,7 +124,7 @@ export class TransportAnimator {
           group.dataset.transport = journey.type;
           const spec=transportSpec(journey.type);
           const scale = Math.min(.85,(svg.classList.contains('city-route-scene')?88:53)/spec.width);
-          group.innerHTML = `<g transform="scale(${journey.incoming?-scale:scale} ${scale})">${vehicle(journey.type,journey.incoming,journey.id)}</g>${svg.classList.contains('city-route-scene')&&journey.incoming?'<g class="delivery-parcel" fill="#e6ba72" stroke="#385065" stroke-width="1.1"><path d="M-6-9H6v9H-6z"/><path d="M-5-8 5-1M5-8-5-1"/></g>':''}`;
+          group.innerHTML = `<g transform="scale(${journey.incoming?-scale:scale} ${scale})">${vehicle(journey.type,journey.incoming,journey.id)}</g>${svg.classList.contains('city-route-scene')&&journey.incoming?`<g class="delivery-parcel">${illustratedDetail('delivery-parcel',12,0,11)}</g>`:''}`;
           svg.append(group);
           record={group,cargo:group.querySelector('.vehicle-cargo'),parcel:group.querySelector('.delivery-parcel')};
           nodes.set(journey.id,record);

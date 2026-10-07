@@ -1,6 +1,7 @@
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 import { setupSteps, progressView } from './setup-progress.js';
 import { appVersion } from './version.js';
+import {illustratedSpot} from './illustration-art.js';
 let settings = null, changing = false, setupError = '', checkedAt = 0, checking = null, setupProgress = null;
 // This remembers presentation only. Every launch still verifies live readiness.
 const establishedKey = 'netkonnect-setup-established';
@@ -27,8 +28,8 @@ function progressPanel() {
   if (!setupProgress) return '';
   const view = progressView(setupProgress);
   return `<div class="setup-journey ${view.complete?'landed':view.failed?'halted':''}">
-    <div class="journey-heading"><span class="journey-mascot" aria-hidden="true">${view.complete?'✦':view.failed?'⚑':'↗'}</span><div role="status" aria-live="polite"><strong>${esc(view.title)}</strong><p>${esc(view.detail)}</p></div><span class="journey-count">${view.complete?'6 of 6 done':`Step ${view.step} of 6`}</span></div>
-    <div class="journey-track" role="progressbar" aria-label="Easy Button setup" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${view.percent}" aria-valuetext="${esc(view.complete?'Setup complete':`Step ${view.step} of 6: ${view.label}${view.failed?', needs attention':''}`)}"><div class="journey-fill" style="width:${view.percent}%"><span aria-hidden="true">✦</span></div></div>
+    <div class="journey-heading"><span class="journey-mascot" aria-hidden="true">${illustratedSpot('setup-crew','',48,view.complete?2:view.failed?1:0)}</span><div role="status" aria-live="polite"><strong>${esc(view.title)}</strong><p>${esc(view.detail)}</p></div><span class="journey-count">${view.complete?'6 of 6 done':`Step ${view.step} of 6`}</span></div>
+    <div class="journey-track" role="progressbar" aria-label="Easy Button setup" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${view.percent}" aria-valuetext="${esc(view.complete?'Setup complete':`Step ${view.step} of 6: ${view.label}${view.failed?', needs attention':''}`)}"><div class="journey-fill" style="width:${view.percent}%"></div></div>
     <ol class="journey-stops">${setupSteps.map((stage,index)=>`<li class="${view.complete||index<view.step-1?'done':index===view.step-1?'current':''}" ${!view.complete&&index===view.step-1?'aria-current="step"':''}><span aria-hidden="true">${view.complete||index<view.step-1?'✓':index+1}</span>${stage.label}</li>`).join('')}</ol>
     <div class="journey-foot"><span>${esc(view.waiting || (view.complete?'The tiny crew sends a high-five.':view.failed?'Ready when you are.':'Small steps. A clearer picture.'))}</span><span>${view.complete?'100% verified':`${view.elapsed}s elapsed`}</span></div>
   </div>`;
@@ -84,7 +85,7 @@ export async function companionPreferences() {
   if (!window.netKonnect) return '';
   await refreshSetupStatus(true);
   if (!settings) return setupPanel();
-  return `${setupPanel()}<details class="collection-controls"><summary>Background collection controls</summary><div class="companion-note"><span class="companion-glyph">⌂</span><div><strong>Your quiet little companion.</strong><p>Close this window whenever you like. The tray companion keeps a local field journal until you quit it or sign out.</p></div></div>
+  return `${setupPanel()}<details class="collection-controls"><summary>Background collection controls</summary><div class="companion-note">${illustratedSpot('quiet-companion','companion-art',64)}<div><strong>Your quiet little companion.</strong><p>Close this window whenever you like. The tray companion keeps a local field journal until you quit it or sign out.</p></div></div>
     <div class="preference-row"><div><strong>Start companion when I sign in</strong><p>${settings.startupAvailable?'Collect while the observatory is closed. Turning this off also removes detailed startup capture, with Windows approval if needed.':'Available in the installed app. Development runs never change startup.'}</p></div><button class="switch ${settings.startup?'on':''}" data-companion-action="startup" role="switch" aria-label="Start companion at sign-in" aria-checked="${settings.startup}" ${!settings.startupAvailable||changing?'disabled':''}><span></span></button></div>
     <div class="preference-row"><div><strong>Detailed capture at sign-in</strong><p>Save measured bytes by app and destination all week. Also starts the companion at sign-in. Windows asks for Administrator permission to manage its capture task. ${!settings.detailedAvailable?'Install the app to enable this.':''}</p></div><button class="switch ${settings.detailedStartup?'on':''}" data-companion-action="capture" role="switch" aria-label="Detailed capture at sign-in" aria-checked="${settings.detailedStartup}" ${!settings.detailedAvailable||changing?'disabled':''}><span></span></button></div>
     </details><div class="local-journal"><span class="tiny-label">YOUR LOCAL FIELD JOURNAL</span><strong>SQLite · 400 days of history</strong><code>${esc(settings.database)}</code><p>Application bytes require detailed capture. Connection and adapter observations continue with ordinary permissions. Computer sleep, sign-out, or a stopped companion leave visible gaps.</p></div>`;

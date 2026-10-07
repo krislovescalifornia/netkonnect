@@ -1,0 +1,99 @@
+{
+  "tool": "built-in imagegen",
+  "references": [
+    "artwork/reference-poster.png",
+    "artwork/cities/town.png"
+  ],
+  "prompts": [
+    {
+      "id": "house-build",
+      "kind": "details",
+      "grid": [
+        2,
+        2
+      ],
+      "aligned": true,
+      "prompt": "Use case: illustration-story. Asset type: transparent construction progression sprite sheet for netKonnect. Reference image 1: style reference ONLY, the Every byte builds poster; image 2: style and architectural materials reference ONLY, current illustrated town. Create a beautifully drawn navy ink and watercolor TWO BY TWO sprite sheet of ONE modest two-story ivory house being built, four separate illustrations with generous TRANSPARENT gutters. Equal quadrants, identical three-quarter architectural viewpoint, identical ground footprint, identical eventual building scale, ground baseline at same relative height in each cell. Reading order top left FOUNDATION: excavated footing, poured stone foundation, several short joists and carefully placed timber; top right FRAMING: timber wall studs and partial triangular roof trusses, exposed oak beams, one side scaffold; bottom left BUILDING FLOORS: ivory plaster and brick walls partly clad, blue window openings, exposed roof timber, believable wood plank scaffolding and ladder; bottom right FINISHING: almost finished warm ivory house, blue glass windows, terracotta pitched roof, small patch of unfinished facade and scaffold at right. No completed fifth version. Architecture and scaffold only; no people, vehicles, crane, vegetation or background scene. Carefully modeled construction materials, realistic connected scaffold rails and boards, gentle paper-like watercolor texture inside painted subjects, warm ochre oak, terracotta, slate blue and navy fine contours. Match the reference quality, avoid flat geometric clipart. No labels, numbers, text, borders, drop shadow, ground slab, watermarks, checkerboard. True alpha transparent background. Fully contain each subject and all ladders in its own quadrant with ample padding, no touching cell boundaries. Sheet about square; illustrations distinct and legible when each is 35px wide.",
+      "references": [
+        "artwork/reference-poster.png",
+        "artwork/cities/town.png"
+      ],
+      "generated_file": "C:/Users/Kris/.codex/generated_images/01a117e8-ee97-74f3-8ac5-6c98b0ee7195/exec-740d9c7c-5fde-40f2-b27e-61fad7cba552.png"
+    },
+    {
+      "id": "tower-build",
+      "kind": "details",
+      "grid": [
+        2,
+        2
+      ],
+      "aligned": true,
+      "prompt": "Use case: illustration-story. Asset type: transparent construction progression sprite sheet for netKonnect. Input image 1 style reference ONLY, current illustrated town. Image 2 STYLE and sheet arrangement reference ONLY, our new house construction sheet. Create a polished navy ink and watercolor TWO BY TWO sprite sheet of ONE compact six-story blue-glass and ivory city tower being built, four separate illustrations, generous TRANSPARENT gutters. Equal quadrants, identical three-quarter viewpoint, identical ground footprint and eventual building scale, ground baseline same relative height in each quadrant. Reading order top left FOUNDATION: low poured concrete footings and slab, several short upright reinforcing columns, concrete formwork; top right FRAMING: exposed reinforced concrete and steel structural frame three floors high, connected beams and floor decks, practical side scaffold; bottom left BUILDING FLOORS: frame at full six-story height, lower floors with pale blue glazing and ivory cladding, upper floors still open, steel scaffold with oak planks along right side; bottom right FINISHING: nearly finished elegant six-story tower, blue glazed window bands and warm ivory piers, flat roof, small unfinished corner and scaffolding at right. Detailed believable architecture, consistent silhouette/scale and connected scaffold construction, realistic joints and material shading. Navy fine pen contours with luminous textured watercolor, ochre timber, blue steel, warm ivory and terracotta accents. Tower should read as a single graceful building, not a busy city block. Architecture and scaffold ONLY; no crane, vehicles, people, plants or scenery. True alpha transparent background. No labels, text, numbers, grid lines, frames, borders, large ground slab, exterior shadows, checkerboard or watermarks. Fully contain all subjects inside their quadrants with at least 6% transparent margin, clean generous gutters; do not touch any cell boundary. Square sheet, miniature legibility.",
+      "references": [
+        "artwork/cities/town.png",
+        "artwork/details/house-build.png"
+      ],
+      "generated_file": "C:/Users/Kris/.codex/generated_images/01a117e8-ee97-74f3-8ac5-6c98b0ee7195/exec-fdd0faa6-34be-424a-ae07-fcb566a34559.png"
+    },
+    {
+      "id": "site-supplies",
+      "kind": "details",
+      "prompt": "Use case: illustration-story. Asset type: transparent miniature construction supply pile for netKonnect. Reference image: STYLE reference only, original Every byte builds poster. Create ONE high quality hand-drawn navy ink and watercolor illustration of a compact construction supply pile in slightly elevated three-quarter view: three neatly offset layers of cut golden oak boards resting on two short timber bearers, believable end grain and plank edges; beside them at RIGHT one stout oak shipping crate with iron corner brackets and diagonal bracing, with a smaller ochre kraft parcel tucked close behind it. The whole group forms a shallow wide composition about 2.1 times wider than tall, flat aligned baseline. Rich material detail, warm oak, ochre and small slate blue straps, delicate navy contours and luminous watercolor texture inside the objects. Silhouette clear at 35px wide. Matches reference illustrated trucks and crates. Fully contain the entire group with generous transparent padding, true alpha background, no ground patch, no exterior shadow, no people, no buildings, no vehicles, no rope or lifting hook, no labels or lettering, no border, no watermark or checkerboard. Beautiful believable craftsmanship, not flat geometric clip art.",
+      "references": [
+        "artwork/reference-poster.png"
+      ],
+      "generated_file": "C:/Users/Kris/.codex/generated_images/01a117e8-ee97-74f3-8ac5-6c98b0ee7195/exec-e80c652a-e4db-436b-a647-cdbe165a8dbf.png"
+    },
+    {
+      "id": "crane-load",
+      "kind": "details",
+      "prompt": "Use case: illustration-story. Asset type: transparent hanging crane cargo prop for netKonnect's city construction animation. Reference image 1 STYLE reference only, Every byte builds poster. One beautifully crafted oak shipping crate hanging from a practical rope sling: short vertical navy steel cable from top center to small dark forged lifting hook, hook connected to a brass ring, two taut ochre rope sling branches descending diagonally to crate's opposite corners and continuing underneath. Crate is square-ish, seen slightly from above in three-quarter perspective, honey oak plank grain, diagonal bracing, navy iron corner bands, subtle slate blue accents. Cable, hook, ropes and crate fully connected and physically plausible. Composition taller than wide about 1:1.8, crate occupies bottom half and lifting rigging occupies top half, cable begins inside canvas with clear padding. Fine navy ink outlines, luminous textured watercolor fills and believable shading, stylish professional editorial illustration, clear silhouette at 11px wide and 20px high. EXACTLY ONE hanging load with no crane, people, building, machinery, ground or scenery, no text, logo, border, checkerboard or watermark. Transparent alpha background. Fully contain all ropes and hook with ample margin. Avoid flat geometric pictograms.",
+      "references": [
+        "artwork/reference-poster.png"
+      ],
+      "generated_file": "C:/Users/Kris/.codex/generated_images/01a117e8-ee97-74f3-8ac5-6c98b0ee7195/exec-774e85c1-cdfc-4619-ba66-6f8530ea3063.png"
+    },
+    {
+      "id": "delivery-parcel",
+      "kind": "details",
+      "prompt": "Use case: illustration-story. Asset type: transparent delivery parcel sprite for netKonnect's miniature illustrated transport lanes. Reference image STYLE reference only: Every byte builds poster. Create exactly ONE compact honey-oak delivery crate in slightly elevated three-quarter view, with a clearly visible front and right face and narrow top. Stout wooden planks, diagonal braces, rounded nail heads, dark navy corner fittings, one simple slate blue fabric band, warm ochre grain and watercolor shading. Crate silhouette nearly square, professional navy ink and watercolor craftsmanship, consistent with the poster's cargo. Simplify tiny details tastefully so it reads clearly at 12px wide; convincing volume and tactile materials. No lifting cable, rope, hook, pallet, other parcels, people, vehicles, building, grass, ground patch or external shadow. Fully contain the crate with generous clear margin. True alpha transparent background, no labels, letters, logos, watermark, grid or checkerboard. Not a flat pictogram or UI icon.",
+      "references": [
+        "artwork/reference-poster.png"
+      ],
+      "generated_file": "C:/Users/Kris/.codex/generated_images/01a117e8-ee97-74f3-8ac5-6c98b0ee7195/exec-71de6539-cbee-4b08-82cb-7733503b95ee.png"
+    },
+    {
+      "id": "little-secrets",
+      "kind": "details",
+      "prompt": "Use case: illustration-story. Asset type: transparent editorial spot illustration for netKonnect's Little Secrets network discovery panel, used at 72px in a banner and 80px on a postcard. Reference image 1 STYLE reference only, Every byte builds poster. Create one charming professional ink-and-watercolor illustration of a curious female network field researcher, waist-up, wearing a soft sage work jacket over ivory shirt, short chestnut hair tucked behind ears. She thoughtfully peers through a brass-handled magnifying glass held in her right hand at a small blue-and-ivory pocket field notebook held open in her left. Three tiny linked slate-blue squares on notebook pages suggest connections, no readable text. Warm approachable thoughtful face, natural convincing hands and posture, no spy disguise. Gentle navy fine pen contours, luminous watercolor washes with subtle paper texture INSIDE painted shapes, warm ivory, sage, slate blue and ochre brass. Character and notebook silhouette clear and readable at 64 pixels. Compact square composition, entirely isolated with ample transparent margin, nothing cut off, no backdrop, landscape, ground patch, shadows outside subjects, floating symbols, borders, labels, lettering, logos, watermark or checkerboard. Keep expression quietly curious and observant, not exaggerated cartoon. Artwork should look handmade with depth and material detail, match the reference aesthetic, not a flat UI pictogram.",
+      "references": [
+        "artwork/reference-poster.png"
+      ],
+      "generated_file": "C:/Users/Kris/.codex/generated_images/01a117e8-ee97-74f3-8ac5-6c98b0ee7195/exec-b2e63178-b6c3-4f73-a0e7-a93f7c224b77.png"
+    },
+    {
+      "id": "setup-crew",
+      "kind": "details",
+      "grid": [
+        3,
+        1
+      ],
+      "aligned": true,
+      "prompt": "Use case: illustration-story. Asset type: transparent three-state crew mascot sprite strip for netKonnect setup progress. Reference image STYLE reference only, original Every byte builds poster. Create ONE horizontal 3:1 sprite strip with exactly THREE independent waist-up portraits of the SAME friendly young male field technician in three states. Equal thirds, same face, proportions, costume, size and waist baseline, generous clear gutters; each is complete inside its own cell. Technician has warm tan skin, short curly dark hair under a soft sage work cap, slate-blue work jacket over an ivory shirt, ochre neckerchief, a practical small ivory field notebook. LEFT WORKING: attentive slight smile, examining open notebook with a pencil held naturally, focused and capable. CENTER NEEDS ATTENTION: calm thoughtful expression, one hand on chin and notebook in other hand, approachable and reassuring, no alarm or anger. RIGHT COMPLETE: cheerful warm smile, one natural thumbs-up gesture and notebook tucked in other arm. Beautiful polished hand-drawn fine navy ink and luminous watercolor, tactile clothing texture and modeled faces and hands, warm ivory, sage, slate blue, ochre accents. Characters readable at 46px, not flat pictograms or emoji or rubbery cartoons. No text, letters, numbers, checkmark symbols, speech bubbles, additional objects, label, panels, grid lines, borders, shadows outside character, scenery, logo, watermark or checkerboard. True alpha transparent background; at least 8% clear padding around each portrait, fully contain heads, hands and notebooks. SAME charming character in all three poses.",
+      "references": [
+        "artwork/reference-poster.png"
+      ],
+      "generated_file": "C:/Users/Kris/.codex/generated_images/01a117e8-ee97-74f3-8ac5-6c98b0ee7195/exec-08aaea83-e675-4f62-ab9d-f09220e20b59.png"
+    },
+    {
+      "id": "quiet-companion",
+      "kind": "details",
+      "prompt": "Use case: illustration-story. Asset type: transparent editorial spot illustration for netKonnect's background companion preferences note. Reference image 1 STYLE reference only, Every byte builds poster. Reference image 2 CHARACTER IDENTITY AND COSTUME reference only, our field technician crew strip. Create ONE compact illustration of the SAME friendly curly-haired male field technician in sage work cap, slate blue work jacket, ivory shirt and ochre neckerchief, seated comfortably at a small warm oak desk quietly writing in an open ivory field journal with a pencil. A modest sage-green task lamp softly lights the notebook; one tiny navy radio rests at desk edge, suggests his lookout role. He is focused and relaxed, looking at journal, convincing natural hands, desk legs and seated posture. Three-quarter view, compact nearly square composition, clear recognizable silhouette at 64px. Fine navy pen contours and luminous hand-painted watercolor with tactile oak, soft fabric and warm gentle light. Professional charming editorial illustration matched to references, no flat geometric pictogram or exaggerated cartoon. Fully contain character, chair, desk and lamp with generous transparent margins. True alpha background; no enclosing room, floor slab, scenery, other people, labels, letters, logos, speech bubbles, decorative symbols, ground shadow outside objects, watermark, borders or checkerboard.",
+      "references": [
+        "artwork/reference-poster.png",
+        "artwork/details/setup-crew.png"
+      ],
+      "generated_file": "C:/Users/Kris/.codex/generated_images/01a117e8-ee97-74f3-8ac5-6c98b0ee7195/exec-bac9197c-cba1-4465-b76d-125bfda2323c.png"
+    }
+  ]
+}

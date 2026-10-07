@@ -100,7 +100,7 @@ try {
   await window.webContents.executeJavaScript(`document.querySelector('[data-action="motion"]').click()`);
   const paused=await window.webContents.executeJavaScript(`(()=>{const a=document.querySelector('.crew-carrier').getAnimations()[0];return {paused:getComputedStyle(document.querySelector('.crew-carrier')).animationPlayState,at:a?.currentTime,progress:document.querySelector('.transport-vehicle')?.dataset.progress};})()`);
   assert.equal(paused.paused,'paused');
-  assert.equal(await window.webContents.executeJavaScript(`[...document.querySelectorAll('.crane-load,.site-vehicle,.excavator-arm,.mixer-drum')].every(el=>getComputedStyle(el).animationPlayState==='paused')`),true,'pause freezes every construction machine');
+  assert.equal(await window.webContents.executeJavaScript(`[...document.querySelectorAll('.crane-load,.site-vehicle')].every(el=>getComputedStyle(el).animationPlayState==='paused')`),true,'pause freezes every construction machine');
   await new Promise(resolve=>setTimeout(resolve,300));
   const frozen=await window.webContents.executeJavaScript(`({at:document.querySelector('.crew-carrier').getAnimations()[0]?.currentTime,progress:document.querySelector('.transport-vehicle')?.dataset.progress})`);
   assert.ok(Math.abs(frozen.at-paused.at)<40);assert.equal(frozen.progress,paused.progress);
@@ -119,7 +119,7 @@ try {
   await window.webContents.debugger.sendCommand('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
   await new Promise(resolve=>setTimeout(resolve,100));
   assert.equal(await window.webContents.executeJavaScript(`getComputedStyle(document.querySelector('.crew-carrier')).animationName`),'none');
-  assert.equal(await window.webContents.executeJavaScript(`[...document.querySelectorAll('.crane-load,.site-vehicle,.excavator-arm,.mixer-drum')].every(el=>getComputedStyle(el).animationName==='none')`),true,'reduced motion disables construction animations');
+  assert.equal(await window.webContents.executeJavaScript(`[...document.querySelectorAll('.crane-load,.site-vehicle')].every(el=>getComputedStyle(el).animationName==='none')`),true,'reduced motion disables construction animations');
   const reducedProgress=await window.webContents.executeJavaScript(`document.querySelector('.transport-vehicle')?.dataset.progress`);
   await new Promise(resolve=>setTimeout(resolve,100));
   assert.equal(await window.webContents.executeJavaScript(`document.querySelector('.transport-vehicle')?.dataset.progress`),reducedProgress);

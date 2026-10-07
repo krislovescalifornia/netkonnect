@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {CITY_ART,FLEET_ART,PROP_ART,ILLUSTRATION_ASSETS,CITY_ART_IDS} from '../public/illustration-art.js';
+import {CITY_ART,FLEET_ART,PROP_ART,CONSTRUCTION_ART,DETAIL_ART,ILLUSTRATION_ASSETS,CITY_ART_IDS} from '../public/illustration-art.js';
 import {CITY_STAGES,cityArtwork} from '../public/cities.js';
 import {VEHICLE_STAGES,vehicle} from '../public/vehicles.js';
 import {TRUCK_ART} from '../public/truck-art.js';
@@ -12,7 +12,9 @@ test('every city and remaining transport tier has measured transparent artwork',
   assert.deepEqual(new Set(Object.keys(CITY_ART)),new Set(CITY_ART_IDS));
   assert.deepEqual(new Set(Object.keys(FLEET_ART)),new Set(VEHICLE_STAGES.filter(s=>!TRUCK_ART[s.id]).map(s=>s.id)));
   assert.deepEqual(new Set(Object.keys(PROP_ART)),new Set(['crew','crane','airdrop']));
-  for(const [folder,table] of [['cities',CITY_ART],['fleet',FLEET_ART],['fleet',PROP_ART]]) {
+  assert.deepEqual(new Set(Object.keys(CONSTRUCTION_ART)),new Set(['excavator','cement-mixer']));
+  assert.deepEqual(new Set(Object.keys(DETAIL_ART)),new Set(['house-build','tower-build','site-supplies','crane-load','delivery-parcel','little-secrets','setup-crew','quiet-companion']));
+  for(const [folder,table] of [['cities',CITY_ART],['fleet',FLEET_ART],['fleet',PROP_ART],['construction',CONSTRUCTION_ART],['details',DETAIL_ART]]) {
     for(const [id,art] of Object.entries(table))for(const [suffix,strip] of [['',art],...(art.empty?[['-empty',art.empty]]:[])]){
       const png=await readFile(new URL(`../public/artwork/${folder}/${id}${suffix}.png`,import.meta.url));
       assert.equal(png.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
@@ -29,6 +31,18 @@ test('loaded and empty side-profile fleet keeps scale and clips separate rows',(
     assert.deepEqual(art.frames[i].slice(2),art.empty.frames[i].slice(2));
     assert.equal(art.frames[i][0],art.empty.frames[i][0]);
     assert.ok(art.clips[i][1]+art.clips[i][3]<art.empty.clips[i][1]);
+  }
+  for(const id of ['house-build','tower-build','setup-crew']) {
+    const art=DETAIL_ART[id];
+    for(const frame of art.frames)assert.deepEqual(frame.slice(2),art.frames[0].slice(2),'phase changes preserve scale');
+    for(let i=0;i<art.frames.length;i++) {
+      const a=art.frames[i],b=art.clips[i];
+      assert.equal(a[1]+a[3],b[1]+b[3],'each phase stays on its baseline');
+      for(let j=i+1;j<art.clips.length;j++) {
+        const c=art.clips[j];
+        assert.ok(b[0]+b[2]<=c[0]||c[0]+c[2]<=b[0]||b[1]+b[3]<=c[1]||c[1]+c[3]<=b[1],'phase clips cannot expose another cell');
+      }
+    }
   }
 });
 

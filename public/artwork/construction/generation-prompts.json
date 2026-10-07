@@ -1,0 +1,19 @@
+{
+  "tool": "built-in image_gen",
+  "references": [
+    "artwork/reference-poster.png",
+    "artwork/trucks/box-truck.png"
+  ],
+  "prompts": [
+    {
+      "id": "excavator",
+      "kind": "construction",
+      "prompt": "Use case: illustration-story. Asset type: transparent construction vehicle sprite strip for netKonnect's animated city. Input image 1 is STYLE REFERENCE ONLY, the Every byte builds poster; input image 2 is STYLE REFERENCE ONLY, the current box trucks. Create a polished hand-drawn navy ink and watercolor illustration matching these references: fine careful contours, luminous warm washes, convincing mechanical detail and material texture, readable miniature silhouette. ONE wide 3:1 transparent sprite strip with EXACTLY THREE independent illustrations of the SAME compact tracked hydraulic EXCAVATOR model in one horizontal row, equal thirds, generous clear padding and no overlap. All in true SIDE PROFILE facing RIGHT, tracks on the same horizontal baseline, identical scale and pose. Left warm ochre yellow, middle sage green with ochre arm, right dusty slate blue with ochre arm. Each has a clearly modeled glazed blue cab, rear counterweight, dark continuous caterpillar tracks with visible rollers and tread links, articulated boom reaching forward RIGHT, hydraulic cylinders and hoses, steel toothed bucket held near the ground, believable connected machinery. Boom raised slightly above the cab with a compact folded working pose, bucket fully inside its cell. Light weathering and soft painted shading. Full complete vehicles only. Genuine alpha transparent background. No backdrop, scenery, people, ground lines, external shadows, lettering, logos, labels, watermark, painted checkerboard. Do not make geometric pictograms or flat clip art. Preserve elegance and detail of reference fleet."
+    },
+    {
+      "id": "cement-mixer",
+      "kind": "construction",
+      "prompt": "Use case: illustration-story. Asset type: transparent construction vehicle sprite strip for netKonnect's animated city. Input image 1 is STYLE REFERENCE ONLY, the Every byte builds poster; input image 2 is STYLE REFERENCE ONLY, the current box trucks. Create a polished hand-drawn navy ink and watercolor illustration matching these references: fine careful contours, luminous warm washes, convincing mechanical detail and material texture, readable miniature silhouette. ONE wide 3:1 transparent sprite strip with EXACTLY THREE independent illustrations of the SAME small concrete CEMENT MIXER TRUCK model in one horizontal row, equal thirds, generous clear padding and no overlap. All in true SIDE PROFILE facing RIGHT, tires on the same horizontal baseline, identical scale and pose. Left warm ivory cab and ochre accents, middle sage green cab and ochre accents, right dusty slate blue cab and ochre accents. Each has a tilted pear-shaped ivory mixing drum mounted on a believable steel frame behind the cab, ochre spiral band on drum, rear loading hopper, folded discharge chute extending left, small access ladder, blue glazed cab at RIGHT, side mirror, radiator grille and headlamp, two rear axles and one front axle with round dark rubber tires and silver hubs. Coherent chassis, wheel spacing, suspension and carefully shaded curved drum. Light weathering and soft painted shading, compact proportions. Full complete vehicles only. Genuine alpha transparent background. No backdrop, scenery, people, ground lines, external shadows, lettering, logos, labels, watermark, painted checkerboard. Do not make geometric pictograms or flat clip art. Preserve elegance and detail of reference fleet."
+    }
+  ]
+}

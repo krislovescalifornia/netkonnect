@@ -1,0 +1,248 @@
+{
+  "description": "Imagegen watercolor adaptations of the locally bundled app and service emblems. Original generated RGBA pixels are preserved; measured alpha bounds normalize badge size. Claude and Anthropic retain their shared source sunburst.",
+  "prompts": [
+    {
+      "id": "firefox",
+      "prompt": "Create one polished watercolor application icon on a fully transparent background. Use the FIRST image as the precise Firefox logo shape reference: preserve the recognizable orange and pink curled fox/flame silhouette wrapped around the purple circular center, its proportions, pointed ear and sweeping tail. This is the same emblem rendered in watercolor, not a realistic fox, and do not add eyes, limbs, continents, text, or a badge tile. Use the SECOND image only as a style reference: delicate hand-painted watercolor, warm organic pigment variation, fine restrained navy ink accents, softly feathered pigment edges, beautiful crafted detail. Keep the original orange, golden yellow, pink and violet brand palette saturated and readable. Preserve a crisp overall silhouette and clear purple center so it works at 18–32 pixels. Texture should stay inside the mark, with no stray splashes, scenery, shadows or background paper. One centered isolated icon filling about 85% of a square canvas, generous even transparent padding. High quality, carefully painted, elegant rather than sketchy.",
+      "referenceImages": [
+        "C:/Users/Kris/dev/netKonnect/test-results/watercolor-icons/references/firefox.png",
+        "C:/Users/Kris/dev/netKonnect/public/artwork/reference-poster.png"
+      ],
+      "kind": "brands",
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a117e8-ee97-74f3-8ac5-6c98b0ee7195\\exec-e1141b3a-2893-4fab-8d82-1ed15d742627.png",
+      "file": "public/artwork/brands/firefox.png"
+    },
+    {
+      "id": "claude",
+      "kind": "brands",
+      "prompt": "Create one polished watercolor application icon on a fully transparent background. The FIRST reference is the exact existing brand emblem: match its silhouette, geometry, spacing and proportions closely. The SECOND reference supplies ONLY the watercolor artwork style: softly varied pigment washes, handcrafted subtle paper grain within the painted shapes, restrained fine navy ink edges. Preserve the original brand palette and identity. Keep clean negative spaces and a crisp readable silhouette at 18–32 pixels. Do not add a surrounding badge tile, text, shadows, scenery, stray splashes or background paper. Single centered isolated emblem filling about 85% of a square canvas with even transparent padding. Elegant meticulous watercolor workmanship. Preserve the Claude terracotta/coral irregular radial sunburst with its many tapered hand-like rays and warm central disk. No face, no added symbols. Keep rays distinct and the exact radial silhouette recognizable.",
+      "referenceImages": [
+        "C:/Users/Kris/dev/netKonnect/test-results/watercolor-icons/references/claude.png",
+        "C:/Users/Kris/dev/netKonnect/public/artwork/reference-poster.png"
+      ],
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a117e8-ee97-74f3-8ac5-6c98b0ee7195\\exec-dcc8020b-6b4c-4802-ab33-43ecd214a061.png",
+      "file": "public/artwork/brands/claude.png"
+    },
+    {
+      "id": "anthropic",
+      "kind": "brands",
+      "prompt": "Create one polished watercolor application icon on a fully transparent background. The FIRST reference is the exact existing brand emblem: match its silhouette, geometry, spacing and proportions closely. The SECOND reference supplies ONLY the watercolor artwork style: softly varied pigment washes, handcrafted subtle paper grain within the painted shapes, restrained fine navy ink edges. Preserve the original brand palette and identity. Keep clean negative spaces and a crisp readable silhouette at 18–32 pixels. Do not add a surrounding badge tile, text, shadows, scenery, stray splashes or background paper. Single centered isolated emblem filling about 85% of a square canvas with even transparent padding. Elegant meticulous watercolor workmanship. Preserve the Claude terracotta/coral irregular radial sunburst with its many tapered hand-like rays and warm central disk. No face, no added symbols. Keep rays distinct and the exact radial silhouette recognizable.",
+      "referenceImages": [
+        "C:/Users/Kris/dev/netKonnect/test-results/watercolor-icons/references/claude.png",
+        "C:/Users/Kris/dev/netKonnect/public/artwork/reference-poster.png"
+      ],
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a117e8-ee97-74f3-8ac5-6c98b0ee7195\\exec-dcc8020b-6b4c-4802-ab33-43ecd214a061.png",
+      "file": "public/artwork/brands/anthropic.png",
+      "note": "The existing Claude and Anthropic badges use the same coral sunburst. Share the watercolor rendering to retain that identity."
+    },
+    {
+      "id": "openai",
+      "kind": "brands",
+      "prompt": "Create one polished watercolor application icon on a fully transparent background. The FIRST reference is the exact existing brand emblem: match its silhouette, geometry, spacing and proportions closely. The SECOND reference supplies ONLY the watercolor artwork style: softly varied pigment washes, handcrafted subtle paper grain within the painted shapes, restrained fine navy ink edges. Preserve the original brand palette and identity. Keep clean negative spaces and a crisp readable silhouette at 18–32 pixels. Do not add a surrounding badge tile, text, shadows, scenery, stray splashes or background paper. Single centered isolated emblem filling about 85% of a square canvas with even transparent padding. Elegant meticulous watercolor workmanship. Precisely preserve the OpenAI sixfold interwoven rounded knot emblem and its six clean interior channels, central hexagonal opening and over-under weaving. Paint its original dark mark in deep charcoal/navy watercolor, with restrained blue-grey pigment variation. Do not invent extra loops or closed channels; exact recognizable knot topology is essential.",
+      "referenceImages": [
+        "C:/Users/Kris/dev/netKonnect/test-results/watercolor-icons/references/openai.png",
+        "C:/Users/Kris/dev/netKonnect/public/artwork/reference-poster.png"
+      ],
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a117e8-ee97-74f3-8ac5-6c98b0ee7195\\exec-ac481eeb-90c5-4867-bd07-ffeeeb3b1440.png",
+      "file": "public/artwork/brands/openai.png"
+    },
+    {
+      "id": "youtube",
+      "kind": "brands",
+      "prompt": "Create one polished watercolor application icon on a fully transparent background. The FIRST reference is the exact existing brand emblem: match its silhouette, geometry, spacing and proportions closely. The SECOND reference supplies ONLY the watercolor artwork style: softly varied pigment washes, handcrafted subtle paper grain within the painted shapes, restrained fine navy ink edges. Preserve the original brand palette and identity. Keep clean negative spaces and a crisp readable silhouette at 18–32 pixels. Do not add a surrounding badge tile, text, shadows, scenery, stray splashes or background paper. Single centered isolated emblem filling about 85% of a square canvas with even transparent padding. Elegant meticulous watercolor workmanship. Match YouTube's red rounded rectangular play button, with its single white right-pointing triangle precisely centered. The white play triangle is opaque white paint, while the area outside the red emblem is transparent. Warm vivid red watercolor wash, gentle pigment blooms, very thin edge ink; no wordmark.",
+      "referenceImages": [
+        "C:/Users/Kris/dev/netKonnect/test-results/watercolor-icons/references/youtube.png",
+        "C:/Users/Kris/dev/netKonnect/public/artwork/reference-poster.png"
+      ],
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a117e8-ee97-74f3-8ac5-6c98b0ee7195\\exec-4951de68-8096-4b6d-b87b-62488cfcb304.png",
+      "file": "public/artwork/brands/youtube.png"
+    },
+    {
+      "id": "spotify",
+      "kind": "brands",
+      "prompt": "Create one polished watercolor application icon on a fully transparent background. The FIRST reference is the exact existing brand emblem: match its silhouette, geometry, spacing and proportions closely. The SECOND reference supplies ONLY the watercolor artwork style: softly varied pigment washes, handcrafted subtle paper grain within the painted shapes, restrained fine navy ink edges. Preserve the original brand palette and identity. Keep clean negative spaces and a crisp readable silhouette at 18–32 pixels. Do not add a surrounding badge tile, text, shadows, scenery, stray splashes or background paper. Single centered isolated emblem filling about 85% of a square canvas with even transparent padding. Elegant meticulous watercolor workmanship. Preserve the bright Spotify green circle and exactly THREE dark curved broadcast lines inside it, descending in length from top to bottom, cleanly separated and gently slanted as in the reference. Opaque dark charcoal lines over green watercolor pigment. No music notes or extra lines.",
+      "referenceImages": [
+        "C:/Users/Kris/dev/netKonnect/test-results/watercolor-icons/references/spotify.png",
+        "C:/Users/Kris/dev/netKonnect/public/artwork/reference-poster.png"
+      ],
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a117e8-ee97-74f3-8ac5-6c98b0ee7195\\exec-2889c9dd-8c00-4b72-a098-3f4f0f4b5073.png",
+      "file": "public/artwork/brands/spotify.png"
+    },
+    {
+      "id": "onedrive",
+      "kind": "brands",
+      "prompt": "Create one polished watercolor application icon on a fully transparent background. The FIRST reference is the exact existing brand emblem: match its silhouette, geometry, spacing and proportions closely. The SECOND reference supplies ONLY the watercolor artwork style: softly varied pigment washes, handcrafted subtle paper grain within the painted shapes, restrained fine navy ink edges. Preserve the original brand palette and identity. Keep clean negative spaces and a crisp readable silhouette at 18–32 pixels. Do not add a surrounding badge tile, text, shadows, scenery, stray splashes or background paper. Single centered isolated emblem filling about 85% of a square canvas with even transparent padding. Elegant meticulous watercolor workmanship. Preserve the Microsoft OneDrive blue cloud silhouette and its overlapping geometric blue facets. Keep the cloud's broad low shape, larger top central dome and smaller side lobes, exactly as in the reference. Rich cobalt, deep blue and light azure watercolor sections with clear facet boundaries. No letters, no rain or sky.",
+      "referenceImages": [
+        "C:/Users/Kris/dev/netKonnect/test-results/watercolor-icons/references/onedrive.png",
+        "C:/Users/Kris/dev/netKonnect/public/artwork/reference-poster.png"
+      ],
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a117e8-ee97-74f3-8ac5-6c98b0ee7195\\exec-a7d930d6-3482-4572-9b8f-882949800d8e.png",
+      "file": "public/artwork/brands/onedrive.png"
+    },
+    {
+      "id": "slack",
+      "kind": "brands",
+      "prompt": "Create one polished watercolor application icon on a fully transparent background. The FIRST reference is the exact existing brand emblem: match its silhouette, geometry, spacing and proportions closely. The SECOND reference supplies ONLY the watercolor artwork style: softly varied pigment washes, handcrafted subtle paper grain within the painted shapes, restrained fine navy ink edges. Preserve the original brand palette and identity. Keep clean negative spaces and a crisp readable silhouette at 18–32 pixels. Do not add a surrounding badge tile, text, shadows, scenery, stray splashes or background paper. Single centered isolated emblem filling about 85% of a square canvas with even transparent padding. Elegant meticulous watercolor workmanship. Precisely preserve Slack's multicolor hash emblem: four paired rounded bars and dots, cyan upper-left, green upper-right, red lower-left and golden yellow lower-right, in the exact arrangement and spacing of the reference. Keep the central white/transparent gaps open and all separate segments distinct. No letters or extra decorative dots.",
+      "referenceImages": [
+        "C:/Users/Kris/dev/netKonnect/test-results/watercolor-icons/references/slack.png",
+        "C:/Users/Kris/dev/netKonnect/public/artwork/reference-poster.png"
+      ],
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a117e8-ee97-74f3-8ac5-6c98b0ee7195\\exec-fb8e411a-fa23-4787-8016-ff1cf41ddfaa.png",
+      "file": "public/artwork/brands/slack.png"
+    },
+    {
+      "id": "visual-studio-code",
+      "kind": "brands",
+      "prompt": "Create one polished watercolor application icon on a fully transparent background. The FIRST reference is the exact existing brand emblem: match its silhouette, geometry, spacing and proportions closely. The SECOND reference supplies ONLY the watercolor artwork style: softly varied pigment washes, handcrafted subtle paper grain within the painted shapes, restrained fine navy ink edges. Preserve the original brand palette and identity. Keep clean negative spaces and a crisp readable silhouette at 18–32 pixels. Do not add a surrounding badge tile, text, shadows, scenery, stray splashes or background paper. Single centered isolated emblem filling about 85% of a square canvas with even transparent padding. Elegant meticulous watercolor workmanship. Preserve Visual Studio Code's blue folded angular ribbon silhouette: a narrow crossed left bow and broad open right folded polygon, precise diagonal cutouts and the reference's blue tonal facets. Do not draw letters, brackets, a folder or a different bow. Azure and cobalt watercolor inside the exact recognizable ribbon shape.",
+      "referenceImages": [
+        "C:/Users/Kris/dev/netKonnect/test-results/watercolor-icons/references/visual-studio-code.png",
+        "C:/Users/Kris/dev/netKonnect/public/artwork/reference-poster.png"
+      ],
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a117e8-ee97-74f3-8ac5-6c98b0ee7195\\exec-e68b1ec1-9417-490d-90bb-6fccb5eeb7aa.png",
+      "file": "public/artwork/brands/visual-studio-code.png"
+    },
+    {
+      "id": "github",
+      "kind": "brands",
+      "prompt": "Create one polished watercolor application icon on a fully transparent background. The FIRST reference is the exact existing brand emblem: match its silhouette, geometry, spacing and proportions closely. The SECOND reference supplies ONLY the watercolor artwork style: softly varied pigment washes, handcrafted subtle paper grain within the painted shapes, restrained fine navy ink edges. Preserve the original brand palette and identity. Keep clean negative spaces and a crisp readable silhouette at 18–32 pixels. Do not add a surrounding badge tile, text, shadows, scenery, stray splashes or background paper. Single centered isolated emblem filling about 85% of a square canvas with even transparent padding. Elegant meticulous watercolor workmanship. Preserve GitHub's dark circular emblem with the white Octocat negative silhouette exactly as in the reference: two pointed ears, rounded head, lower body and curled tail on the left. Paint the circle deep charcoal/navy watercolor with subtle pigment variation. Octocat is white/transparent negative space, not a detailed cartoon cat; no facial features, letters, extra legs or scenery.",
+      "referenceImages": [
+        "C:/Users/Kris/dev/netKonnect/test-results/watercolor-icons/references/github.png",
+        "C:/Users/Kris/dev/netKonnect/public/artwork/reference-poster.png"
+      ],
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a117e8-ee97-74f3-8ac5-6c98b0ee7195\\exec-c5a62c03-975d-4682-9d46-1b4a674b8e31.png",
+      "file": "public/artwork/brands/github.png"
+    },
+    {
+      "id": "figma",
+      "kind": "brands",
+      "prompt": "Create one polished watercolor application icon on a fully transparent background. The FIRST reference is the exact existing brand emblem: match its silhouette, geometry, spacing and proportions closely. The SECOND reference supplies ONLY the watercolor artwork style: softly varied pigment washes, handcrafted subtle paper grain within the painted shapes, restrained fine navy ink edges. Preserve the original brand palette and identity. Keep clean negative spaces and a crisp readable silhouette at 18–32 pixels. Do not add a surrounding badge tile, text, shadows, scenery, stray splashes or background paper. Single centered isolated emblem filling about 85% of a square canvas with even transparent padding. Elegant meticulous watercolor workmanship. Preserve Figma's five-part upright emblem: top red left and coral right rounded halves, middle purple left and blue circle right, bottom green left rounded-ended vertical lobe. Exactly five shapes in the reference's two-column three-row arrangement, with no bottom-right shape. Preserve each brand color and readable seams, no letters.",
+      "referenceImages": [
+        "C:/Users/Kris/dev/netKonnect/test-results/watercolor-icons/references/figma.png",
+        "C:/Users/Kris/dev/netKonnect/public/artwork/reference-poster.png"
+      ],
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a117e8-ee97-74f3-8ac5-6c98b0ee7195\\exec-1f014e76-76b5-407e-ba5d-f7e983ae5dd3.png",
+      "file": "public/artwork/brands/figma.png"
+    },
+    {
+      "id": "google-chrome",
+      "kind": "brands",
+      "prompt": "Create one polished watercolor application icon on a fully transparent background. The FIRST reference is the exact existing brand emblem: match its silhouette, geometry, spacing and proportions closely. The SECOND reference supplies ONLY the watercolor artwork style: softly varied pigment washes, handcrafted subtle paper grain within the painted shapes, restrained fine navy ink edges. Preserve the original brand palette and identity. Keep clean negative spaces and a crisp readable silhouette at 18–32 pixels. Do not add a surrounding badge tile, text, shadows, scenery, stray splashes or background paper. Single centered isolated emblem filling about 85% of a square canvas with even transparent padding. Elegant meticulous watercolor workmanship. Preserve Chrome's circular three-color pinwheel: red upper sector, green lower-left sector, golden yellow right sector, centered cobalt blue disk and thin opaque ivory circular separator around the blue disk. Match exact reference arrangement, proportions and three swept boundaries. Watercolor within each section, no lettering or extra rings.",
+      "referenceImages": [
+        "C:/Users/Kris/dev/netKonnect/test-results/watercolor-icons/references/google-chrome.png",
+        "C:/Users/Kris/dev/netKonnect/public/artwork/reference-poster.png"
+      ],
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a117e8-ee97-74f3-8ac5-6c98b0ee7195\\exec-bf546a5f-ee63-4d55-bd29-2e2a0b91b423.png",
+      "file": "public/artwork/brands/google-chrome.png"
+    },
+    {
+      "id": "microsoft-edge",
+      "kind": "brands",
+      "prompt": "Create one polished watercolor application icon on a fully transparent background. The FIRST reference is the exact existing brand emblem: match its silhouette, geometry, spacing and proportions closely. The SECOND reference supplies ONLY the watercolor artwork style: softly varied pigment washes, handcrafted subtle paper grain within the painted shapes, restrained fine navy ink edges. Preserve the original brand palette and identity. Keep clean negative spaces and a crisp readable silhouette at 18–32 pixels. Do not add a surrounding badge tile, text, shadows, scenery, stray splashes or background paper. Single centered isolated emblem filling about 85% of a square canvas with even transparent padding. Elegant meticulous watercolor workmanship. Preserve Microsoft Edge's circular curling wave emblem, its exact open swirl with negative inner space, blue lower wave and turquoise/green upper flowing crest. Watercolor washes follow the original cyan, teal, green and deep blue gradient zones. Match the reference shape rather than drawing a literal ocean wave or letter e; no scenery, white foam or text.",
+      "referenceImages": [
+        "C:/Users/Kris/dev/netKonnect/test-results/watercolor-icons/references/microsoft-edge.png",
+        "C:/Users/Kris/dev/netKonnect/public/artwork/reference-poster.png"
+      ],
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a117e8-ee97-74f3-8ac5-6c98b0ee7195\\exec-63f85d5b-e03b-4068-b025-c4edece53406.png",
+      "file": "public/artwork/brands/microsoft-edge.png"
+    },
+    {
+      "id": "discord",
+      "kind": "brands",
+      "prompt": "Create one polished watercolor application icon on a fully transparent background. The FIRST reference is the exact existing brand emblem: match its silhouette, geometry, spacing and proportions closely. The SECOND reference supplies ONLY the watercolor artwork style: softly varied pigment washes, handcrafted subtle paper grain within the painted shapes, restrained fine navy ink edges. Preserve the original brand palette and identity. Keep clean negative spaces and a crisp readable silhouette at 18–32 pixels. Do not add a surrounding badge tile, text, shadows, scenery, stray splashes or background paper. Single centered isolated emblem filling about 85% of a square canvas with even transparent padding. Elegant meticulous watercolor workmanship. Preserve Discord's lavender-blue game-controller-like mascot silhouette with two clean round white/transparent eye holes and its distinctive broad curved upper edge, small ear-like shoulders and two lower flared corners. Match exact existing logo geometry; no mouth, nose, extra eyes, buttons or enclosing tile. Periwinkle watercolor pigment.",
+      "referenceImages": [
+        "C:/Users/Kris/dev/netKonnect/test-results/watercolor-icons/references/discord.png",
+        "C:/Users/Kris/dev/netKonnect/public/artwork/reference-poster.png"
+      ],
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a117e8-ee97-74f3-8ac5-6c98b0ee7195\\exec-d3ee1c75-04f2-44b0-bfe5-511d21c7cd5e.png",
+      "file": "public/artwork/brands/discord.png"
+    },
+    {
+      "id": "steam",
+      "kind": "brands",
+      "prompt": "Create one polished watercolor application icon on a fully transparent background. The FIRST reference is the exact existing brand emblem: match its silhouette, geometry, spacing and proportions closely. The SECOND reference supplies ONLY the watercolor artwork style: softly varied pigment washes, handcrafted subtle paper grain within the painted shapes, restrained fine navy ink edges. Preserve the original brand palette and identity. Keep clean negative spaces and a crisp readable silhouette at 18–32 pixels. Do not add a surrounding badge tile, text, shadows, scenery, stray splashes or background paper. Single centered isolated emblem filling about 85% of a square canvas with even transparent padding. Elegant meticulous watercolor workmanship. Preserve Steam's dark navy circular badge and white connecting mechanical arm symbol: large outlined ring at upper-right, diagonal linkage down-left to a smaller outlined round joint, and the lower-left white arm extending to the circular edge. Exactly match original geometry and clear white negative shape, with deep blue/navy watercolor circle. No gears, text or extra mechanical parts.",
+      "referenceImages": [
+        "C:/Users/Kris/dev/netKonnect/test-results/watercolor-icons/references/steam.png",
+        "C:/Users/Kris/dev/netKonnect/public/artwork/reference-poster.png"
+      ],
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a117e8-ee97-74f3-8ac5-6c98b0ee7195\\exec-a8c545ad-f3c8-4f93-b94c-5c4bfefc2f40.png",
+      "file": "public/artwork/brands/steam.png"
+    },
+    {
+      "id": "microsoft-teams",
+      "kind": "brands",
+      "prompt": "Create one polished watercolor application icon on a fully transparent background. The FIRST reference is the exact existing brand emblem: match its silhouette, geometry, spacing and proportions closely. The SECOND reference supplies ONLY the watercolor artwork style: softly varied pigment washes, handcrafted subtle paper grain within the painted shapes, restrained fine navy ink edges. Preserve the original brand palette and identity. Keep clean negative spaces and a crisp readable silhouette at 18–32 pixels. Do not add a surrounding badge tile, text, shadows, scenery, stray splashes or background paper. Single centered isolated emblem filling about 85% of a square canvas with even transparent padding. Elegant meticulous watercolor workmanship. Preserve the Microsoft Teams purple emblem exactly: front square purple tile with opaque white uppercase T, larger purple circular head and upright rounded panel behind it, plus smaller right-side head and purple panel. Match original layer order and spacing. Deep purple, violet and lavender watercolor, a crisp T with correct typography. No extra people or letters.",
+      "referenceImages": [
+        "C:/Users/Kris/dev/netKonnect/test-results/watercolor-icons/references/microsoft-teams.png",
+        "C:/Users/Kris/dev/netKonnect/public/artwork/reference-poster.png"
+      ],
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a117e8-ee97-74f3-8ac5-6c98b0ee7195\\exec-be505784-b7be-47b4-808a-6cb5e9dc9be8.png",
+      "file": "public/artwork/brands/microsoft-teams.png"
+    },
+    {
+      "id": "microsoft-outlook",
+      "kind": "brands",
+      "prompt": "Create one polished watercolor application icon on a fully transparent background. The FIRST reference is the exact existing brand emblem: match its silhouette, geometry, spacing and proportions closely. The SECOND reference supplies ONLY the watercolor artwork style: softly varied pigment washes, handcrafted subtle paper grain within the painted shapes, restrained fine navy ink edges. Preserve the original brand palette and identity. Keep clean negative spaces and a crisp readable silhouette at 18–32 pixels. Do not add a surrounding badge tile, text, shadows, scenery, stray splashes or background paper. Single centered isolated emblem filling about 85% of a square canvas with even transparent padding. Elegant meticulous watercolor workmanship. Preserve Microsoft Outlook's blue envelope-and-panel emblem: front deep blue square with one crisp opaque white uppercase O; behind it the blue mail envelope with diagonal flap and blue tiled upper panel. Match exact reference layer order and proportions. Cobalt, azure and navy watercolor inside original facets. No extra letters, paper sheets or surrounding badge.",
+      "referenceImages": [
+        "C:/Users/Kris/dev/netKonnect/test-results/watercolor-icons/references/microsoft-outlook.png",
+        "C:/Users/Kris/dev/netKonnect/public/artwork/reference-poster.png"
+      ],
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a117e8-ee97-74f3-8ac5-6c98b0ee7195\\exec-2b8145d5-53fe-4246-8f09-e56c8e533f79.png",
+      "file": "public/artwork/brands/microsoft-outlook.png"
+    },
+    {
+      "id": "zoom",
+      "kind": "brands",
+      "prompt": "Create one polished watercolor application icon on a fully transparent background. The FIRST reference is the exact existing brand emblem: match its silhouette, geometry, spacing and proportions closely. The SECOND reference supplies ONLY the watercolor artwork style: softly varied pigment washes, handcrafted subtle paper grain within the painted shapes, restrained fine navy ink edges. Preserve the original brand palette and identity. Keep clean negative spaces and a crisp readable silhouette at 18–32 pixels. Do not add a surrounding badge tile, text, shadows, scenery, stray splashes or background paper. Single centered isolated emblem filling about 85% of a square canvas with even transparent padding. Elegant meticulous watercolor workmanship. Preserve the existing Zoom logo shown in the first reference, its blue emblem and opaque white video camera silhouette with rectangular rounded camera body and right-side triangular lens. Follow the reference's exact container shape, spacing and proportions. Bright blue watercolor and restrained fine ink. No wordmark, extra buttons or invented enclosing tile.",
+      "referenceImages": [
+        "C:/Users/Kris/dev/netKonnect/test-results/watercolor-icons/references/zoom.png",
+        "C:/Users/Kris/dev/netKonnect/public/artwork/reference-poster.png"
+      ],
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a117e8-ee97-74f3-8ac5-6c98b0ee7195\\exec-49f944db-85f0-44a5-aba8-22310f03e78c.png",
+      "file": "public/artwork/brands/zoom.png"
+    },
+    {
+      "id": "dropbox",
+      "kind": "brands",
+      "prompt": "Create one polished watercolor application icon on a fully transparent background. The FIRST reference is the exact existing brand emblem: match its silhouette, geometry, spacing and proportions closely. The SECOND reference supplies ONLY the watercolor artwork style: softly varied pigment washes, handcrafted subtle paper grain within the painted shapes, restrained fine navy ink edges. Preserve the original brand palette and identity. Keep clean negative spaces and a crisp readable silhouette at 18–32 pixels. Do not add a surrounding badge tile, text, shadows, scenery, stray splashes or background paper. Single centered isolated emblem filling about 85% of a square canvas with even transparent padding. Elegant meticulous watercolor workmanship. Preserve Dropbox's blue open-box emblem precisely: FOUR separate rhombus-shaped flaps in a two-by-two arrangement and ONE bottom angular folded box piece beneath them. Keep the diamond-shaped central opening and narrow transparent diagonal gaps clear. Rich azure/cobalt watercolor within each face, no additional flaps, perspective scenery or letters.",
+      "referenceImages": [
+        "C:/Users/Kris/dev/netKonnect/test-results/watercolor-icons/references/dropbox.png",
+        "C:/Users/Kris/dev/netKonnect/public/artwork/reference-poster.png"
+      ],
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a117e8-ee97-74f3-8ac5-6c98b0ee7195\\exec-aee224f7-cd64-4835-a0ef-cf8c2fc97e28.png",
+      "file": "public/artwork/brands/dropbox.png"
+    },
+    {
+      "id": "microsoft",
+      "kind": "brands",
+      "prompt": "Create one polished watercolor application icon on a fully transparent background. The FIRST reference is the exact existing brand emblem: match its silhouette, geometry, spacing and proportions closely. The SECOND reference supplies ONLY the watercolor artwork style: softly varied pigment washes, handcrafted subtle paper grain within the painted shapes, restrained fine navy ink edges. Preserve the original brand palette and identity. Keep clean negative spaces and a crisp readable silhouette at 18–32 pixels. Do not add a surrounding badge tile, text, shadows, scenery, stray splashes or background paper. Single centered isolated emblem filling about 85% of a square canvas with even transparent padding. Elegant meticulous watercolor workmanship. Preserve Microsoft's four equal square panes in a strict two-by-two grid: red-orange upper-left, green upper-right, blue lower-left and golden yellow lower-right, separated by even narrow ivory/transparent gutters. Each pane stays square and aligned, with delicate watercolor variation inside. No perspective, rounded tiles, letters or extra border; outside the four-pane emblem fully transparent.",
+      "referenceImages": [
+        "C:/Users/Kris/dev/netKonnect/test-results/watercolor-icons/references/microsoft.png",
+        "C:/Users/Kris/dev/netKonnect/public/artwork/reference-poster.png"
+      ],
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a117e8-ee97-74f3-8ac5-6c98b0ee7195\\exec-81fa8f66-e181-4a8a-ad1e-acd83fe969a9.png",
+      "file": "public/artwork/brands/microsoft.png"
+    },
+    {
+      "id": "google",
+      "kind": "brands",
+      "prompt": "Create one polished watercolor application icon on a fully transparent background. The FIRST reference is the exact existing brand emblem: match its silhouette, geometry, spacing and proportions closely. The SECOND reference supplies ONLY the watercolor artwork style: softly varied pigment washes, handcrafted subtle paper grain within the painted shapes, restrained fine navy ink edges. Preserve the original brand palette and identity. Keep clean negative spaces and a crisp readable silhouette at 18–32 pixels. Do not add a surrounding badge tile, text, shadows, scenery, stray splashes or background paper. Single centered isolated emblem filling about 85% of a square canvas with even transparent padding. Elegant meticulous watercolor workmanship. Preserve Google's exact uppercase G emblem, an open circular band with red upper arc, yellow left arc, green lower arc and blue right section plus blue horizontal crossbar. Match the first reference's geometry, opening, stroke width, color boundaries and orientation precisely. Multicolor watercolor inside this recognizable single G, no additional letters, circle backing or tile.",
+      "referenceImages": [
+        "C:/Users/Kris/dev/netKonnect/test-results/watercolor-icons/references/google.png",
+        "C:/Users/Kris/dev/netKonnect/public/artwork/reference-poster.png"
+      ],
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a117e8-ee97-74f3-8ac5-6c98b0ee7195\\exec-1e712e9e-b971-41f7-b99f-18f7c27ca9d7.png",
+      "file": "public/artwork/brands/google.png"
+    },
+    {
+      "id": "cloudflare",
+      "kind": "brands",
+      "prompt": "Create one polished watercolor application icon on a fully transparent background. The FIRST reference is the exact existing brand emblem: match its silhouette, geometry, spacing and proportions closely. The SECOND reference supplies ONLY the watercolor artwork style: softly varied pigment washes, handcrafted subtle paper grain within the painted shapes, restrained fine navy ink edges. Preserve the original brand palette and identity. Keep clean negative spaces and a crisp readable silhouette at 18–32 pixels. Do not add a surrounding badge tile, text, shadows, scenery, stray splashes or background paper. Single centered isolated emblem filling about 85% of a square canvas with even transparent padding. Elegant meticulous watercolor workmanship. Preserve Cloudflare's low orange cloud emblem with tall central dome, smaller left lobes and golden-yellow right lobe, flat baseline and precise thin white horizontal crossing beam with the white star-like flare toward the right. Match reference geometry and orange/gold color zones. Delicate watercolor washes, no literal sun, rain, skyline, wordmark or extra rays.",
+      "referenceImages": [
+        "C:/Users/Kris/dev/netKonnect/test-results/watercolor-icons/references/cloudflare.png",
+        "C:/Users/Kris/dev/netKonnect/public/artwork/reference-poster.png"
+      ],
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a117e8-ee97-74f3-8ac5-6c98b0ee7195\\exec-371837f1-40cd-4afe-8e60-633a2f22ac0b.png",
+      "file": "public/artwork/brands/cloudflare.png"
+    }
+  ]
+}

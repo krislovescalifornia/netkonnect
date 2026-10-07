@@ -30,3 +30,13 @@ main.traffic-overview { padding-top:20px; }
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}.moving-vehicle{offset-distance:55%}}
 @media(max-width:520px){.map-surface{overflow-x:auto}.network-svg{width:620px;min-width:100%;min-height:0;margin-left:0}.map-topline,.map-legend{width:600px}.map-surface:after{content:"Scroll to follow the routes →";display:block;font-size:8px;color:#9ba78a;padding:0 14px 14px;position:sticky;left:0;width:270px}}
+
+/* Original transparent illustration spots, shared with the city artwork. */
+.illustrated-spot { display:block; object-fit:contain; flex-shrink:0; }
+.secret-postcard-art { width:72px; height:72px; }
+.secrets-art { width:84px; }
+.secrets-art .illustrated-spot { width:100%; height:auto; }
+@media(max-width:520px) {
+  .secrets-art { width:60px; }
+  .secret-postcard-art { width:64px; height:64px; }
+}

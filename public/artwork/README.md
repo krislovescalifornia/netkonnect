@@ -9,10 +9,45 @@ pedestrians, gardens, transit, and distinct buildings give each stage a sense of
 inhabited place. The later stages add denser skylines and optimistic technology.
 
 `fleet/` contains 13 transport tiers plus crew, crane, and parachute artwork.
+
+`construction/` contains imagegen excavators and cement mixer trucks, each with
+three paint variations. Every moving city machine uses these transparent PNGs;
+the original SVG machine drawings have been replaced. The exact built-in tool
+prompts and style references are saved in `construction/generation-prompts.json`.
+Original generated pixels and alpha are preserved, and `CONSTRUCTION_ART` in
+the measured manifest supplies the sprite frames and offline asset list.
+The whole machines retain their shuttle motion and respect pause/reduced motion.
 `trucks/` contains seven road tiers. All 20 traveling vehicles are drawn in true
 side profile, facing right, with three paint/material variants. Downloads mirror
 the artwork horizontally. The broadside view follows the horizontal route.
 `reference-poster.png` preserves the user's style reference.
+
+`brands/` contains 22 transparent watercolor app/service emblems made with the
+built-in imagegen tool. The locally bundled SVGs in `public/icons/` supply the
+shape references; the poster supplies the painting style. Brand colors and
+identifying shapes remain recognizable at 18–32px. Claude and Anthropic retain
+their shared sunburst; Codex, ChatGPT and OpenAI share the knot emblem.
+Exact prompts and generation provenance are in `brands/generation-prompts.json`.
+The original generated PNG pixels are preserved. `BRAND_ART` measures alpha bounds
+to normalize transparent padding in the shared `brandBadge` renderer, so tables,
+routes, analytics and dossiers all use the same watercolor assets. They are
+included in the HTTP allowlist and required desktop bundle, with no remote loads.
+Unknown apps retain text monograms. Original SVG sources and their license remain
+in place. `electron scripts/qa-brand-artwork.mjs` reviews all 22 emblems enlarged
+and at badge sizes, genuine alpha, and desktop/phone dashboard layouts.
+
+`details/` finishes the illustrated world with four-phase house and tower
+construction sheets (including scaffold), timber and crate supplies, rigged
+crane cargo, a delivered parcel, the Little Secrets researcher, three setup crew
+portraits, and the quiet journal companion. All eight sheets were individually
+generated with the built-in imagegen tool. Exact prompts and reference roles
+are recorded in `details/generation-prompts.json`.
+`DETAIL_ART` measures clear sprite gutters and alpha bounds; phase sheets share
+their scale and bottom anchor, and per-cell clips keep neighbouring images out.
+The source pixels and transparency are preserved. Construction stages cross-fade
+with measured progress while live workers, hoists, and delivery motion continue
+independently. Decorative portraits use empty alt text or hidden SVGs beside
+the existing status text.
 
 Open cargo sheets contain loaded variants in the upper row and matching empty
 variants in the lower row. Both filename aliases contain the original sheet;
@@ -36,3 +71,7 @@ separate from the static dioramas and pause with the app's motion settings.
 Visual review: `electron scripts/qa-artwork.mjs` (all paint variants and actual
 lane sizes), `electron scripts/qa-progression.mjs`,
 `electron scripts/qa-cities.mjs`, and `electron scripts/qa-trucks.mjs`.
+`electron scripts/qa-decoration.mjs` reviews every finishing asset enlarged and
+at scene size, the Secrets postcard/banner, and setup states at desktop and phone
+widths. Construction and delivery QA also check that these layers contain images
+instead of geometric artwork and preserve unload/landing behavior.

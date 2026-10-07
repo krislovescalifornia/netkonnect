@@ -56,10 +56,15 @@ app.whenReady().then(async()=>{
       const unloaded=first.querySelector('.vehicle-cargo').style.opacity==='0';
       const emptyBed=!!first.querySelector('image[href="artwork/trucks/pickup-empty.png"]');
       const bodyVisible=Number(first.style.opacity)>0;
+      const parcel=first.querySelector('.delivery-parcel');
+      const illustratedParcel=!!parcel?.querySelector('image[href="artwork/details/delivery-parcel.png"]');
+      const parcelLanded=parcel?.style.opacity==='1' && parcel.getAttribute('transform')==='translate(-8 17)';
+      const geometricParcel=!!parcel?.querySelector('path,rect,circle,ellipse');
       animator.active=false;animator.resizeObserver?.disconnect();root.remove();
-      return {stable,fleetVariety,fleetSize:original.length,transparentImages,assets:assets.length,unloaded,emptyBed,bodyVisible,overflow:document.documentElement.scrollWidth>innerWidth};
+      return {stable,fleetVariety,fleetSize:original.length,transparentImages,assets:assets.length,unloaded,emptyBed,bodyVisible,illustratedParcel,parcelLanded,geometricParcel,overflow:document.documentElement.scrollWidth>innerWidth};
     })()`);
     assert.equal(report.stable,true);assert.equal(report.fleetVariety,3);assert.equal(report.transparentImages,report.assets);assert.equal(report.unloaded,true);assert.equal(report.emptyBed,true);assert.equal(report.bodyVisible,true);assert.equal(report.overflow,false);assert.deepEqual(errors,[]);
+    assert.equal(report.illustratedParcel,true);assert.equal(report.parcelLanded,true);assert.equal(report.geometricParcel,false);
     await writeFile(resolve(output,'catalog.html'),html);
     await new Promise(r=>setTimeout(r,500));
     win.webContents.debugger.attach('1.3');

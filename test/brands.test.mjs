@@ -4,6 +4,9 @@ import { once } from 'node:events';
 import { appName, appIdentity, brandBadge, brands } from '../public/brands.js';
 import { buildRoutes, serviceIdentity } from '../public/routes.js';
 import { createAppServer } from '../lib/http.mjs';
+import { BRAND_ART, ILLUSTRATION_ASSETS } from '../public/artwork/manifest.js';
+import { requiredAssets } from '../desktop/bundle.mjs';
+import { readFile } from 'node:fs/promises';
 
 const connection = { app:'code', pid:42, scope:'Internet', protocol:'TCP', state:'Established', remoteAddress:'1.2.3.4', remotePort:443, domainCandidates:['github.com'] };
 
@@ -38,7 +41,26 @@ test('unknown application badges escape process text and never turn names into i
   assert.doesNotMatch(badge,/<script|<img/);
 });
 
-test('all bundled brand assets are served as SVGs and arbitrary paths remain inaccessible', async t => {
+test('every known badge uses measured watercolor art included in the offline bundle', async () => {
+  const logos = new Set(Object.values(brands).map(([,logo])=>logo));
+  assert.deepEqual(new Set(Object.keys(BRAND_ART)),logos);
+  for (const [key,[,logo]] of Object.entries(brands)) {
+    const path = `artwork/brands/${logo}.png`;
+    assert.match(brandBadge(appIdentity(key)),new RegExp(path.replaceAll('.','\\.')));
+    assert.doesNotMatch(brandBadge(appIdentity(key)),/\/icons\//);
+    assert.ok(ILLUSTRATION_ASSETS.includes(path));
+    assert.ok(requiredAssets.includes('public/'+path));
+    const art = BRAND_ART[logo], png = await readFile(new URL('../public/'+path,import.meta.url));
+    assert.equal(png[25],6,'RGBA with genuine transparency');
+    assert.deepEqual([png.readUInt32BE(16),png.readUInt32BE(20)],art.size);
+    const [x,y,w,h]=art.frames[0];
+    assert.ok(x>=0&&y>=0&&w>0&&h>0&&x+w<=art.size[0]&&y+h<=art.size[1]);
+  }
+  assert.doesNotMatch(brandBadge({label:'Unknown',logo:'../private'}),/<image|<img/);
+  assert.doesNotMatch(brandBadge({label:'Unknown',logo:'__proto__'}),/<image|<img/);
+});
+
+test('watercolor PNGs and original SVG references load locally while arbitrary paths stay private', async t => {
   const server = createAppServer({getSnapshot:()=>({snapshot:null})});
   server.listen(0,'127.0.0.1');
   await once(server,'listening');
@@ -51,10 +73,16 @@ test('all bundled brand assets are served as SVGs and arbitrary paths remain ina
     const svg = await response.text();
     assert.match(svg,/<svg/);
     assert.doesNotMatch(svg,/<script|<foreignObject|(?:href|src)=["']https?:/i);
+    const watercolor = await fetch(`${url}/artwork/brands/${logo}.png`);
+    assert.equal(watercolor.status,200,logo);
+    assert.match(watercolor.headers.get('content-type'),/^image\/png/);
+    await watercolor.arrayBuffer();
   }
   assert.equal((await fetch(`${url}/brands.js`)).status,200);
   assert.equal((await fetch(`${url}/speed.js`)).status,200);
   assert.equal((await fetch(`${url}/icons/LICENSE`)).status,404);
   assert.equal((await fetch(`${url}/icons/not-a-brand.svg`)).status,404);
   assert.equal((await fetch(`${url}/package.json`)).status,404);
+  assert.equal((await fetch(`${url}/artwork/brands/generation-prompts.json`)).status,404);
+  assert.equal((await fetch(`${url}/artwork/brands/not-a-brand.png`)).status,404);
 });
