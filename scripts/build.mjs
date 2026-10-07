@@ -16,6 +16,7 @@ async function run(script, args = [], executable = process.execPath) {
   });
 }
 await run('scripts/version.mjs');
+await run('scripts/package-browsers.mjs');
 await run('scripts/check.mjs');
 await run('--test');
 await run('-NoProfile', ['-NonInteractive','-ExecutionPolicy','Bypass','-File','test/traffic-trace.ps1'], 'powershell.exe');

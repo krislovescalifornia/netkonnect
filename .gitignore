@@ -4,7 +4,10 @@ node_modules/
 test-results/
 data/analytics/
 dist/
+browser/*.xpi
 data/desktop/
 *.sqlite
 *.sqlite-wal
 *.sqlite-shm
+
+browser/*.zip

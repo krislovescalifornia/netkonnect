@@ -1,4 +1,6 @@
-import { appIdentity, appName, hostnameIdentity } from './brands.js';
+import { appIdentity, appName } from './brands.js';
+import { serviceIdentity } from './service-evidence.js';
+export { serviceIdentity } from './service-evidence.js';
 import {VEHICLE_STAGES,transportSpec} from './vehicles.js';
 function addHistory(target,history) {
   if(!history)return;
@@ -7,14 +9,6 @@ function addHistory(target,history) {
     target.usageHistory[i].received+=history[i]?.received || 0;
     target.usageHistory[i].sent+=history[i]?.sent || 0;
   }
-}
-export function serviceIdentity(connection) {
-  const names = (connection.domainCandidates || []).map(n => n.toLowerCase().replace(/\.$/, ''));
-  const labels = names.map(hostnameIdentity).map(identity=>[identity.key, identity]);
-  const unique = new Map(labels);
-  if (unique.size === 1) { const [, identity] = [...unique][0]; return {...identity, hint: names.join(', '), confidence:'DNS clue'}; }
-  if (unique.size > 1) return {key:connection.remoteAddress, label:connection.remoteAddress, hint:`Shared IP · ${names.join(', ')}`, confidence:'Ambiguous DNS'};
-  return {key:connection.remoteAddress, label:connection.remoteAddress, hint:'No cached hostname', confidence:'IP only'};
 }
 export function sortRoutes(routes, sort = 'total', direction = 'desc') {
   const numeric = {total:r=>r.totalBytes60m, download:r=>r.receivedBytes60m, upload:r=>r.sentBytes60m, connections:r=>r.connections.length,

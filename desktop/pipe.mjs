@@ -2,6 +2,7 @@ import net from 'node:net';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { readFile, writeFile, rename, chmod } from 'node:fs/promises';
 import { join } from 'node:path';
+import {StringDecoder} from 'node:string_decoder';
 
 export const MAX_FRAME = 24 * 1024 * 1024;
 export const pipeName = () => `\\\\.\\pipe\\netkonnect-${randomBytes(16).toString('hex')}`;
@@ -22,11 +23,11 @@ export function servePipe(endpoint, dispatch) {
   const server = net.createServer(socket => {
     sockets.add(socket); socket.on('error', () => {}); socket.once('close', () => sockets.delete(socket));
     socket.setTimeout(25000, () => socket.destroy());
-    let input = '', bytes = 0, handled = false;
+    let input = '', bytes = 0, handled = false;const decoder=new StringDecoder('utf8');
     socket.on('data', async chunk => {
       if (handled) return;
       bytes += chunk.length; if (bytes > 128 * 1024) { socket.destroy(); return; }
-      input += chunk.toString('utf8');
+      input += decoder.write(chunk);
       const end = input.indexOf('\n'); if (end < 0) return; handled = true;
       try {
         const request = JSON.parse(input.slice(0, end));
@@ -44,13 +45,13 @@ export function servePipe(endpoint, dispatch) {
 export async function callCompanion(directory, method, params = {}) {
   const endpoint = await readEndpoint(directory);
   return new Promise((resolve, reject) => {
-    const socket = net.createConnection(endpoint.pipe); let input = '', bytes = 0;
+    const socket = net.createConnection(endpoint.pipe); let input = '', bytes = 0;const decoder=new StringDecoder('utf8');
     socket.setTimeout(20000, () => socket.destroy(new Error('The tray companion did not respond.')));
     socket.on('error', reject);
     socket.once('connect', () => socket.write(JSON.stringify({ token: endpoint.token, method, params }) + '\n'));
     socket.on('data', chunk => {
       bytes += chunk.length; if (bytes > MAX_FRAME) { socket.destroy(new Error('Local result is too large.')); return; }
-      input += chunk.toString('utf8');
+      input += decoder.write(chunk);
       if (!input.includes('\n')) return;
       try { const data = JSON.parse(input.slice(0, input.indexOf('\n'))); socket.destroy(); data.error ? reject(new Error(data.error)) : resolve(data.result); }
       catch (error) { socket.destroy(); reject(error); }

@@ -25,8 +25,14 @@ try {
   $writer.WriteLine((@{type='protection';firewall=($rules.Count -gt 0)} | ConvertTo-Json -Compress))
   [Console]::SetOut($writer)
   [Console]::SetIn($reader)
+  try {
+    Add-Type -Path (Join-Path $PSScriptRoot '..\lib\NameTrace.cs') -ReferencedAssemblies System.dll,System.Core.dll,System.Xml.dll
+    [NetKonnect.NameTrace]::Start($true)
+  } catch {
+    foreach($source in @('windows-dns-etw','wfp-audit')) {$writer.WriteLine((@{type='evidence-status';source=$source;available=$false;message='Name and audit collector could not start: '+$_.Exception.GetBaseException().Message}|ConvertTo-Json -Compress))}
+  }
   Add-Type -Path (Join-Path $PSScriptRoot '..\lib\TrafficTrace.cs')
   [NetKonnect.TrafficTrace]::Run([int]$request.parentId, 0, $true)
 } catch {
   if ($writer) { try { $writer.WriteLine((@{type='status';available=$false;message=$_.Exception.GetBaseException().Message} | ConvertTo-Json -Compress)) } catch {} }
-} finally { $pipe.Dispose() }
+} finally { if ('NetKonnect.NameTrace' -as [type]) { [NetKonnect.NameTrace]::Stop() }; $pipe.Dispose() }

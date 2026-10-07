@@ -4,6 +4,7 @@ import { createInterface } from 'node:readline';
 import { enrichSnapshot } from './lib/network.mjs';
 import { TrafficStore } from './lib/traffic.mjs';
 import { AnalyticsStore } from './lib/analytics.mjs';
+import { EvidenceStore } from './lib/evidence.mjs';
 
 import { randomUUID } from 'node:crypto';
 import { createAppServer } from './lib/http.mjs';
@@ -17,6 +18,7 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('Choose
 let snapshot = null, busy = false, collectorError = null;
 const sightings = new Map();
 const traffic = new TrafficStore();
+const evidence = new EvidenceStore();
 const analytics = new AnalyticsStore(fileURLToPath(new URL('./data/analytics/', import.meta.url)));
 await analytics.load();
 let trafficWorker;
@@ -25,7 +27,13 @@ function startTraffic() {
   trafficWorker = spawn('powershell.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', fileURLToPath(new URL('./traffic.ps1', import.meta.url)), '-ParentId', String(process.pid)], { windowsHide:true, stdio:['pipe','pipe','pipe'] });
   trafficWorker.stdin.on('error', () => {});
   createInterface({ input:trafficWorker.stdout }).on('line', line => {
-    try { const batch=JSON.parse(line),now=Date.now();traffic.ingest(batch,now,snapshot);analytics.ingest(batch,now,snapshot); } catch { traffic.ingest({ type:'status', available:false, message:'Detailed collector returned invalid data.' }); }
+    try {
+      const batch=JSON.parse(line),now=Date.now();
+      if(evidence.nativeBatch(batch,now))return;
+      const observed=evidence.snapshot(snapshot,now);
+      const annotated=batch.type==='traffic'?{...batch,flows:(batch.flows||[]).map(c=>evidence.annotate({...c,app:c.owner?.name||snapshot?.processes?.[c.pid],owner:c.owner||snapshot?.processDetails?.[c.pid]},now))}:batch;
+      traffic.ingest(annotated,now,observed);analytics.ingest(annotated,now,observed);
+    } catch { traffic.ingest({ type:'status', available:false, message:'Detailed collector returned invalid data.' }); }
   });
   let errorText = '';
   trafficWorker.stderr.on('data', chunk => { errorText = (errorText + chunk).slice(-2000); });
@@ -49,7 +57,7 @@ async function collect() {
 }
 const server = createAppServer({
   getAnalytics: options => analytics.query(options),
-  getSnapshot: () => ({ snapshot: traffic.decorate(snapshot, Date.now(), [...analytics.cityUsage.values()]), collecting: busy, error: collectorError, interval: 2000,
+  getSnapshot: () => ({ snapshot: evidence.snapshot(traffic.decorate(snapshot, Date.now(), [...analytics.cityUsage.values()])), collecting: busy, error: collectorError, interval: 2000,
     service: { instanceId, pid: process.pid, restarting } }),
   requestRestart: async () => {
     if (restarting) throw new Error('The service is already restarting.');

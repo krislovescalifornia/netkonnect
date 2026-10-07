@@ -78,6 +78,6 @@ export function analyze(records, options = {}, now = Date.now()) {
   const unique=field=>[...new Set(selected.flatMap(r=>r[field]||[]))].sort();
   return { received,sent,total:received+sent,apps:rankedApps,services:rankedServices,timeline:[...timeline.values()].sort((a,b)=>a.key.localeCompare(b.key)),hours,week,heat,matches,
     busiestDay:[...days.values()].sort(descending)[0]||null,busiestHour:[...hours].sort((a,b)=>total(b)-total(a))[0],activeDays:days.size,
-    metadata:{pids:unique('pids'),addresses:unique('addresses'),ports:unique('ports'),hostnames:unique('hostnames'),protocols:[...new Set(selected.map(r=>r.protocol))],scopes:[...new Set(selected.map(r=>r.scope))],firstSeen:selected.length?selected.reduce((n,r)=>Math.min(n,r.firstSeen),Infinity):null,lastSeen:selected.length?selected.reduce((n,r)=>Math.max(n,r.lastSeen),0):null},
+    metadata:{pids:unique('pids'),addresses:unique('addresses'),ports:unique('ports'),hostnames:unique('hostnames'),evidence:[...new Map(selected.flatMap(r=>r.evidence||[]).map(r=>[JSON.stringify(r),r])).values()].slice(-64),protocols:[...new Set(selected.map(r=>r.protocol))],scopes:[...new Set(selected.map(r=>r.scope))],firstSeen:selected.length?selected.reduce((n,r)=>Math.min(n,r.firstSeen),Infinity):null,lastSeen:selected.length?selected.reduce((n,r)=>Math.max(n,r.lastSeen),0):null},
     filters:f };
 }

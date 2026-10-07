@@ -265,3 +265,10 @@
   .application-city-card .route-speeds .speed-value small { font-size:7px; }
   .usage-graph { width:34px; }
 }
+.service-insight { display:flex; flex-wrap:wrap; gap:6px 18px; padding:12px 20px; background:#f6f8ef; border-bottom:1px solid #e2e6d7; font-size:12px; }
+.service-insight strong { color:#33452b; }
+.service-insight small { flex-basis:100%; color:#5c6654; line-height:1.5; }
+.route-terminal strong { overflow-wrap:anywhere; }
+.evidence-health {display:block;padding:8px 18px;color:var(--muted);line-height:1.6;overflow-wrap:anywhere}
+.evidence-card {border:1px solid var(--border);border-radius:10px;padding:12px;margin:12px 0;overflow-wrap:anywhere}
+.detail-list dd {overflow-wrap:anywhere}

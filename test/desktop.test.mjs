@@ -130,5 +130,5 @@ test('desktop query validates filters and emits safe full exports',()=>{
 });
 test('coverage distinguishes captured bytes, snapshots and days with no collection',()=>{
   const html=coverageRibbon([{at:now-86400000,snapshotSeconds:30,captureSeconds:0,lostEvents:0},{at:now,snapshotSeconds:60,captureSeconds:60,lostEvents:3}],now+60000);
-  assert.match(html,/Snapshots/);assert.match(html,/No capture/);assert.match(html,/3 lost events/);assert.match(html,/0.0h/);
+  assert.match(html,/Snapshots/);assert.match(html,/No capture/);assert.match(html,/3 lost or skipped events/);assert.match(html,/0.0h/);
 });

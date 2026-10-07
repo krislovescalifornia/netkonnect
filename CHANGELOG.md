@@ -1,5 +1,34 @@
 # Changelog
 
+## 1.9.0 — 2026-10-07
+
+- Expand passive Windows collection with kernel process lifetimes, short-lived TCP lifecycle events and retransmission diagnostics; retain ETW-only and zero-byte connection sightings independently of socket snapshots.
+- Refresh capture interface addresses, preserve multicast/broadcast and loopback observations, and prevent captured process ownership from being replaced by a stale reused PID.
+- Add local hosts aliases, cached IPv4/IPv6 PTR names, existing unique NetBIOS host names and hosted Windows service candidates without destination queries.
+- Include hidden/virtual adapters, IPv6 gateways/link-local addresses, interface settings, packet/discard counters and OS TCP/UDP/ICMP statistics; expose unavailable counters accurately.
+- Report snapshot source health, separate event/buffer losses, unsupported schemas and native capacity loss; migrate history without discarding earlier observations. Add independent UDP fallback and correct on-link routing clues.
+- Document OS coverage and remaining packet/name visibility limits in the Windows network collection audit.
+
+## 1.8.0 — 2026-10-06
+
+- Add separate opt-in Chrome and Edge Service Insight extensions and local native bridges alongside Firefox. All integrations and Enhanced Lookup default off.
+- Attribute request hostname, server IP/port, page hostname and request-kind observations only to the matching browser family. Keep shared destinations uncertain and exclude Edge WebView processes.
+- Include reproducible Manifest V3 extension ZIPs with stable, distinct IDs; Preferences exports each package and explains local installation. Browser source health, recent observations and connection details identify their source.
+- Read Chromium proxy mode and Windows system-proxy configuration without collecting proxy URLs or credentials. Configured or uncertain proxy requests remain visible but cannot label direct sockets. Clearly mark Chromium TLS/certificate/secure-DNS fields unavailable; response-line versions do not establish the negotiated HTTP version.
+- Verify caller origin, fragmented native frames, all three bridge registrations, independent disable behavior, private/cache exclusions and worker reconnection with Windows and browser API regression tests.
+
+## 1.7.0 — 2026-10-06
+
+- Explain destination identification in the dashboard, route/connection drawers and connection CSV: named hostname clues, shared-IP ambiguity, network hints and unidentified services. Show possible encrypted HTTPS/QUIC transport without inferring a streaming service from a port.
+- Bundle sourced offline Google and Cloudflare network ranges and the AT&T IPv6 allocation observed during Firefox streaming. Keep provider-only destinations separate by IP and explicitly label their service unknown; this catalog is partial and does not perform online lookups.
+- Normalize IPv6 and mapped IPv4 DNS matches, include cached CNAME aliases and observed TTLs, preserve earlier clues on continuously observed sockets/ETW flows, and fix empty candidate arrays suppressing available hostname evidence in live traffic and saved analytics.
+- Verify passive aliases, expiration, socket recreation, ambiguous names, unchanged measured totals and the desktop/narrow service explanations with a Firefox destination fixture.
+
+- Add passive process DNS ETW, existing firewall audit endpoints, process creation/product metadata, local routing/neighbor clues and source-health reporting without changing audit policy.
+- Add an optional local Firefox request/TLS native messaging bridge and reproducible unsigned development add-on; correlate hostnames and page context while excluding private windows and page content. Mozilla signing remains required for persistent distribution.
+- Add Enhanced Lookup, off by default, with individual PTR/RDAP actions, restricted registry referrals, provenance, bounded cache/concurrency and cancellation on disable. Preserve offline app guards.
+- Retain evidence with historical intervals and process lifetimes; avoid assigning later names to earlier bytes. Verify native host framing and real Windows PowerShell compilation, Firefox API hooks, privacy filters, UI details and lookup defaults.
+
 ## 1.6.0 — 2026-10-06
 
 - Compact application cards with larger app names, bold speeds at the right of each lane, and a shared footer for city progress, hourly usage graphs, and the services dropdown. Move PIDs and protocols into expandable Info.

@@ -6,6 +6,7 @@ Add-Type -TypeDefinition @'
 using System;
 using System.Threading;
 namespace NetKonnect {
+  public static class NameTrace {public static void Start(bool recover){} public static void Stop(){}}
   public static class TrafficTrace {
     public static void Run(int parent, int seconds, bool recover) {
       var reader = new Thread(() => Console.ReadLine());

@@ -199,6 +199,23 @@ async function start() {
     setCompanionStartup(app, process.execPath, enabled); return settings();
   });
   handle('nk:capture',setCapture);
+  handle('nk:enrichment',()=>callCompanion(directory,'enrichment-settings'));
+  handle('nk:browser-extension',async params=>{
+    const browser=params?.browser;
+    if(!['chrome','edge'].includes(browser))throw new Error('Choose Chrome or Edge.');
+    const label=browser==='chrome'?'Chrome':'Edge';
+    const choice=await dialog.showSaveDialog({title:`Save ${label} extension`,defaultPath:`netKonnect-${label}-Service-Insight.zip`,filters:[{name:'Browser extension archive',extensions:['zip']}]});
+    if(choice.canceled||!choice.filePath)return {saved:false};
+    await writeFile(choice.filePath,await readFile(join(root,'browser',`netKonnect-${browser}-Service-Insight.zip`)));
+    return {saved:true};
+  });
+  handle('nk:set-enrichment',params=>callCompanion(directory,'set-enrichment',params));
+  handle('nk:enhanced-lookup',params=>callCompanion(directory,'enhanced-lookup',params));
+  handle('nk:firefox-addon',async()=>{
+    const choice=await dialog.showSaveDialog(window,{title:'Save Firefox Service Insight add-on',defaultPath:'netKonnect-Service-Insight.xpi',filters:[{name:'Firefox add-on',extensions:['xpi']}]});
+    if(choice.canceled)return {saved:false};
+    await writeFile(choice.filePath,await readFile(join(root,'browser','netKonnect-Service-Insight.xpi')));return {saved:true};
+  });
   window=new BrowserWindow({ width:1460,height:980,minWidth:900,minHeight:650,backgroundColor:'#ffffff',title:'netKonnect',icon:nativeImage.createFromPath(join(root,'desktop','icon.png')),show:false,
     webPreferences:{preload:join(root,'desktop','preload.cjs'),contextIsolation:true,sandbox:true,nodeIntegration:false,webviewTag:false,spellcheck:false,devTools:!app.isPackaged} });
   if(process.argv.includes('--smoke-test')) window.webContents.on('console-message',event=> { if(event.level==='error'||event.level===3)console.error('RENDERER '+event.message); });

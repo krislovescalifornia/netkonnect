@@ -1,0 +1,10 @@
+{
+  "chrome": {
+    "id": "ghhkklahefoedmdlfehpcjkfaleihnmi",
+    "host": "org.netkonnect.chrome"
+  },
+  "edge": {
+    "id": "ofckebaebjcpecjmiddbcchaipikgmmf",
+    "host": "org.netkonnect.edge"
+  }
+}

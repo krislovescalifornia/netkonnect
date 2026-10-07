@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "netKonnect Service Insight for Chrome",
+  "version": "1.0.0",
+  "description": "Share request hostnames, server IPs and page hostname context with netKonnect on this computer.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAm2WJfNHN/gupclzZHXeMLbCzO/XRi7XHZAoEFBaZFbgPBPAj18piBWduyEhGz1deYnF5MrrQab91xsSP5bg3MIBZ54TpExb9w8zNsvxlztZiFzMbKdLE3UNtso5Ssw2TX7nCl/O+dKWNYg0HcopW6tFYPM8ndKi0+KmEeZmtA2jcQMucNnnFb/FC4KS5lSHmwfbK4jh966GEIILPH4fYvR90MAPqADTf7fAH/ezIKz0MRySUPJTyKUZgV2W8aTOGyaLA5QUFPAlte7o9/uswS1I0ynEoQlqHYv6M8TtQQYhYhkmzW8aerCn9q9Np9U4GLWR+x1BF276RpeY+0yutUQIDAQAB",
+  "minimum_chrome_version": "120",
+  "permissions": [
+    "webRequest",
+    "tabs",
+    "nativeMessaging",
+    "storage",
+    "alarms",
+    "proxy"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "netKonnect Service Insight",
+    "default_popup": "popup.html"
+  },
+  "incognito": "not_allowed",
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'"
+  }
+}

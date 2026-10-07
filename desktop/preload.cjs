@@ -14,5 +14,10 @@ contextBridge.exposeInMainWorld('netKonnect', Object.freeze({
     return () => ipcRenderer.removeListener('nk:setup-progress', listener);
   },
   setStartup: enabled => ipcRenderer.invoke('nk:startup', enabled),
-  setCapture: enabled => ipcRenderer.invoke('nk:capture', enabled)
+  setCapture: enabled => ipcRenderer.invoke('nk:capture', enabled),
+  enrichment: () => ipcRenderer.invoke('nk:enrichment'),
+  setEnrichment: (feature,enabled) => ipcRenderer.invoke('nk:set-enrichment', {feature,enabled}),
+  enhancedLookup: address => ipcRenderer.invoke('nk:enhanced-lookup', {address}),
+  exportFirefoxAddon: () => ipcRenderer.invoke('nk:firefox-addon'),
+  exportBrowserExtension: browser => ipcRenderer.invoke('nk:browser-extension', {browser})
 }));
