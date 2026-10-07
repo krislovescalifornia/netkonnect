@@ -20,12 +20,13 @@ function patch(current,next) {
     return;
   }
   const scene=current.matches('.application-city, .convoy-svg');
-  const growth=scene && current.dataset.stage !== next.dataset.stage;
+  const growth=scene && (current.dataset.stage !== next.dataset.stage || current.dataset.progress !== next.dataset.progress);
   attributes(current,next,scene);
   if(scene) {
     if(growth && current.matches('.application-city')) {
-      updateChildren(current.querySelector('.city-buildings'),next.querySelector('.city-buildings'));
-      updateChildren(current.querySelector('.city-helpers'),next.querySelector('.city-helpers'));
+      for(const layer of ['.city-buildings','.construction-site','.city-projects','.city-site-vehicles','.city-helpers']) {
+        updateChildren(current.querySelector(layer),next.querySelector(layer));
+      }
     }
     return;
   }

@@ -123,8 +123,20 @@
 .city-caption span { white-space:normal; }
 .city-caption small { font-size:9px; }
 .lane-arrow { fill:none; stroke-width:1.5; }
-.application-city .site-crane { opacity:.85; }
-.application-city[data-stage="0"] .site-crane,.application-city[data-stage="1"] .site-crane { display:none; }
+.application-city .site-crane { opacity:.88; }
+.city-established,.city-rising,.city-project,.building-cladding,.building-roof,.site-scaffolding { transition:opacity 1.4s ease; }
+.application-city .site-vehicle { animation:site-shuttle 14s ease-in-out infinite; animation-delay:var(--machine-delay); }
+.application-city .excavator-arm { animation:site-dig 5s ease-in-out infinite; animation-delay:var(--machine-delay); transform-origin:6px -10px; }
+.application-city .mixer-drum { animation:site-mix 3s linear infinite; transform-origin:-7px -11px; }
+.city-resting .city-site-vehicles * { animation-play-state:paused; }
+.city-resting .site-scaffolding * { animation-play-state:paused; }
+.application-city.city-delivering .site-supplies { animation:site-delivery 1.2s ease-out; }
+@keyframes site-shuttle { 0%,15%,100% { transform:translateX(0); } 45%,65% { transform:translateX(calc(18px * var(--machine-direction))); } }
+@keyframes site-dig { 0%,100% { transform:rotate(0); } 35%,55% { transform:rotate(22deg); } 75% { transform:rotate(-12deg); } }
+@keyframes site-mix { 50% { transform:rotate(12deg); } }
+@keyframes site-delivery { 35% { transform:translate(267px,137px); } }
+@media(prefers-reduced-motion:reduce) { .city-established,.city-rising,.city-project,.building-cladding,.building-roof,.site-scaffolding { transition:none; } }
+.still .city-established,.still .city-rising,.still .city-project,.still .building-cladding,.still .building-roof,.still .site-scaffolding,.no-motion .city-established,.no-motion .city-rising,.no-motion .city-project,.no-motion .building-cladding,.no-motion .building-roof,.no-motion .site-scaffolding { transition:none; }
 .city-airdrop { opacity:0; }
 .has-airdrop.city-working .city-airdrop { animation:city-parcel 12s linear infinite; }
 .city-resting .city-airdrop { animation-play-state:paused; }
@@ -145,11 +157,11 @@
 .application-city .crew-carrier .helper-legs { animation:helper-step .7s ease-in-out infinite alternate; transform-origin:0 -5px; }
 .application-city .crew-receiver .helper-arms { animation:city-receive 4s ease-in-out infinite; transform-origin:0 -11px; }
 .application-city .crew-builder .helper-arms,.application-city .helper-hammer { animation:city-hammer 2.6s ease-in-out infinite; transform-origin:2px -11px; }
-.application-city .crane-load { animation:city-hoist 10s ease-in-out infinite; }
+.application-city .crane-load { animation:city-hoist var(--hoist-duration,10s) ease-in-out infinite; animation-delay:var(--hoist-delay,0s); }
 .application-city .construction-beam { animation:city-build 10s ease-in-out infinite; }
 .city-resting .crew-carrier,.city-resting .crew-carrier *,.city-resting .crew-walker,.city-resting .crew-walker *,.city-resting .crew-receiver *,.city-resting .crew-builder *,.city-resting .crane-load,.city-resting .construction-beam { animation-play-state:paused; }
 .city-new-stage .city-linework { animation:city-reveal 1.8s ease-out both; }
-.city-resting .construction-site { opacity:.35; }
+.city-resting .construction-site { opacity:.65; }
 .city-unmeasured .city-linework { opacity:.4; }
 .supply-pushcart .helper-legs { animation:helper-step .8s ease-in-out infinite alternate; transform-origin:0 -5px; }
 .plane-propeller { animation:propeller-spin .3s linear infinite; transform-box:fill-box; transform-origin:center; }

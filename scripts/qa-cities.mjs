@@ -11,11 +11,12 @@ app.whenReady().then(async()=>{
 const errors=[];
 let cityBoost=0;
 let firefoxBoost=0;
+let constructionBoost=0;
 const snapshot=()=>{
   const s=demoSnapshot(),ips=['142.250.80.46','142.250.80.14','104.18.32.7','13.107.42.12','140.82.112.4'];
   s.connections=s.connections.filter(c=>ips.includes(c.remoteAddress));
   s.traffic.cityUsage.find(c=>c.app==='Code').receivedBytesTotal+=cityBoost;
-  s.traffic.cityUsage.find(c=>c.app==='firefox').receivedBytesTotal+=firefoxBoost;
+  s.traffic.cityUsage.find(c=>c.app==='firefox').receivedBytesTotal+=firefoxBoost+constructionBoost;
   return {snapshot:s,interval:2000,collecting:false,error:null};
 };
 const server=createAppServer({getSnapshot:snapshot,getAnalytics:()=>({}),requestRestart:()=>({})});
@@ -70,6 +71,11 @@ try {
   assert.ok(refreshedWorkerTime>firstWorkerTime+2100,`worker playback must advance through a polling refresh: ${firstWorkerTime} → ${refreshedWorkerTime}`);
   assert.equal(await window.webContents.executeJavaScript(`window.cityNode===document.querySelector('.application-city')&&window.convoyNode===document.querySelector('.convoy-svg')`),true,'polling must preserve animation nodes');
   assert.equal(await window.webContents.executeJavaScript(`window.sceneRemovals===0&&window.workerAnimation===document.querySelector('.crew-carrier').getAnimations().find(a=>a.animationName==='city-carry')`),true,'refresh must keep scenes connected and preserve the CSS Animation object');
+  await window.webContents.executeJavaScript(`window.buildCity=document.querySelector('[data-city-key="application|firefox"]');window.buildProject=window.buildCity.querySelector('.city-project');window.buildCrane=window.buildCity.querySelector('.crane-load');window.buildCraneAnimation=window.buildCrane.getAnimations()[0];window.buildVehicle=window.buildCity.querySelector('.site-vehicle');window.buildVehicleAnimation=window.buildVehicle.getAnimations()[0];window.buildProgress=window.buildProject.dataset.buildProgress;window.clipHeight=window.buildCity.querySelector('clipPath rect').getAttribute('height');window.buildStage=window.buildCity.dataset.stage;`);
+  constructionBoost=20*1024**3;
+  await new Promise(resolve=>setTimeout(resolve,2400));
+  assert.equal(await window.webContents.executeJavaScript(`window.buildCity.dataset.stage===window.buildStage&&Number(window.buildProject.dataset.buildProgress)>Number(window.buildProgress)&&Number(window.buildCity.querySelector('clipPath rect').getAttribute('height'))>Number(window.clipHeight)`),true,'downloads within a level raise frames and reveal the next illustrated skyline');
+  assert.equal(await window.webContents.executeJavaScript(`window.buildProject===window.buildCity.querySelector('.city-project')&&window.buildCrane===window.buildCity.querySelector('.crane-load')&&window.buildCraneAnimation===window.buildCrane.getAnimations()[0]&&window.buildVehicleAnimation===window.buildVehicle.getAnimations()[0]`),true,'construction updates retain cranes, machinery, projects and their animation objects');
   assert.equal(await window.webContents.executeJavaScript(`(()=>{
     document.querySelector('[data-map-sort="app"]').click();
     return window.workerAnimation===window.cityNode.querySelector('.crew-carrier').getAnimations().find(a=>a.animationName==='city-carry');
@@ -94,6 +100,7 @@ try {
   await window.webContents.executeJavaScript(`document.querySelector('[data-action="motion"]').click()`);
   const paused=await window.webContents.executeJavaScript(`(()=>{const a=document.querySelector('.crew-carrier').getAnimations()[0];return {paused:getComputedStyle(document.querySelector('.crew-carrier')).animationPlayState,at:a?.currentTime,progress:document.querySelector('.transport-vehicle')?.dataset.progress};})()`);
   assert.equal(paused.paused,'paused');
+  assert.equal(await window.webContents.executeJavaScript(`[...document.querySelectorAll('.crane-load,.site-vehicle,.excavator-arm,.mixer-drum')].every(el=>getComputedStyle(el).animationPlayState==='paused')`),true,'pause freezes every construction machine');
   await new Promise(resolve=>setTimeout(resolve,300));
   const frozen=await window.webContents.executeJavaScript(`({at:document.querySelector('.crew-carrier').getAnimations()[0]?.currentTime,progress:document.querySelector('.transport-vehicle')?.dataset.progress})`);
   assert.ok(Math.abs(frozen.at-paused.at)<40);assert.equal(frozen.progress,paused.progress);
@@ -112,6 +119,7 @@ try {
   await window.webContents.debugger.sendCommand('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
   await new Promise(resolve=>setTimeout(resolve,100));
   assert.equal(await window.webContents.executeJavaScript(`getComputedStyle(document.querySelector('.crew-carrier')).animationName`),'none');
+  assert.equal(await window.webContents.executeJavaScript(`[...document.querySelectorAll('.crane-load,.site-vehicle,.excavator-arm,.mixer-drum')].every(el=>getComputedStyle(el).animationName==='none')`),true,'reduced motion disables construction animations');
   const reducedProgress=await window.webContents.executeJavaScript(`document.querySelector('.transport-vehicle')?.dataset.progress`);
   await new Promise(resolve=>setTimeout(resolve,100));
   assert.equal(await window.webContents.executeJavaScript(`document.querySelector('.transport-vehicle')?.dataset.progress`),reducedProgress);
@@ -125,6 +133,7 @@ try {
     await new Promise(resolve=>setTimeout(resolve,2400));
     const live=await window.webContents.executeJavaScript(`(()=>{const c=document.querySelector('.application-city');const g=c.querySelector('[data-transport="${type}"]');return {stage:Number(c.dataset.stage),type:c.dataset.downloadType,journey:!!g,progress:Number(g?.dataset.progress),bounds:g?g.getBBox().width:0};})()`);
     assert.equal(live.stage,19);assert.equal(live.type,type);assert.equal(live.journey,true);assert.ok(live.progress>0);assert.ok(live.bounds>0);
+    assert.equal(await window.webContents.executeJavaScript(`document.querySelector('.application-city').querySelectorAll('.site-crane').length`),6,'giant cities have six cranes');
     await writeFile(resolve('test-results/cities/'+type+'.png'),(await window.webContents.capturePage()).toPNG());
   }
   assert.deepEqual(errors,[]);

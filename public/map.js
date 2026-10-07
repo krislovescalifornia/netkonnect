@@ -1,7 +1,7 @@
 import {formatEndpoint} from './address.js';
 import { appIdentity, appName, brandBadge } from './brands.js';
 import { buildRoutes, groupApplicationRoutes, sortRoutes, transportForRate, JourneyQueue } from './routes.js';
-import { renderCity, cityStage } from './cities.js';
+import { renderCity, cityStage, cityConstruction } from './cities.js';
 import {vehicle,VEHICLE_STAGES,transportSpec} from './vehicles.js';
 import { serviceDisplayLabel, transportHint } from './service-evidence.js';
 import {evidenceDetails,evidenceHealth} from './enrichment.js';
@@ -31,6 +31,7 @@ export class TransportAnimator {
     this.clock = clock; this.requestFrame = requestFrame; this.cancelFrame = cancelFrame;
     this.queue = new JourneyQueue(); this.svgs = new Map(); this.source = null;
     this.vehicleNodes = new WeakMap(); this.sceneSizes = new WeakMap(); this.configurations=[];
+    this.deliveryTimes = new WeakMap();
     this.lastTime = this.clock(); this.active = false; this.frame = null;
     this.resizeObserver=typeof ResizeObserver==='undefined'?null:new ResizeObserver(entries=>{
       for(const {target} of entries)this.resizeCityScene(target);
@@ -136,12 +137,17 @@ export class TransportAnimator {
         if(parcel) {
           parcel.style.opacity=pose.unloaded;
           parcel.setAttribute('transform',`translate(-8 ${pose.unloaded*(132-pose.y)})`);
+          if(pose.unloaded>0 && !record.delivered) {
+            record.delivered=true;
+            this.deliveryTimes.set(svg,this.queue.now+1200);
+          }
         }
       }
       for (const id of existing) { nodes.get(id).group.remove(); nodes.delete(id); }
       if(svg.classList.contains('application-city')) {
         const working=Number(svg.dataset.downloadRate)>0||journeys.some(j=>j.incoming);
         svg.classList.toggle('city-working',working);svg.classList.toggle('city-resting',!working);
+        svg.classList.toggle('city-delivering',this.queue.now<(this.deliveryTimes.get(svg)||0));
       }
       const idle = svg.parentElement.querySelector('.road-idle');
       if (idle) idle.hidden = journeys.length > 0;
@@ -187,7 +193,7 @@ export function renderNetworkMap({state,icon,rate,bytes,esc}) {
     const uploadType = state.mapVehicle==='auto' ? upload.type : state.mapVehicle;
     const protocols = [...r.protocols].join(' + ');
     const cityBytes=r.cityBytes ?? null, stage=cityStage(cityBytes);
-    const milestone=stage.known?(stage.next?`${bytes(stage.nextAt-cityBytes)} to ${stage.next}`:'Final city tier'):'Awaiting measured data';
+    const milestone=stage.known?(stage.next?`${cityConstruction(stage.index,stage.progress).phase} · ${bytes(stage.nextAt-cityBytes)} to ${stage.next}`:'Final city tier · complete'):'Awaiting measured data';
     const level=stage.known?`Level ${stage.index+1} / ${20} · `:'';
     const fleetLabel=`Incoming: ${transportSpec(downloadType).name}; outgoing: ${transportSpec(uploadType).name}`;
     const expanded = parent && state.mapExpanded?.has(r.key);

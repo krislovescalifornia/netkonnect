@@ -7,7 +7,10 @@ function sprite(folder,id,art,variant,width,baseline=11,maxHeight=Infinity) {
   const [x,y,w,h]=art.frames[variant],padding=2;
   const scale=Math.min(width/(w+padding*2),maxHeight/(h+padding*2));
   const displayWidth=(w+padding*2)*scale,displayHeight=(h+padding*2)*scale;
-  return `<svg x="${-displayWidth/2}" y="${baseline-displayHeight}" width="${displayWidth}" height="${displayHeight}" viewBox="${x-padding} ${y-padding} ${w+padding*2} ${h+padding*2}" overflow="hidden"><image href="artwork/${folder}/${id}.png" width="${art.size[0]}" height="${art.size[1]}"/></svg>`;
+  const image=`<image href="artwork/${folder}/${id}.png" width="${art.size[0]}" height="${art.size[1]}"/>`;
+  const clip=art.clips?.[variant];
+  const contents=clip?`<svg x="${clip[0]}" y="${clip[1]}" width="${clip[2]}" height="${clip[3]}" viewBox="${clip.join(' ')}" overflow="hidden">${image}</svg>`:image;
+  return `<svg x="${-displayWidth/2}" y="${baseline-displayHeight}" width="${displayWidth}" height="${displayHeight}" viewBox="${x-padding} ${y-padding} ${w+padding*2} ${h+padding*2}" overflow="hidden">${contents}</svg>`;
 }
 
 export function illustratedVehicle(spec,appearance) {

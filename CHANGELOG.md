@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.11.0 — 2026-10-07
+
+- Build cities progressively from measured downloads: staggered foundations, framed homes, partial towers, walls, roofs, and finishing reveal the next illustrated skyline before each level advances.
+- Scale construction to six cranes and six scaffold crews in giant cities, with excavators, a cement mixer, material piles, and delivery activity. Preserve crew and machinery playback through refreshes, growth, sorting, pause, and reduced motion.
+- Give all 20 delivery vehicles true side profiles for their horizontal routes, with three paint variants and matching empty cargo beds. Update measured sprite bounds, clipping, prompts, and artwork verification.
+- Add native construction-phase catalogs and verify within-level progress, animation continuity, responsive layouts, and final-tier construction alongside the complete automated release checks.
+
 ## 1.10.0 — 2026-10-07
 
 - Replace all 20 city stages with individually illustrated ink-and-watercolor scenes, from a timber shack to bustling markets, gardens, layered skylines, transit, and a space-age metropolis.

@@ -33,7 +33,7 @@ export function vehicle(type,incoming=false,appearance) {
   const spec=transportSpec(type),i=VEHICLE_STAGES.indexOf(spec);
   const seed=Number.isFinite(appearance)?Math.abs(Math.floor(appearance)):i+(incoming?0:3);
   const {body,cargo}=i>=5&&i<=11?illustratedTruck(spec,seed):illustratedVehicle(spec,seed);
-  const handler=i<=1?`<g class="cart-handler" transform="translate(${spec.width/2-2} 11)">${illustratedWorker({woman:incoming})}</g>`:'';
+  const handler=i<=1?`<g class="cart-handler" transform="translate(${i===0?-spec.width/2+3:spec.width/2-2} 11)">${illustratedWorker({woman:incoming})}</g>`:'';
   const legacyClass=i===1?'supply-pushcart':i===6?'supply-pickup':i===15?'supply-plane':`supply-${spec.id}`;
   return `<g class="${legacyClass}" stroke="#385065" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none">${body}<g class="vehicle-cargo">${cargo}</g>${handler}</g>`;
 }
