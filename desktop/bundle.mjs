@@ -1,5 +1,7 @@
 import { access, readFile } from 'node:fs/promises';
 import { join, resolve, relative, isAbsolute } from 'node:path';
+import {TRUCK_ASSETS} from '../public/truck-art.js';
+import {ILLUSTRATION_ASSETS} from '../public/artwork/manifest.js';
 
 export const requiredAssets = [
   'package.json', 'collector.ps1', 'traffic.ps1', 'lib/TrafficTrace.cs',
@@ -7,7 +9,7 @@ export const requiredAssets = [
   'desktop/manage-capture.ps1', 'desktop/trace-host.ps1', 'desktop/trace-session.ps1',
   'desktop/icon.png', 'desktop/tray.png', 'public/index.html', 'public/app.js', 'public/render.js',
   'public/companion-ui.js', 'public/setup-progress.js', 'public/setup.css', 'public/version.js', 'public/speed.js', 'public/cities.js', 'public/vehicles.js',
-  'public/routes.js', 'public/brands.js', 'public/address.js', 'public/providers.js', 'public/service-evidence.js','public/enrichment.js', 'lib/dns.mjs',
+  'public/routes.js', 'public/brands.js', 'public/address.js', 'public/providers.js', 'public/service-evidence.js','public/enrichment.js', 'public/truck-art.js', ...TRUCK_ASSETS.map(name=>'public/'+name), 'public/illustration-art.js', 'public/artwork/manifest.js', ...ILLUSTRATION_ASSETS.map(name=>'public/'+name), 'lib/dns.mjs',
   'lib/evidence.mjs','lib/enhanced-lookup.mjs','lib/NameTrace.cs','lib/BrowserHost.cs','desktop/browser-bridge.ps1','desktop/enhanced-lookup.ps1',
   'browser/identities.json','browser/chrome/manifest.json','browser/chrome/background.js','browser/chrome/popup.js','browser/chrome/popup.html','browser/edge/manifest.json','browser/edge/background.js','browser/edge/popup.js','browser/edge/popup.html','browser/netKonnect-chrome-Service-Insight.zip','browser/netKonnect-edge-Service-Insight.zip','browser/firefox/manifest.json','browser/firefox/background.js','browser/netKonnect-Service-Insight.xpi'
 ];

@@ -1,0 +1,93 @@
+{
+  "tool": "built-in imagegen",
+  "prompts": [
+    {
+      "id": "handcart-empty",
+      "kind": "fleet",
+      "prompt": "Edit the reference transparent three-cart sprite strip: remove ONLY all crates, stacked timber, tarp and tie straps ABOVE THE CART BED from each of the three pushcarts, leaving empty clean wooden cart beds. Preserve EXACT original canvas dimensions 2172 by 724, positions, scale, pose, wheel baseline, each cart's wooden side walls, handles, iron rims, wheel spokes, colors, shading and fine ink contours. Do not recenter or resize. Keep genuine transparency.",
+      "refs": [
+        "C:/Users/Kris/dev/netKonnect/public/artwork/fleet/handcart.png"
+      ]
+    },
+    {
+      "id": "wheelbarrow-empty",
+      "kind": "fleet",
+      "prompt": "Edit this transparent three-vehicle sprite strip. Remove ONLY all shipping crates, loose lumber, tarps and cargo tie straps from each wheelbarrow, revealing a clean EMPTY wooden wheelbarrow bed. Preserve the cargo bed/basket/rack itself and every part of the vehicle. Preserve EXACT canvas dimensions 2172 by 724, vehicle positions, sizes, perspective, baseline, colors, outlines, shading, wheels, spokes, handles and mechanical details. Do not resize or recenter. Genuine alpha transparency. No new scenery or text.",
+      "refs": [
+        "C:/Users/Kris/dev/netKonnect/public/artwork/fleet/wheelbarrow.png"
+      ]
+    },
+    {
+      "id": "cargo-bicycle-empty",
+      "kind": "fleet",
+      "prompt": "Edit this transparent three-vehicle sprite strip. Remove ONLY all shipping crates, loose lumber, tarps and cargo tie straps from each bicycle's rear cargo rack, revealing a clean EMPTY wooden cargo rack/basket. Preserve the cargo bed/basket/rack itself and every part of the vehicle. Preserve EXACT canvas dimensions 2172 by 724, vehicle positions, sizes, perspective, baseline, colors, outlines, shading, wheels, spokes, handles and mechanical details. Do not resize or recenter. Genuine alpha transparency. No new scenery or text.",
+      "refs": [
+        "C:/Users/Kris/dev/netKonnect/public/artwork/fleet/cargo-bicycle.png"
+      ]
+    },
+    {
+      "id": "cargo-trike-empty",
+      "kind": "fleet",
+      "refs": [
+        "C:/Users/Kris/dev/netKonnect/public/artwork/fleet/cargo-trike.png"
+      ],
+      "prompt": "Edit this transparent three-vehicle sprite strip. Remove ONLY the wooden shipping crates, loose stacked lumber and cargo straps above the tricycle's wooden cargo box side walls. Keep the EMPTY wooden cargo box intact. Preserve EXACT original canvas dimensions 2172 by 724, every vehicle's position, size, perspective, baseline, body paint, fine ink contours, watercolor shading and mechanical details. Do not resize, reposition or recenter any vehicle. Retain the empty areas where cargo has been removed as true transparency where appropriate. No new scenery, text or objects. Genuine alpha transparency."
+    },
+    {
+      "id": "scooter-empty",
+      "kind": "fleet",
+      "refs": [
+        "C:/Users/Kris/dev/netKonnect/public/artwork/fleet/scooter.png"
+      ],
+      "prompt": "Edit this transparent three-vehicle sprite strip. Remove ONLY all shipping crates and tie straps from the scooter's rear luggage rack. Keep the EMPTY metal rack intact. Preserve EXACT original canvas dimensions 2172 by 724, every vehicle's position, size, perspective, baseline, body paint, fine ink contours, watercolor shading and mechanical details. Do not resize, reposition or recenter any vehicle. Retain the empty areas where cargo has been removed as true transparency where appropriate. No new scenery, text or objects. Genuine alpha transparency."
+    },
+    {
+      "id": "freight-train-empty",
+      "kind": "fleet",
+      "refs": [
+        "C:/Users/Kris/dev/netKonnect/public/artwork/fleet/freight-train.png"
+      ],
+      "prompt": "Edit this transparent three-vehicle sprite strip. Remove ONLY all shipping containers, loose crates, lumber, tarp and cargo straps from both freight wagons. Keep the locomotive and the EMPTY freight wagon side boards, floors, buffers, couplings and wheels intact. Preserve EXACT original canvas dimensions 2172 by 724, every vehicle's position, size, perspective, baseline, body paint, fine ink contours, watercolor shading and mechanical details. Do not resize, reposition or recenter any vehicle. Retain the empty areas where cargo has been removed as true transparency where appropriate. No new scenery, text or objects. Genuine alpha transparency."
+    },
+    {
+      "id": "helicopter-empty",
+      "kind": "fleet",
+      "refs": [
+        "C:/Users/Kris/dev/netKonnect/public/artwork/fleet/helicopter.png"
+      ],
+      "prompt": "Edit this transparent three-vehicle sprite strip. Remove ONLY the suspended wooden crate and all its suspension ropes below the helicopter's skids. Keep helicopter, skids and all rotor blades intact, in precisely their original places. Preserve EXACT original canvas dimensions 2172 by 724, every vehicle's position, size, perspective, baseline, body paint, fine ink contours, watercolor shading and mechanical details. Do not resize, reposition or recenter any vehicle. Retain the empty areas where cargo has been removed as true transparency where appropriate. No new scenery, text or objects. Genuine alpha transparency."
+    },
+    {
+      "id": "tiltrotor-empty",
+      "kind": "fleet",
+      "refs": [
+        "C:/Users/Kris/dev/netKonnect/public/artwork/fleet/tiltrotor.png"
+      ],
+      "prompt": "Edit this transparent three-vehicle sprite strip. Remove ONLY the suspended wooden crate and its suspension ropes below the aircraft. Keep the aircraft, landing gear, wings, rotors and engine nacelles intact, in precisely their original places. Preserve EXACT original canvas dimensions 2172 by 724, every vehicle's position, size, perspective, baseline, body paint, fine ink contours, watercolor shading and mechanical details. Do not resize, reposition or recenter any vehicle. Retain the empty areas where cargo has been removed as true transparency where appropriate. No new scenery, text or objects. Genuine alpha transparency."
+    },
+    {
+      "id": "barge-empty",
+      "kind": "fleet",
+      "refs": [
+        "C:/Users/Kris/dev/netKonnect/public/artwork/fleet/barge.png"
+      ],
+      "prompt": "Edit this transparent three-vehicle sprite strip. Remove ONLY all wooden shipping crates and shipping containers from the open deck, revealing the clean EMPTY cargo deck. Keep the pilothouse, railings, crane, mast, hull and wake unchanged. Preserve EXACT original canvas dimensions 2172 by 724, every vehicle's position, size, perspective, baseline, body paint, fine ink contours, watercolor shading and mechanical details. Do not resize, reposition or recenter any vehicle. Retain the empty areas where cargo has been removed as true transparency where appropriate. No new scenery, text or objects. Genuine alpha transparency."
+    },
+    {
+      "id": "freighter-empty",
+      "kind": "fleet",
+      "refs": [
+        "C:/Users/Kris/dev/netKonnect/public/artwork/fleet/freighter.png"
+      ],
+      "prompt": "Edit this transparent three-vehicle sprite strip. Remove ONLY all colored shipping containers from the open cargo deck, revealing realistic EMPTY container sockets and clean deck. Keep superstructure, masts, railings, lifeboats, hull and wake unchanged. Preserve EXACT original canvas dimensions 2172 by 724, every vehicle's position, size, perspective, baseline, body paint, fine ink contours, watercolor shading and mechanical details. Do not resize, reposition or recenter any vehicle. Retain the empty areas where cargo has been removed as true transparency where appropriate. No new scenery, text or objects. Genuine alpha transparency."
+    },
+    {
+      "id": "mega-ship-empty",
+      "kind": "fleet",
+      "refs": [
+        "C:/Users/Kris/dev/netKonnect/public/artwork/fleet/mega-ship.png"
+      ],
+      "prompt": "Edit this transparent three-vehicle sprite strip. Remove ONLY all colored shipping containers and wooden cargo crates from the cargo deck, revealing an EMPTY deck underneath the solar canopy. Keep the solar canopy, entire superstructure, machinery, masts, hull and wake unchanged. Preserve EXACT original canvas dimensions 2172 by 724, every vehicle's position, size, perspective, baseline, body paint, fine ink contours, watercolor shading and mechanical details. Do not resize, reposition or recenter any vehicle. Retain the empty areas where cargo has been removed as true transparency where appropriate. No new scenery, text or objects. Genuine alpha transparency."
+    }
+  ]
+}

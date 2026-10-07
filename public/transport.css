@@ -126,6 +126,16 @@
 .application-city .site-crane { opacity:.85; }
 .application-city[data-stage="0"] .site-crane,.application-city[data-stage="1"] .site-crane { display:none; }
 .city-airdrop { opacity:0; }
+.has-airdrop.city-working .city-airdrop { animation:city-parcel 12s linear infinite; }
+.city-resting .city-airdrop { animation-play-state:paused; }
+.crew-builder .illustrated-person { animation:illustrated-build 2.6s ease-in-out infinite; transform-origin:0 0; }
+.crew-receiver .illustrated-person { animation:illustrated-receive 4s ease-in-out infinite; transform-origin:0 0; }
+@keyframes illustrated-build { 40% { transform:rotate(-5deg); } 60% { transform:rotate(3deg); } }
+@keyframes illustrated-receive { 45% { transform:translateY(-1px); } }
+.cart-handler>.helper-person { animation:cart-walk .7s ease-in-out infinite alternate; }
+@keyframes cart-walk { to { transform:translateY(-.6px) rotate(2deg); } }
+.still .cart-handler *,.no-motion .cart-handler * { animation-play-state:paused !important; }
+@media(prefers-reduced-motion:reduce) { .cart-handler * { animation:none !important; } }
 .application-city .crew-carrier { animation:city-carry 12s linear infinite; }
 .application-city .crew-carrier>.helper-person { animation:city-face 12s steps(1,end) infinite; }
 .application-city .crew-walker { animation:city-patrol var(--walk-duration) linear infinite; animation-delay:var(--walk-delay); }

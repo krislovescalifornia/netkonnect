@@ -126,7 +126,8 @@ test('hidden routes drain without new departures, then release their queue',()=>
 test('supply sprites carry wood, crates and walking helpers in both directions',()=>{
   for(const incoming of [true,false]) {
     assert.match(vehicle('bicycle',incoming),/supply-pushcart/);
-    assert.match(vehicle('bicycle',incoming),/helper-legs/);
+    assert.match(vehicle('bicycle',incoming),/cart-handler/);
+    assert.match(vehicle('bicycle',incoming),/artwork\/fleet\/crew\.png/);
     assert.doesNotMatch(vehicle('bicycle',incoming),/class="bicycle"|bicycle-spokes/);
     assert.match(vehicle('truck',incoming),/supply-pickup/);
     assert.match(vehicle('plane',incoming),/supply-plane/);

@@ -168,7 +168,7 @@ async function start() {
     return;
   }
   await ensureCompanion();
-  const types = { '.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.svg':'image/svg+xml' };
+  const types = { '.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.svg':'image/svg+xml', '.png':'image/png' };
   protocol.handle('netkonnect', async request => {
     if (!isLocalAsset(request.url)) return new Response('Denied',{status:403});
     const u=new URL(request.url); let name;

@@ -1,0 +1,11 @@
+{
+  "tool": "built-in imagegen",
+  "prompts": [
+    {
+      "id": "tiltrotor",
+      "prompt": "Edit this transparent three-aircraft sprite strip to fix overlapping rotor tips between cells. Preserve the illustration style, detailed aircraft designs, exact ivory/sage/slate liveries, perspective, rightward facing pose and suspended wooden crates. Keep canvas EXACTLY 2172 by 724. UNIFORMLY SHRINK each entire aircraft including its rotors and hanging crate to 82 percent of its original scale, then place each in its OWN EQUAL 724-pixel-wide third, centered at x=362,1086,1810. Each complete aircraft including all rotor blades must be fully contained within x=55..669 for first, x=779..1393 for second, x=1503..2117 for third. Leave at least 110 pixels of completely clear transparent space between neighboring aircraft silhouettes. The aircraft MUST NOT overlap, touch, or extend beyond their cells. Align all three suspended crate bottoms at the same baseline. Do not change subject or remove cargo. No scenery, text or painted checkerboard. True alpha transparency.",
+      "reference": "fleet/tiltrotor.png",
+      "followup": "Regenerated fleet/tiltrotor-empty.png from the repaired strip with its recorded empty-load prompt."
+    }
+  ]
+}

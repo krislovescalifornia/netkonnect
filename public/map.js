@@ -121,7 +121,7 @@ export class TransportAnimator {
           group.dataset.transport = journey.type;
           const spec=transportSpec(journey.type);
           const scale = Math.min(.85,(svg.classList.contains('city-route-scene')?88:53)/spec.width);
-          group.innerHTML = `<g transform="scale(${journey.incoming?-scale:scale} ${scale})">${vehicle(journey.type,journey.incoming)}</g>${svg.classList.contains('city-route-scene')&&journey.incoming?'<g class="delivery-parcel" fill="#e6ba72" stroke="#385065" stroke-width="1.1"><path d="M-6-9H6v9H-6z"/><path d="M-5-8 5-1M5-8-5-1"/></g>':''}`;
+          group.innerHTML = `<g transform="scale(${journey.incoming?-scale:scale} ${scale})">${vehicle(journey.type,journey.incoming,journey.id)}</g>${svg.classList.contains('city-route-scene')&&journey.incoming?'<g class="delivery-parcel" fill="#e6ba72" stroke="#385065" stroke-width="1.1"><path d="M-6-9H6v9H-6z"/><path d="M-5-8 5-1M5-8-5-1"/></g>':''}`;
           svg.append(group);
           record={group,cargo:group.querySelector('.vehicle-cargo'),parcel:group.querySelector('.delivery-parcel')};
           nodes.set(journey.id,record);

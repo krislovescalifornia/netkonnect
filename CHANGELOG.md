@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.10.0 — 2026-10-07
+
+- Replace all 20 city stages with individually illustrated ink-and-watercolor scenes, from a timber shack to bustling markets, gardens, layered skylines, transit, and a space-age metropolis.
+- Give every supply vehicle the same illustrated treatment with three paint or material variants, including pushcarts, bicycles, trucks, trains, helicopters, planes, and ships. Match open cargo vehicles to empty versions for delivery cross-fades.
+- Illustrate construction crews, cranes, and parachute supplies while preserving live journey timing, animation continuity, motion preferences, and measured-byte milestones.
+- Bundle and verify all 56 transparent runtime assets. Add the complete city/fleet catalogs, alpha-bound measurements, generation prompt records, and native visual checks.
+
 ## 1.9.1 — 2026-10-07
 
 - Update application cards in place so live refreshes and sorting preserve connected city scenes and CSS animation timelines. Cache vehicle nodes and resize geometry to avoid repeated SVG searches and layout work during animation.
