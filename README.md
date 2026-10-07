@@ -6,7 +6,7 @@ Brand colors are white (`#ffffff`) and neon green (`#b6ff00`). The app, tray, an
 
 ## Run
 
-Launch the built **netKonnect-Setup-1.3.1.exe** installer. Installation uses its Windows Administrator approval to set up the background companion, privileged capture helper, sign-in startup and outbound app protection together. There are no customer scripts, terminals, dependency downloads or separate setup switches.
+Launch the built **netKonnect-Setup-1.5.0.exe** installer. Installation uses its Windows Administrator approval to set up the background companion, privileged capture helper, sign-in startup and outbound app protection together. There are no customer scripts, terminals, dependency downloads or separate setup switches.
 
 The dashboard's large **Easy Button · Set up everything** performs the same setup if installation could not finish, and repairs or checks it later. A six-stage progress trail follows the real work: companion, checkup, helper, sign-in, live data and local journal. The tiny network crew explains each step, shows elapsed time and calls out Windows approval or live-data waits. Ready/Pending checks update during setup, including in Preferences or with dashboard updates paused. Progress reaches 100% only after fresh observations, measured TCP/UDP capture and a successful local history checkpoint. Windows may ask for Administrator approval to install or repair privileged components. A healthy recheck does not need another approval. Completed steps survive canceled approval; click the same button to retry. Reduced-motion preferences disable the trail and mascot animations.
 
@@ -45,19 +45,44 @@ After startup, click **Restart Service** in the left navigation. The button show
 
 ## Live transport
 
-Service cities are the default visual direction as of 1.4.0. Service cards open initially and pair roomy architectural line art with their traffic lanes. City size uses cumulative recorded download + upload bytes, saved locally across restarts; the existing usage columns still cover the last 60 minutes. Existing installations start with the measured history they retain. Cities never infer bytes from animation, connection counts, or adapter traffic.
+Version 1.5.0 gives each application one city and aggregate traffic lanes; expand its dropdown to inspect services or endpoints in compact rows. City size uses cumulative recorded download bytes across all of the application's destinations, saved locally across restarts and unaffected by destination filters; the existing usage columns still cover the last 60 minutes. Existing installations start with the measured history they retain. Downloads arrive from the right and unload into the city on the left; uploads leave the city. Worker and vehicle animation progress survives refreshes, pause/resume, and city growth. Cities never infer bytes from animation, connection counts, or adapter traffic.
 
-The milestones are shack (starting), house (64 MB), mansion (512 MB), neighborhood (2 GB), village (8 GB), city (32 GB), and metropolis (128 GB), using the same 1,024-based units as usage totals. Unknown totals stay labeled unavailable. Cumulative city totals are retained independently of the 400-day detailed journal.
+Cities have 20 milestones, using the same 1,024-based units as usage totals. Level and next-milestone progress appear beneath each city. Unknown totals stay labeled unavailable. Cumulative city totals are retained independently of the 400-day detailed journal. The original named milestones retain their download thresholds.
 
-Wood pushcarts, loaded pickups, and cargo planes replace the former vehicle artwork while keeping independent download/upload directions and throughput thresholds. Women and men receive deliveries, carry timber, hammer at a scaffold, and operate a crane. High-throughput services receive parachute crates. Construction rests during idle or unavailable capture; animation does not reset on two-second refreshes. Pause and reduced motion apply to the crew and vehicles. Run `electron scripts/qa-cities.mjs` to verify the UI and save screenshots under `test-results/cities`.
+| Level | City | Recorded downloads | Delivery vehicle | Automatic throughput |
+| --- | --- | --- | --- | --- |
+| 1 | Shack | Starting | Wheelbarrow | Below 1 KB/s |
+| 2 | Cabin | 16 MB | Wood handcart | 1 KB/s |
+| 3 | House | 64 MB | Cargo bicycle | 2 KB/s |
+| 4 | Homestead | 128 MB | Cargo tricycle | 4 KB/s |
+| 5 | Mansion | 512 MB | Delivery scooter | 8 KB/s |
+| 6 | Estate | 1 GB | Microvan | 16 KB/s |
+| 7 | Neighborhood | 2 GB | Supply pickup | 32 KB/s |
+| 8 | Suburb | 4 GB | Cargo van | 64 KB/s |
+| 9 | Village | 8 GB | Box truck | 128 KB/s |
+| 10 | Town | 16 GB | Heavy truck | 256 KB/s |
+| 11 | City | 32 GB | Semi trailer | 512 KB/s |
+| 12 | Regional city | 64 GB | Double trailer | 1 MB/s |
+| 13 | Metropolis | 128 GB | Freight train | 2 MB/s |
+| 14 | Capital | 256 GB | Cargo helicopter | 4 MB/s |
+| 15 | Megacity | 512 GB | Heavy lift tiltrotor | 8 MB/s |
+| 16 | Green megacity | 1 TB | Cargo plane | 16 MB/s |
+| 17 | Smart metropolis | 2 TB | Jumbo cargo jet | 32 MB/s |
+| 18 | Arcology | 4 TB | Supply barge | 64 MB/s |
+| 19 | Orbital gateway | 8 TB | Container ship | 128 MB/s |
+| 20 | Space-age metropolis | 16 TB | Space-age cargo ship | 256 MB/s |
+
+City growth and vehicle tiers advance independently. Automatic throughput entries are each tier's starting rate, before hysteresis. Larger cities add elevated transit, skybridges, roof gardens, climate domes, and orbital gateways. All artwork is local SVG in the existing pastel architectural line style.
+
+Twenty progressively larger supply vehicles carry timber, crates, and containers in independent download/upload directions. Aircraft use elevated lanes in both directions; ships have hulls and water wakes. Women and men receive deliveries, carry timber, hammer at a scaffold, and operate a crane. Aerial deliveries receive parachute crates. Construction rests during idle or unavailable capture; animation does not reset on two-second refreshes. Pause and reduced motion apply to the crew, wheels, rotors, and vehicles. Run `electron scripts/qa-cities.mjs` to verify the UI and save screenshots under `test-results/cities`; run `electron scripts/qa-progression.mjs` to create an HTML catalog and full 20-tier contact sheet under `test-results/progression`.
 
 - Each application appears once in a parent card with combined traffic and 60-minute usage. Services open initially; click **Hide services** or **Show services** to collapse or expand its associated services and destinations; **Show endpoints** reveals IP/port/protocol entries in endpoint detail mode. Expanded entries retain their individual traffic, usage, and connection drawers. Expansion stays open across live refreshes and sorting. Local brand logos and consistent names identify apps such as Firefox and Claude; ambiguous DNS destinations retain their IP label. The cards stack their traffic and usage details on smaller screens.
 - View all applications, filter by application or destination, and expand the initial ten applications with **Show more applications**. Filters apply to child routes and their parent totals, sorting ranks parents by combined usage, and expanded children follow the selected sort order.
 - Switch between **App to service** and **App to IP / port** for individual destination addresses, ports, and protocols.
 - Services default to highest **Total · 60 min** (download + upload bytes), keeping brief speed spikes from reshuffling the list. Click the Application, Service / destination, Total, Download, or Upload column to sort; click again to reverse for lowest usage or reverse alphabetical order. **Sort by** also offers connection count. Your choice is saved in browser preferences.
 - Usage includes completed transfers in a rolling 60-minute window, while lane speeds use a smooth average with a 10-second time constant, refreshed from the two-second samples. Brief quiet intervals fade gradually; 20 seconds of sustained idle stops new departures; vehicles already traveling finish their journey. Connection and route details keep the latest exact sample rates. Departed services remain visible until their usage expires. History starts when capture starts, builds during the first hour, and resets when the server restarts; the collection start time appears while the window is filling. Unavailable usage displays a dash.
-- Download vehicles move from the service toward your PC; upload vehicles move in the opposite direction. Vehicle density rises with averaged B/s on a bounded logarithmic scale, so vehicles are a visual encoding rather than one vehicle per packet. Each vehicle travels once from departure to arrival on an independent animation clock. The same SVG and vehicle nodes survive display refreshes and sorting. Each departure keeps its vehicle type and completes its 12-second journey; averaged traffic changes only the type and spacing of future departures, so planes, pickups, and pushcarts can share a lane in order. Cargo planes face their travel direction, and busy cities receive parachute supply crates.
-- Choose automatic transport, wood pushcarts, supply pickups, or airdrops. Automatic transport selects independently for download and upload: wood pushcarts below 64 KB/s, supply pickups from 64 KB/s to 1 MB/s, and cargo planes above 1 MB/s. A 20% buffer around those boundaries prevents frequent category changes. Cart and pickup wheels rotate, and animation/display pause and reduced-motion preferences are respected. Sustained idle routes empty after their remaining journeys finish. When detailed capture is unavailable, route rates remain unavailable instead of estimating bandwidth from connection counts.
+- Download vehicles move from the service toward your PC; upload vehicles move in the opposite direction. Vehicle density rises with averaged B/s on a bounded logarithmic scale, so vehicles are a visual encoding rather than one vehicle per packet. Each vehicle travels once from departure to arrival on an independent animation clock. The same SVG and vehicle nodes survive display refreshes and sorting. Each departure keeps its vehicle type and completes its 12-second journey; averaged traffic changes only the type and spacing of future departures, so different tiers can share a lane in order. Aircraft face their travel direction, and busy cities receive parachute supply crates.
+- Choose automatic transport or any of the 20 individual vehicles. Automatic transport selects independently for download and upload using the throughput milestones above. A 20% buffer around every boundary prevents frequent category changes. Wheels and aircraft rotors animate, and animation/display pause and reduced-motion preferences are respected. Small road fleets are capped at 12 or 16 vehicles; semis, trains, aircraft, and ships are capped at seven to keep lanes readable. Sustained idle routes empty after their remaining journeys finish. When detailed capture is unavailable, route rates remain unavailable instead of estimating bandwidth from connection counts.
 - Open a service terminal for aggregate download/upload rates and its individual connections, including per-connection speeds and hostname clues.
 - The illustrative sample includes Firefox to YouTube video CDN, Firefox to YouTube TV, and upload-heavy OneDrive traffic. It is always labeled as sample data.
 

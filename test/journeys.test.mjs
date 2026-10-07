@@ -1,7 +1,8 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {JourneyQueue} from '../public/routes.js';
-import {vehicle} from '../public/map.js';
+import {vehicle,journeyPose} from '../public/map.js';
+import {VEHICLE_STAGES} from '../public/vehicles.js';
 
 const settings = (type='truck',rate=400000,key='route|download',incoming=true) => ({key,type,rate,incoming});
 const travel = (queue,milliseconds) => { for(let elapsed=0;elapsed<milliseconds;elapsed+=100) queue.advance(Math.min(100,milliseconds-elapsed)); };
@@ -118,5 +119,21 @@ test('supply sprites carry wood, crates and walking helpers in both directions',
     assert.doesNotMatch(vehicle('bicycle',incoming),/class="bicycle"|bicycle-spokes/);
     assert.match(vehicle('truck',incoming),/supply-pickup/);
     assert.match(vehicle('plane',incoming),/supply-plane/);
+  }
+});
+
+test('downloads enter the city on the left and stop to unload; uploads leave to the right',()=>{
+  for(const type of VEHICLE_STAGES.map(s=>s.id)) {
+    const incoming={incoming:true,type},outgoing={incoming:false,type};
+    assert.ok(journeyPose(incoming,.5,true).x<journeyPose(incoming,0,true).x);
+    const arrival=journeyPose(incoming,.82,true),delivery=journeyPose(incoming,.93,true);
+    assert.equal(arrival.x,292);assert.equal(delivery.x,arrival.x);
+    assert.equal(arrival.unloaded,0);assert.equal(delivery.unloaded,1);
+    assert.equal(journeyPose(outgoing,0,true).x,292);
+    assert.equal(journeyPose(outgoing,1,true).x,900);
+    assert.equal(journeyPose(outgoing,.93,true).unloaded,0);
+    const air=VEHICLE_STAGES.find(s=>s.id===type).mode==='air';
+    assert.equal(journeyPose(incoming,0,true).y,air?55:121);
+    assert.equal(journeyPose(outgoing,0,true).y,air?85:149);
   }
 });

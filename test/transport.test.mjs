@@ -1,6 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {RouteTrafficView, buildRoutes, transportForRate, LOW_TRAFFIC_LIMIT, HIGH_TRAFFIC_LIMIT} from '../public/routes.js';
+import {RouteTrafficView, buildRoutes, transportForRate,fleet} from '../public/routes.js';
+import {VEHICLE_STAGES,vehicle,transportSpec} from '../public/vehicles.js';
 import {renderNetworkMap, routeDetails} from '../public/map.js';
 
 const connection = {app:'firefox',pid:45,scope:'Internet',protocol:'UDP',state:'Observed',remoteAddress:'1.2.3.4',remotePort:443};
@@ -74,17 +75,35 @@ test('capture loss, long gaps, clock resets, restart and sample mode discard old
 });
 
 test('automatic transport follows per-direction throughput with boundary hysteresis',()=>{
-  assert.equal(transportForRate(3000),'bicycle');
-  assert.equal(transportForRate(300000),'truck');
-  assert.equal(transportForRate(3000000),'plane');
-  assert.equal(transportForRate(LOW_TRAFFIC_LIMIT*1.1,'bicycle'),'bicycle');
-  assert.equal(transportForRate(LOW_TRAFFIC_LIMIT*.9,'truck'),'truck');
-  assert.equal(transportForRate(LOW_TRAFFIC_LIMIT*1.3,'bicycle'),'truck');
-  assert.equal(transportForRate(LOW_TRAFFIC_LIMIT*.7,'truck'),'bicycle');
-  assert.equal(transportForRate(HIGH_TRAFFIC_LIMIT*1.1,'truck'),'truck');
-  assert.equal(transportForRate(HIGH_TRAFFIC_LIMIT*.9,'plane'),'plane');
-  assert.equal(transportForRate(HIGH_TRAFFIC_LIMIT*1.3,'truck'),'plane');
-  assert.equal(transportForRate(HIGH_TRAFFIC_LIMIT*.7,'plane'),'truck');
+  assert.equal(VEHICLE_STAGES.length,20);
+  for(const [index,stage] of VEHICLE_STAGES.entries()) {
+    assert.equal(transportForRate(stage.at),stage.id);
+    if(!index)continue;
+    const prior=VEHICLE_STAGES[index-1];
+    assert.equal(transportForRate(stage.at-1),prior.id);
+    assert.equal(transportForRate(stage.at*1.1,prior.id),prior.id);
+    assert.equal(transportForRate(stage.at*.9,stage.id),stage.id);
+    assert.equal(transportForRate(stage.at*1.3,prior.id),stage.id);
+    assert.equal(transportForRate(stage.at*.7,stage.id),prior.id);
+    assert.ok(stage.width>prior.width);
+  }
+  assert.equal(transportForRate(null),'wheelbarrow');
+  assert.equal(transportForRate(0,'mega-ship'),'wheelbarrow');
+  assert.equal(transportForRate(1024**3,'wheelbarrow'),'mega-ship');
+  assert.equal(transportForRate(1,'mega-ship'),'wheelbarrow');
+});
+
+test('all twenty vehicles have distinct loaded art in both directions and bounded fleets',()=>{
+  for(const incoming of [true,false]) {
+    assert.equal(new Set(VEHICLE_STAGES.map(s=>vehicle(s.id,incoming))).size,20);
+    for(const stage of VEHICLE_STAGES) {
+      assert.match(vehicle(stage.id,incoming),/vehicle-cargo/);
+      assert.equal(fleet(null,stage.id).count,0);
+      assert.equal(fleet(0,stage.id).count,0);
+      assert.ok(fleet(Number.MAX_SAFE_INTEGER,stage.id).count<=16);
+    }
+  }
+  assert.equal(transportSpec('plane').id,'cargo-plane');
 });
 
 test('Service lanes render smoothed labels and independent fleets while details retain exact rates',()=>{
@@ -95,9 +114,10 @@ test('Service lanes render smoothed labels and independent fleets while details 
   const state = {snapshot,trafficView:view,mode:'live',mapApp:'all',mapQuery:'',mapDetail:'service',mapLimit:10,mapSort:'total',mapSortDirection:'desc',mapVehicle:'auto',motion:true};
   const html = renderNetworkMap({state,icon:()=>'',rate:n=>String(n),bytes:n=>String(n),esc:s=>String(s)});
   assert.match(html,new RegExp(String(lane(view,snapshot).rate)));
-  assert.match(html,/data-download-type="plane"/);
-  assert.match(html,/data-upload-type="bicycle"/);
-  assert.doesNotMatch(html,/train|Idle this interval|road-idle/);
+  assert.match(html,/data-download-type="freight-train"/);
+  assert.match(html,/data-upload-type="handcart"/);
+  assert.doesNotMatch(html,/Idle this interval|road-idle/);
+  assert.equal((html.match(/<option value="(?:wheelbarrow|mega-ship)"/g)||[]).length,2);
   assert.match(html,/987655555/);
   // The map only renders lane settings. Persistent vehicles belong to the
   // separate animator and must never be rebuilt by a sample refresh.

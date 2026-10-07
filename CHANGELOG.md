@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.0 — 2026-10-06
+
+- Give each application one roomy city with services available in a collapsed dropdown, with colorful architectural line art and 20 measured-data growth stages, from a small shack to a space-age metropolis. Show the current level and progress toward the next milestone.
+- Persist cumulative measured traffic separately from rolling-hour traffic; grow application cities from downloads only. Seed existing cities from retained measured history and preserve growth across idle periods, service restarts, and history pruning.
+- Expand deliveries to 20 throughput tiers: wheelbarrows, handcarts, cargo cycles, scooters, vans, pickups, trucks, semis, trains, helicopters, tiltrotors, planes, barges, container ships, and a futuristic cargo ship. Preserve independent directions, threshold stability, full journeys, and parachute airdrops; offer every vehicle in the transport selector.
+- Animate women and men receiving supplies, carrying timber, hammering, and operating cranes while traffic is active. Preserve animation nodes during refreshes and sorting; pause and reduced-motion settings apply to crews and vehicles.
+- Put cities on the left with incoming deliveries and outgoing uploads. Preserve worker animation playback across refreshes and growth; unload supplies before workers carry them to the building site.
+- Verify checkpoint rollback, saved growth, all 20 milestone boundaries, desktop/narrow layouts, refresh continuity, pause, reduced motion, and final-tier helicopter/ship deliveries. Generate a full artwork catalog for visual review.
+
 ## 1.4.0 — 2026-10-06
 
 - Make roomy service cities the default expanded service view, with colorful architectural line art and seven measured-data growth stages, from shack to metropolis.

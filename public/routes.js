@@ -1,4 +1,5 @@
 import { appIdentity, appName, hostnameIdentity } from './brands.js';
+import {VEHICLE_STAGES,transportSpec} from './vehicles.js';
 export function serviceIdentity(connection) {
   const names = (connection.domainCandidates || []).map(n => n.toLowerCase().replace(/\.$/, ''));
   const labels = names.map(hostnameIdentity).map(identity=>[identity.key, identity]);
@@ -59,7 +60,7 @@ export function buildRoutes(connections, { app = 'all', query = '', detail = 'se
     const destination=detail==='endpoint'?`${c.remoteAddress}|${c.remotePort}|${c.protocol}`:(c.service || serviceIdentity(c)).key;
     const route=routes.get(`${c.app}|${destination}`);
     if(!route || !Number.isFinite(c.receivedBytesTotal) || !Number.isFinite(c.sentBytesTotal))continue;
-    route.cityBytes=(route.cityBytes || 0)+c.receivedBytesTotal+c.sentBytesTotal;
+    route.cityBytes=(route.cityBytes || 0)+c.receivedBytesTotal;
   }
   return sortRoutes([...routes.values()], sort, direction);
 }
@@ -69,13 +70,14 @@ export function fleet(rate, type = 'truck') {
   // high-throughput streams to create unbounded DOM nodes.
   const load = Math.log2(1 + rate / 8192);
   const duration = Math.max(5, 13-load*.65);
-  if (type === 'plane') return {count:Math.min(7,Math.max(1,Math.ceil(load/2))), duration};
-  return {count:Math.min(type === 'bicycle' ? 12 : 24,Math.max(1,Math.ceil(load*2))), duration};
+  const spec=transportSpec(type);
+  if (spec.mode !== 'road' || spec.width>=71) return {count:Math.min(7,Math.max(1,Math.ceil(load/2))), duration};
+  return {count:Math.min(spec.width<=49 ? 12 : 16,Math.max(1,Math.ceil(load*2))), duration};
 }
 
 // Group already filtered routes, so parent totals always describe the children
 // shown underneath them. Keep raw route keys for the connection detail drawer.
-export function groupApplicationRoutes(routes, {sort = 'total', direction = 'desc'} = {}) {
+export function groupApplicationRoutes(routes, {sort = 'total', direction = 'desc', cityUsage} = {}) {
   const groups = new Map();
   for (const route of routes) {
     const key = appIdentity(route.app).key;
@@ -97,16 +99,30 @@ export function groupApplicationRoutes(routes, {sort = 'total', direction = 'des
       group.totalBytes60m = group.receivedBytes60m + group.sentBytes60m;
     }
   }
+  if (cityUsage) {
+    // City growth belongs to the whole application, including destinations that
+    // are no longer active or are hidden by the current destination filter.
+    for (const group of groups.values()) group.cityBytes = null;
+    for (const usage of cityUsage) {
+      if (usage.scope !== 'Internet' || usage.pid === 0 || !Number.isFinite(usage.receivedBytesTotal) || !Number.isFinite(usage.sentBytesTotal)) continue;
+      const group = groups.get(appIdentity(usage.app).key);
+      if (group) group.cityBytes = (group.cityBytes ?? 0) + usage.receivedBytesTotal;
+    }
+  }
   return sortRoutes([...groups.values()], sort, direction);
 }
 
 export const LOW_TRAFFIC_LIMIT = 64 * 1024;
 export const HIGH_TRAFFIC_LIMIT = 1024 * 1024;
 export function transportForRate(rate, previous) {
-  // A 20% buffer keeps a lane from swapping vehicles near a category boundary.
-  const low = LOW_TRAFFIC_LIMIT * (previous === 'bicycle' ? 1.2 : previous ? .8 : 1);
-  const high = HIGH_TRAFFIC_LIMIT * (previous === 'plane' ? .8 : previous ? 1.2 : 1);
-  return rate < low ? 'bicycle' : rate < high ? 'truck' : 'plane';
+  if(!Number.isFinite(rate)||rate<=0)return VEHICLE_STAGES[0].id;
+  let index=previous?VEHICLE_STAGES.indexOf(transportSpec(previous)):-1;
+  // A 20% buffer at every boundary prevents jitter. A large speed change can
+  // cross multiple tiers immediately; existing journeys keep their own type.
+  if(index<0)return VEHICLE_STAGES.findLast(s=>rate>=s.at).id;
+  while(index<VEHICLE_STAGES.length-1&&rate>=VEHICLE_STAGES[index+1].at*1.2)index++;
+  while(index>0&&rate<VEHICLE_STAGES[index].at*.8)index--;
+  return VEHICLE_STAGES[index].id;
 }
 
 // This cache belongs to the Service view. Collector rates and hourly byte totals

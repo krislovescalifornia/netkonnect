@@ -9,7 +9,7 @@ const connections = [connection,
   {...connection,app:'Codex',remoteAddress:'3.4.5.6',receivedBytes60m:300,sentBytes60m:10}];
 const departed = {...connection,app:'FIREFOX.exe',pid:12,remoteAddress:'4.5.6.7',protocol:'UDP',receiveRate:0,sendRate:0,receivedBytes60m:40,sentBytes60m:10};
 const options = {usageConnections:[departed]};
-const state = {snapshot:{connections,traffic:{available:true,usageConnections:[departed]}},mode:'live',mapApp:'all',mapQuery:'',mapDetail:'service',mapLimit:10,mapSort:'total',mapSortDirection:'desc',mapVehicle:'auto',motion:false,mapExpanded:new Set(),mapCitiesInitialized:true};
+const state = {snapshot:{connections,traffic:{available:true,usageConnections:[departed]}},mode:'live',mapApp:'all',mapQuery:'',mapDetail:'service',mapLimit:10,mapSort:'total',mapSortDirection:'desc',mapVehicle:'auto',motion:false,mapExpanded:new Set()};
 const render = overrides => renderNetworkMap({state:{...state,...overrides},icon:()=>'',rate:String,bytes:String,esc:String});
 
 test('one parent combines all process IDs, destinations, protocols and completed usage exactly once',()=>{
@@ -46,14 +46,14 @@ test('search, endpoint mode and missing capture preserve matching parent totals'
 
 test('manual collapse and expansion remain keyed across sorting',()=>{
   const collapsed=render();
-  assert.equal((collapsed.match(/class="transport-route application-parent"/g)||[]).length,2);
+  assert.equal((collapsed.match(/class="transport-route application-parent application-city-card"/g)||[]).length,2);
   assert.doesNotMatch(collapsed,/class="transport-route application-child"|data-route="firefox\|/);
   assert.match(collapsed,/data-map-expand="firefox" aria-expanded="false"/);
   const expanded=render({mapExpanded:new Set(['firefox']),mapSort:'app',mapSortDirection:'asc',mapLimit:1});
   // The first alphabetic parent is Codex; child counts do not consume pagination.
   assert.doesNotMatch(expanded,/class="transport-route application-child"/);
   const firefox=render({mapExpanded:new Set(['firefox'])});
-  assert.equal((firefox.match(/class="transport-route application-child service-city-card"/g)||[]).length,3);
+  assert.equal((firefox.match(/class="transport-route application-child"/g)||[]).length,3);
   assert.equal((firefox.match(/<strong>Firefox<\/strong>/g)||[]).length,1);
   assert.match(firefox,/data-map-expand="firefox" aria-expanded="true"/);
   assert.match(firefox,/No active connections/);
@@ -62,14 +62,46 @@ test('manual collapse and expansion remain keyed across sorting',()=>{
   assert.match(endpoints,/Show endpoints|Hide endpoints/);
 });
 
-test('new city applications open once while manually collapsed applications remain closed',()=>{
-  const initial={...state,mapCitiesInitialized:false,mapExpanded:new Set()};
+test('application cities stay visible while services default to collapsed and expand without cities',()=>{
+  const initial={...state,mapExpanded:new Set()};
   const first=renderNetworkMap({state:initial,icon:()=>'',rate:String,bytes:String,esc:String});
-  assert.equal((first.match(/service-city-card/g)||[]).length,4);
-  initial.mapExpanded.delete('firefox');
+  assert.equal((first.match(/data-city-key=/g)||[]).length,2);
+  assert.doesNotMatch(first,/class="transport-route application-child"/);
+  initial.mapExpanded.add('firefox');
   const second=renderNetworkMap({state:initial,icon:()=>'',rate:String,bytes:String,esc:String});
-  assert.match(second,/data-map-expand="firefox" aria-expanded="false"/);
-  assert.equal((second.match(/service-city-card/g)||[]).length,1);
+  assert.match(second,/data-map-expand="firefox" aria-expanded="true"/);
+  assert.equal((second.match(/data-city-key=/g)||[]).length,2);
+  assert.equal((second.match(/class="transport-route application-child"/g)||[]).length,3);
+  for(const [child] of second.matchAll(/<article class="transport-route application-child"[\s\S]*?<\/article>/g))assert.doesNotMatch(child,/data-city-key=/);
+  initial.mapExpanded.delete('firefox');
+  const third=renderNetworkMap({state:initial,icon:()=>'',rate:String,bytes:String,esc:String});
+  assert.match(third,/data-map-expand="firefox" aria-expanded="false"/);
+  assert.equal((third.match(/data-city-key=/g)||[]).length,2);
+  assert.doesNotMatch(third,/class="transport-route application-child"/);
+});
+
+test('application city growth includes historical destinations and stays stable across filters and detail modes',()=>{
+  const MB=1024**2;
+  const cityUsage=[
+    {...connection,receivedBytesTotal:30*MB,sentBytesTotal:0},
+    {...connections[1],receivedBytesTotal:20*MB,sentBytesTotal:0},
+    {...departed,remoteAddress:'9.9.9.9',receivedBytesTotal:500*MB,sentBytesTotal:10*MB},
+    {...connections[2],receivedBytesTotal:70*MB,sentBytesTotal:0},
+    {...connection,pid:0,receivedBytesTotal:1024**4,sentBytesTotal:0},
+    {...connection,scope:'Local network',receivedBytesTotal:1024**4,sentBytesTotal:0}
+  ];
+  const snapshot={...state.snapshot,traffic:{...state.snapshot.traffic,cityUsage}};
+  for(const overrides of [{},{mapQuery:'2.3.4.5'},{mapDetail:'endpoint'},{mapExpanded:new Set(['firefox'])}]) {
+    const html=render({snapshot,...overrides});
+    assert.match(html,/data-city-key="application\|firefox" data-stage="4"/);
+    assert.match(html,new RegExp(`${550*MB} downloaded`));
+  }
+  const unknown=render({snapshot:{...snapshot,traffic:{...snapshot.traffic,cityUsage:[]}}});
+  assert.match(unknown,/Awaiting measured data/);
+  const uploading=render({snapshot:{connections:[{...connection,receiveRate:0,sendRate:100}],traffic:{available:true,cityUsage:[{...connection,receivedBytesTotal:0,sentBytesTotal:1024**4}]}}});
+  assert.match(uploading,/data-city-key="application\|firefox" data-stage="0"/);
+  assert.match(uploading,/city-resting/);
+  assert.match(uploading,/0 downloaded/);
 });
 
 test('parent smooth speeds equal child speeds and filtered display does not inherit unrelated traffic',()=>{
