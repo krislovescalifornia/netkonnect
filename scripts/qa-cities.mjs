@@ -29,7 +29,7 @@ try {
     const cities=[...document.querySelectorAll('.application-city')];
     return {count:cities.length,stages:cities.map(c=>Number(c.dataset.stage)),helpers:document.querySelectorAll('.application-city .helper-person').length,overflow:document.documentElement.scrollWidth>innerWidth};
   })()`);
-  const initial=await inspect();assert.equal(initial.count,3);assert.deepEqual(initial.stages,[12,8,3]);assert.ok(initial.helpers>=9);
+  const initial=await inspect();assert.equal(initial.count,3,JSON.stringify(errors));assert.deepEqual(initial.stages,[12,8,3]);assert.ok(initial.helpers>=9);
   const sortOrders=[
     ['app',['Firefox','OneDrive','Visual Studio Code']],
     ['downloadSpeed',['OneDrive','Visual Studio Code','Firefox']],
@@ -60,13 +60,20 @@ try {
     animation.currentTime=saved;return {left,right};
   })()`);
   assert.deepEqual(facing,{left:-1,right:1},'walker faces in the direction of travel');
-  await window.webContents.executeJavaScript(`window.cityNode=document.querySelector('.application-city');window.convoyNode=document.querySelector('.convoy-svg');`);
+  await window.webContents.executeJavaScript(`window.cityNode=document.querySelector('.application-city');window.convoyNode=document.querySelector('.convoy-svg');
+    window.workerAnimation=document.querySelector('.crew-carrier').getAnimations().find(a=>a.animationName==='city-carry');
+    window.sceneRemovals=0;window.sceneObserver=new MutationObserver(records=>{for(const record of records)for(const node of record.removedNodes)if(node.nodeType===1&&(node.matches('.application-city,.convoy-svg')||node.querySelector('.application-city,.convoy-svg')))window.sceneRemovals++;});window.sceneObserver.observe(document.querySelector('#main'),{childList:true,subtree:true});`);
   const workerTime=()=>window.webContents.executeJavaScript(`document.querySelector('.crew-carrier').getAnimations().find(a=>a.animationName==='city-carry').currentTime`);
   const firstWorkerTime=await workerTime();
   await new Promise(resolve=>setTimeout(resolve,2400));
   const refreshedWorkerTime=await workerTime();
   assert.ok(refreshedWorkerTime>firstWorkerTime+2100,`worker playback must advance through a polling refresh: ${firstWorkerTime} → ${refreshedWorkerTime}`);
   assert.equal(await window.webContents.executeJavaScript(`window.cityNode===document.querySelector('.application-city')&&window.convoyNode===document.querySelector('.convoy-svg')`),true,'polling must preserve animation nodes');
+  assert.equal(await window.webContents.executeJavaScript(`window.sceneRemovals===0&&window.workerAnimation===document.querySelector('.crew-carrier').getAnimations().find(a=>a.animationName==='city-carry')`),true,'refresh must keep scenes connected and preserve the CSS Animation object');
+  assert.equal(await window.webContents.executeJavaScript(`(()=>{
+    document.querySelector('[data-map-sort="app"]').click();
+    return window.workerAnimation===window.cityNode.querySelector('.crew-carrier').getAnimations().find(a=>a.animationName==='city-carry');
+  })()`),true,'reordering application cards keeps CSS animation playback');
   assert.equal(await window.webContents.executeJavaScript(`document.querySelectorAll('.application-child').length`),0,'services start collapsed');
   await window.webContents.executeJavaScript(`document.querySelector('[data-map-expand="firefox"]').click()`);
   const expanded=await window.webContents.executeJavaScript(`({children:document.querySelectorAll('.application-child').length,childCities:document.querySelectorAll('.application-child .application-city').length,sameCity:window.cityNode===document.querySelector('.application-city')})`);
@@ -109,6 +116,8 @@ try {
   await new Promise(resolve=>setTimeout(resolve,100));
   assert.equal(await window.webContents.executeJavaScript(`document.querySelector('.transport-vehicle')?.dataset.progress`),reducedProgress);
   await window.webContents.debugger.sendCommand('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});
+  await window.webContents.executeJavaScript(`document.querySelector('[data-page="overview"]').click()`);
+  assert.equal(await window.webContents.executeJavaScript(`[...document.querySelectorAll('.city-route-scene')].every(svg=>Number(svg.dataset.sceneEnd)>0)`),true,'reopening the current page measures and observes replacement scenes');
   window.setSize(1440,1340);
   cityBoost=16*1024**4;firefoxBoost=16*1024**4;
   for(const type of ['helicopter','mega-ship']) {

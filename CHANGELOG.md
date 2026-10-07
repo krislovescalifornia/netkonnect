@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.1 — 2026-10-07
+
+- Update application cards in place so live refreshes and sorting preserve connected city scenes and CSS animation timelines. Cache vehicle nodes and resize geometry to avoid repeated SVG searches and layout work during animation.
+- Verify animation continuity through polling, sorting, growth and pause/resume, plus a ten-city live-refresh stress check.
+
 ## 1.9.0 — 2026-10-07
 
 - Expand passive Windows collection with kernel process lifetimes, short-lived TCP lifecycle events and retransmission diagnostics; retain ETW-only and zero-byte connection sightings independently of socket snapshots.

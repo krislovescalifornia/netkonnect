@@ -8,6 +8,7 @@ import { speedUnit, nextSpeedUnit, speedButton } from './speed.js';
 import { releaseYear } from './version.js';
 import { serviceDisplayLabel, transportHint } from './service-evidence.js';
 import {evidenceDetails,enrichmentPreferences,sourceDetails} from './enrichment.js';
+import {updateMarkup} from './render.js';
 const analyticsView = new AnalyticsView();
 const transportAnimator = new TransportAnimator();
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -78,8 +79,8 @@ function renderContent(){
   state.trafficView.update(state.snapshot,source);
   refreshNetworkControls();
   const markup=setupSlot('main')+fn();
-  transportAnimator.detach();
-  main.innerHTML=markup;
+  if(state.page==='overview')updateMarkup(main,markup);
+  else main.innerHTML=markup;
   if(state.page==='activity'&&!state.paused)queueMicrotask(()=>analyticsView.load(state.mode,()=>{if(state.page==='activity'&&!analyticsView.editing)renderContent();}));
   state.reducedMotion=reducedMotion.matches;
   transportAnimator.mount(main,{source,active:state.motion&&!state.paused&&!state.reducedMotion});

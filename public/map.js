@@ -29,10 +29,16 @@ export function journeyPose(journey,progress,cityScene=false,sceneEnd=900) {
 export class TransportAnimator {
   constructor({clock=()=>performance.now(), requestFrame=callback=>requestAnimationFrame(callback), cancelFrame=id=>cancelAnimationFrame(id)} = {}) {
     this.clock = clock; this.requestFrame = requestFrame; this.cancelFrame = cancelFrame;
-    this.queue = new JourneyQueue(); this.svgs = new Map(); this.cities = new Map(); this.source = null;
+    this.queue = new JourneyQueue(); this.svgs = new Map(); this.source = null;
+    this.vehicleNodes = new WeakMap(); this.sceneSizes = new WeakMap(); this.configurations=[];
     this.lastTime = this.clock(); this.active = false; this.frame = null;
     this.resizeObserver=typeof ResizeObserver==='undefined'?null:new ResizeObserver(entries=>{
       for(const {target} of entries)this.resizeCityScene(target);
+      for(const config of this.configurations) {
+        const svg=this.svgs.get(config.routeKey);
+        if(svg?.classList.contains('city-route-scene'))config.capacity=this.sceneCapacity(svg);
+      }
+      this.queue.configure(this.configurations);
       this.draw();
     });
   }
@@ -40,6 +46,9 @@ export class TransportAnimator {
     if(!svg.classList.contains('city-route-scene'))return;
     const {width,height}=svg.getBoundingClientRect();
     if(!width||!height)return;
+    const previous=this.sceneSizes.get(svg);
+    if(previous?.width===width && previous?.height===height)return;
+    this.sceneSizes.set(svg,{width,height});
     // Keep the people/buildings proportional while roads fill the available width.
     const extent=Math.max(400,width/height*215);
     svg.setAttribute('viewBox',`0 -20 ${extent} 215`);
@@ -51,83 +60,42 @@ export class TransportAnimator {
     svg.querySelector('.lane-arrow.incoming-road').setAttribute('d',`m${middle-30} 116-5 5 5 5m60-10-5 5 5 5`);
     svg.querySelector('.lane-arrow.outgoing-road').setAttribute('d',`m${middle-35} 164 5 5-5 5m60-10 5 5-5 5`);
   }
+  sceneCapacity(svg) {
+    return svg.classList.contains('city-route-scene')?Math.max(1,Math.floor(((Number(svg.dataset.sceneEnd)||900)-292)/90)):Infinity;
+  }
   tick() {
     const now = this.clock();
     this.queue.advance(this.active ? now-this.lastTime : 0, this.active);
     this.lastTime = now;
   }
-  // Keep the actual SVGs and vehicle nodes out of the part of the page whose
-  // innerHTML gets replaced. Reattach those same nodes after updating the labels.
-  detach() {
-    this.animationTimes=[];
-    for(const svg of new Set([...this.svgs.values(),...this.cities.values()])) {
-      for(const animation of svg.getAnimations({subtree:true})) {
-        this.animationTimes.push({target:animation.effect.target,name:animation.animationName,time:animation.currentTime});
-      }
-      svg.remove();
-    }
-  }
   mount(root,{source,active}) {
     this.tick();
-    this.resizeObserver?.disconnect();
-    if (source !== this.source) { this.queue = new JourneyQueue(); this.svgs.clear(); this.cities.clear(); this.animationTimes=[]; this.source = source; }
-    this.active = active;
-    const cities=new Map();
-    for(const placeholder of root.querySelectorAll('.application-city')) {
-      const key=placeholder.dataset.cityKey,retained=this.cities.get(key);
-      const svg=retained||placeholder;
-      if(svg!==placeholder) {
-        if(svg.dataset.stage!==placeholder.dataset.stage) {
-          svg.querySelector('.city-buildings').innerHTML=placeholder.querySelector('.city-buildings').innerHTML;
-          const helpers=svg.querySelector('.city-helpers'),next=placeholder.querySelector('.city-helpers');
-          const keys=new Set([...next.children].map(node=>node.dataset.helper));
-          for(const helper of helpers.children)if(!keys.has(helper.dataset.helper))helper.remove();
-          for(const helper of [...next.children])if(!helpers.querySelector(`[data-helper="${helper.dataset.helper}"]`))helpers.append(helper);
-          svg.dataset.stage=placeholder.dataset.stage;
-        }
-        svg.setAttribute('class',placeholder.getAttribute('class'));
-        svg.setAttribute('aria-label',placeholder.getAttribute('aria-label'));
-        svg.dataset.progress=placeholder.dataset.progress;
-        for(const name of ['downloadRate','uploadRate','downloadType','uploadType'])svg.dataset[name]=placeholder.dataset[name];
-        placeholder.replaceWith(svg);
-      }
-      cities.set(key,svg);
+    if (source !== this.source) {
+      this.resizeObserver?.disconnect();
+      for(const svg of this.svgs.values())for(const node of this.vehicleNodes.get(svg)?.values()||[])node.group.remove();
+      this.queue = new JourneyQueue(); this.svgs.clear(); this.vehicleNodes=new WeakMap(); this.source = source;
     }
-    this.cities=cities;
+    this.active = active;
     const configurations = [], visible = new Map();
-    for (const placeholder of root.querySelectorAll('.convoy-svg')) {
-      const key = placeholder.dataset.routeKey;
-      const retained = this.svgs.get(key);
-      const svg = placeholder.classList.contains('application-city') ? placeholder : retained || placeholder;
-      if (retained && svg !== placeholder) {
-        svg.setAttribute('aria-label',placeholder.getAttribute('aria-label'));
-        for (const name of ['downloadRate','uploadRate','downloadType','uploadType']) svg.dataset[name] = placeholder.dataset[name];
-        placeholder.replaceWith(svg);
-      }
-      this.resizeCityScene(svg);
-      const capacity=svg.classList.contains('city-route-scene')?Math.max(1,Math.floor((Number(svg.dataset.sceneEnd)-292)/90)):Infinity;
+    for (const svg of root.querySelectorAll('.convoy-svg')) {
+      const key = svg.dataset.routeKey;
+      const newScene=this.svgs.get(key)!==svg;
+      if(newScene)this.resizeCityScene(svg);
+      const capacity=this.sceneCapacity(svg);
       for (const [direction,incoming] of [['download',true],['upload',false]]) {
-        configurations.push({key:`${key}|${direction}`, incoming,
-          rate:placeholder.dataset[`${direction}Rate`] === '' ? null : Number(placeholder.dataset[`${direction}Rate`]),
-          type:placeholder.dataset[`${direction}Type`],capacity});
+        configurations.push({key:`${key}|${direction}`,routeKey:key, incoming,
+          rate:svg.dataset[`${direction}Rate`] === '' ? null : Number(svg.dataset[`${direction}Rate`]),
+          type:svg.dataset[`${direction}Type`],capacity});
       }
       visible.set(key,svg);
-      if(svg.classList.contains('city-route-scene'))this.resizeObserver?.observe(svg);
+      if(svg.classList.contains('city-route-scene') && newScene)this.resizeObserver?.observe(svg);
     }
+    for(const [key,svg] of this.svgs)if(visible.get(key)!==svg)this.resizeObserver?.unobserve(svg);
     this.svgs = visible;
+    this.configurations=configurations;
     this.queue.configure(configurations);
     this.queue.advance(0,this.active || (this.queue.serial === 0 && this.queue.now === 0));
     this.draw();
-    // Reattaching even the same DOM node creates new CSS Animation objects.
-    // Restore each surviving worker/wheel's time before the next painted frame.
-    for(const {target,name,time} of this.animationTimes||[])if(target.isConnected&&time!==null) {
-      const animation=target.getAnimations().find(a=>a.animationName===name);
-      if(animation) {
-        if(animation.playState==='paused')animation.currentTime=time;
-        else animation.startTime=target.ownerDocument.timeline.currentTime-time/animation.playbackRate;
-      }
-    }
-    this.animationTimes=[];
     if (this.frame !== null) { this.cancelFrame(this.frame); this.frame = null; }
     if (this.active && this.svgs.size) this.schedule();
   }
@@ -141,9 +109,11 @@ export class TransportAnimator {
   draw() {
     for (const [key,svg] of this.svgs) {
       const journeys = ['download','upload'].flatMap(direction=>this.queue.lanes.get(`${key}|${direction}`)?.vehicles || []);
-      const existing = new Map([...svg.querySelectorAll('.transport-vehicle')].map(g=>[Number(g.dataset.journeyId),g]));
+      let nodes=this.vehicleNodes.get(svg);
+      if(!nodes) { nodes=new Map(); this.vehicleNodes.set(svg,nodes); }
+      const existing = new Set(nodes.keys());
       for (const journey of journeys) {
-        let group = existing.get(journey.id);
+        let record = nodes.get(journey.id), group=record?.group;
         if (!group) {
           group = svg.ownerDocument.createElementNS(SVG_NS,'g');
           group.setAttribute('class',`transport-vehicle ${journey.incoming?'incoming-fleet':'outgoing-fleet'}`);
@@ -153,6 +123,8 @@ export class TransportAnimator {
           const scale = Math.min(.85,(svg.classList.contains('city-route-scene')?88:53)/spec.width);
           group.innerHTML = `<g transform="scale(${journey.incoming?-scale:scale} ${scale})">${vehicle(journey.type,journey.incoming)}</g>${svg.classList.contains('city-route-scene')&&journey.incoming?'<g class="delivery-parcel" fill="#e6ba72" stroke="#385065" stroke-width="1.1"><path d="M-6-9H6v9H-6z"/><path d="M-5-8 5-1M5-8-5-1"/></g>':''}`;
           svg.append(group);
+          record={group,cargo:group.querySelector('.vehicle-cargo'),parcel:group.querySelector('.delivery-parcel')};
+          nodes.set(journey.id,record);
         }
         existing.delete(journey.id);
         const progress = this.queue.progress(journey);
@@ -160,13 +132,13 @@ export class TransportAnimator {
         group.dataset.progress = progress.toFixed(6);
         group.setAttribute('transform',`translate(${pose.x.toFixed(3)} ${pose.y})`);
         group.style.opacity=pose.opacity;
-        const cargo=group.querySelector('.vehicle-cargo');if(cargo)cargo.style.opacity=1-pose.unloaded;
-        const parcel=group.querySelector('.delivery-parcel');if(parcel) {
+        const {cargo,parcel}=record;if(cargo)cargo.style.opacity=1-pose.unloaded;
+        if(parcel) {
           parcel.style.opacity=pose.unloaded;
           parcel.setAttribute('transform',`translate(-8 ${pose.unloaded*(132-pose.y)})`);
         }
       }
-      for (const group of existing.values()) group.remove();
+      for (const id of existing) { nodes.get(id).group.remove(); nodes.delete(id); }
       if(svg.classList.contains('application-city')) {
         const working=Number(svg.dataset.downloadRate)>0||journeys.some(j=>j.incoming);
         svg.classList.toggle('city-working',working);svg.classList.toggle('city-resting',!working);
@@ -233,7 +205,7 @@ export function renderNetworkMap({state,icon,rate,bytes,esc}) {
         <div class="city-services" role="cell"><button class="route-terminal route-expand" data-map-expand="${esc(r.key)}" aria-expanded="${expanded?'true':'false'}" aria-controls="${esc(childrenId)}" aria-label="${expanded?'Hide':'Show'} ${count} for ${esc(appName(r.app))}" title="${expanded?'Hide':'Show'} ${state.mapDetail==='endpoint'?'endpoints':'services'}"><span><strong>${count}${state.mapDetail==='service'?' & destinations':''}</strong><small>${r.addresses.size} IP${r.addresses.size===1?'':'s'} · ${r.connections.length} active connection${r.connections.length===1?'':'s'}</small></span>${icon('chevron',14)}</button></div>
         ${expanded?`<div class="city-info" role="cell"><strong>Info</strong><span>PID ${esc([...r.pids].join(', '))}</span><span>${esc(protocols)}</span></div>`:''}</article>`;
     }
-    return `<article class="transport-route application-child" role="row">
+    return `<article class="transport-route application-child" data-render-key="${esc(state.mapDetail+'|'+r.key)}" role="row">
       <div role="cell"><div class="route-child-origin"><strong>${protocols}${protocols==='UDP'&&r.connections.some(c=>c.remotePort===443)?' / possible QUIC':''}</strong><small>PID ${[...r.pids].join(', ')}</small></div></div>
       <div class="route-road" role="cell"><div class="route-speeds" title="Smooth average · approximately 10 seconds"><span class="download-rate">← ${rate(download.rate)}</span><span class="upload-rate">${rate(upload.rate)} →</span></div><svg class="convoy-svg" data-route-key="${esc(state.mapDetail+'|'+r.key)}" data-download-rate="${r.measured?download.rate:''}" data-upload-rate="${r.measured?upload.rate:''}" data-download-type="${downloadType}" data-upload-type="${uploadType}" viewBox="0 0 600 76" role="img" aria-label="${esc(appName(r.app))} to ${esc(r.service.label)}: ${r.measured?`${Math.round(download.rate)} bytes per second average download, ${Math.round(upload.rate)} average upload`:'route bandwidth unavailable'}"><path d="M20 19h560" class="road incoming-road"/><path d="M20 51h560" class="road outgoing-road"/><path d="M20 35h560" class="road-divider"/></svg>${r.measured&&!download.rate&&!upload.rate?`<span class="road-idle">${r.connections.length?'Idle':'No active connections'}</span>`:!r.measured?'<span class="road-idle">Awaiting byte-level capture</span>':''}</div>
       <div role="cell"><button class="route-terminal" data-route="${esc(r.key)}" title="${esc(r.service.explanation)}">${brandBadge(r.service,'terminal-icon')}<span><strong>${esc(serviceDisplayLabel(r.service))}</strong><small>${esc(endpoint)}</small><em>${esc(r.service.confidence)}</em></span>${icon('chevron',14)}</button></div>
@@ -241,7 +213,7 @@ export function renderNetworkMap({state,icon,rate,bytes,esc}) {
 
 
   };
-  return `<section class="panel dispatch-panel"><div class="transport-toolbar"><h2>App Filter</h2><div class="transport-controls"><label>Application<select id="map-app"><option value="all">All applications</option>${apps.map(a=>`<option value="${esc(a)}" ${state.mapApp===a?'selected':''}>${esc(appName(a))}</option>`).join('')}</select></label><label>Detail<select id="map-detail"><option value="service" ${state.mapDetail==='service'?'selected':''}>App → service</option><option value="endpoint" ${state.mapDetail==='endpoint'?'selected':''}>App → IP / port</option></select></label><label>Transport<select id="map-vehicle">${[['auto','Automatic · 20 tiers'],...VEHICLE_STAGES.map((s,i)=>[s.id,(i+1)+'. '+s.name])].map(([v,l])=>`<option value="${v}" ${state.mapVehicle===v?'selected':''}>${l}</option>`).join('')}</select></label><label class="route-search">Destination<input id="map-search" value="${esc(state.mapQuery)}" placeholder="YouTube, Firefox, IP…" type="search"></label></div></div>${serviceInsight}${evidenceHealth(state.snapshot,esc)}${!traffic?.available&&state.mode==='live'?`<div class="capture-status">${icon('info',16)}<span>${esc(traffic?.message||'Waiting for network collection…')}<small>Adapter speeds are visible above. Convoys appear when per-route byte measurements are available.</small></span></div>`:''}${traffic?.eventsLost?`<div class="capture-status">${icon('info',16)} Windows dropped ${traffic.eventsLost} trace events; displayed route rates may undercount traffic.</div>`:''}<div class="transport-table" role="table" aria-label="Application cities and traffic; usage columns cover the last 60 minutes"><div class="transport-header"><strong class="sort-options-label">Sort Options</strong><div class="sort-option-row" role="row">${sorts.map(([key,label])=>sortHeader(key,label)).join('')}</div></div><div class="transport-routes ${active?'':'still'}" role="rowgroup">${visible.map(group=>`<div class="application-group">${renderRoute(group,true)}<div id="${esc('app-routes-'+encodeURIComponent(group.key))}" class="application-children" role="rowgroup" aria-label="${esc(appName(group.app))} associated destinations" ${state.mapExpanded?.has(group.key)?'':'hidden'}>${state.mapExpanded?.has(group.key)?group.routes.map(r=>renderRoute(r)).join(''):''}</div></div>`).join('')||`<div class="empty-cell">${state.snapshot?'No routes match this view.':'Waiting for your network…'}</div>`}</div></div><div class="transport-foot"><button class="text-button" data-page="connections">Inspect connections ${icon('arrow',16)}</button><span>${groups.length} application${groups.length===1?'':'s'} · ${routes.length} ${state.mapDetail==='endpoint'?'endpoint':'service'}${routes.length===1?'':'s'}${groups.length>visible.length?` · showing ${visible.length} application${visible.length===1?'':'s'}`:''} · city size: recorded application downloads · usage columns: last 60 minutes${coverage}.</span>${groups.length>visible.length?'<button class="text-button" data-action="more-routes">Show more applications ↓</button>':''}<span>${state.mode==='demo'?'Illustrative traffic':traffic?.available?'10-second smooth average · sampled every 2 seconds':'Speeds unavailable'}</span></div></section>`;
+  return `<section class="panel dispatch-panel"><div class="transport-toolbar"><h2>App Filter</h2><div class="transport-controls"><label>Application<select id="map-app"><option value="all">All applications</option>${apps.map(a=>`<option value="${esc(a)}" ${state.mapApp===a?'selected':''}>${esc(appName(a))}</option>`).join('')}</select></label><label>Detail<select id="map-detail"><option value="service" ${state.mapDetail==='service'?'selected':''}>App → service</option><option value="endpoint" ${state.mapDetail==='endpoint'?'selected':''}>App → IP / port</option></select></label><label>Transport<select id="map-vehicle">${[['auto','Automatic · 20 tiers'],...VEHICLE_STAGES.map((s,i)=>[s.id,(i+1)+'. '+s.name])].map(([v,l])=>`<option value="${v}" ${state.mapVehicle===v?'selected':''}>${l}</option>`).join('')}</select></label><label class="route-search">Destination<input id="map-search" value="${esc(state.mapQuery)}" placeholder="YouTube, Firefox, IP…" type="search"></label></div></div>${serviceInsight}${evidenceHealth(state.snapshot,esc)}${!traffic?.available&&state.mode==='live'?`<div class="capture-status">${icon('info',16)}<span>${esc(traffic?.message||'Waiting for network collection…')}<small>Adapter speeds are visible above. Convoys appear when per-route byte measurements are available.</small></span></div>`:''}${traffic?.eventsLost?`<div class="capture-status">${icon('info',16)} Windows dropped ${traffic.eventsLost} trace events; displayed route rates may undercount traffic.</div>`:''}<div class="transport-table" role="table" aria-label="Application cities and traffic; usage columns cover the last 60 minutes"><div class="transport-header"><strong class="sort-options-label">Sort Options</strong><div class="sort-option-row" role="row">${sorts.map(([key,label])=>sortHeader(key,label)).join('')}</div></div><div class="transport-routes ${active?'':'still'}" role="rowgroup">${visible.map(group=>`<div class="application-group" data-render-key="${esc(group.key)}">${renderRoute(group,true)}<div id="${esc('app-routes-'+encodeURIComponent(group.key))}" class="application-children" role="rowgroup" aria-label="${esc(appName(group.app))} associated destinations" ${state.mapExpanded?.has(group.key)?'':'hidden'}>${state.mapExpanded?.has(group.key)?group.routes.map(r=>renderRoute(r)).join(''):''}</div></div>`).join('')||`<div class="empty-cell">${state.snapshot?'No routes match this view.':'Waiting for your network…'}</div>`}</div></div><div class="transport-foot"><button class="text-button" data-page="connections">Inspect connections ${icon('arrow',16)}</button><span>${groups.length} application${groups.length===1?'':'s'} · ${routes.length} ${state.mapDetail==='endpoint'?'endpoint':'service'}${routes.length===1?'':'s'}${groups.length>visible.length?` · showing ${visible.length} application${visible.length===1?'':'s'}`:''} · city size: recorded application downloads · usage columns: last 60 minutes${coverage}.</span>${groups.length>visible.length?'<button class="text-button" data-action="more-routes">Show more applications ↓</button>':''}<span>${state.mode==='demo'?'Illustrative traffic':traffic?.available?'10-second smooth average · sampled every 2 seconds':'Speeds unavailable'}</span></div></section>`;
 }
 export function routeDetails(route,{esc,rate,bytes,icon},snapshot) {
   const identity=route.service, network=identity.network;

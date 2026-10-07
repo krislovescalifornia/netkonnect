@@ -5,7 +5,7 @@ export const requiredAssets = [
   'package.json', 'collector.ps1', 'traffic.ps1', 'lib/TrafficTrace.cs',
   'lib/sqlite-history.mjs', 'desktop/main.mjs', 'desktop/preload.cjs', 'desktop/companion-identity.mjs', 'desktop/startup.mjs', 'desktop/installed-qa.mjs',
   'desktop/manage-capture.ps1', 'desktop/trace-host.ps1', 'desktop/trace-session.ps1',
-  'desktop/icon.png', 'desktop/tray.png', 'public/index.html', 'public/app.js',
+  'desktop/icon.png', 'desktop/tray.png', 'public/index.html', 'public/app.js', 'public/render.js',
   'public/companion-ui.js', 'public/setup-progress.js', 'public/setup.css', 'public/version.js', 'public/speed.js', 'public/cities.js', 'public/vehicles.js',
   'public/routes.js', 'public/brands.js', 'public/address.js', 'public/providers.js', 'public/service-evidence.js','public/enrichment.js', 'lib/dns.mjs',
   'lib/evidence.mjs','lib/enhanced-lookup.mjs','lib/NameTrace.cs','lib/BrowserHost.cs','desktop/browser-bridge.ps1','desktop/enhanced-lookup.ps1',
