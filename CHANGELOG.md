@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.11.1 — 2026-10-07
+
+- Keep application speed values anchored to the right edge when changing units. Wider measurements expand leftward and shorten the road; verify all seven units at seven window widths.
+- Compact city cards and align upload and download labels with their lanes. Keep growth details available in tooltips and accessible progress descriptions.
+- Move process and browser source status into a dedicated sidebar card and streamline the sort controls.
+
 ## 1.11.0 — 2026-10-07
 
 - Build cities progressively from measured downloads: staggered foundations, framed homes, partial towers, walls, roofs, and finishing reveal the next illustrated skyline before each level advances.

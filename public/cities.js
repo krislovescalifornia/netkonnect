@@ -120,9 +120,13 @@ export function cityArtwork(stage,progress=0,sceneKey='catalog') {
     <g class="city-airdrop">${illustratedProp('airdrop',25,39,39)}</g>
   </g>`;
 }
+// Shared by the initial SVG and the animator's responsive layout.
+export const CITY_ROUTE_SCENE={height:178,download:{road:126,vehicle:115,air:70,arrow:110},upload:{road:80,vehicle:71,air:24,arrow:66},divider:103};
+
 export function renderCity({key,bytes,busy=false,airdrop=false,convoy='',trafficLabel=''}) {
   const stage=cityStage(bytes);
   const build=cityConstruction(stage.index,stage.progress);
   // key is escaped by the caller; stage names and geometry are internal constants.
-  return `<svg class="application-city ${convoy?'convoy-svg city-route-scene ':''}${busy?'city-working':'city-resting'} ${airdrop?'has-airdrop':''} ${stage.known?'':'city-unmeasured'}" data-city-key="${key}" data-stage="${stage.index}" data-progress="${stage.progress}" data-build-phase="${build.phase}" ${convoy} viewBox="${convoy?'0 -20 930 215':'0 -20 330 178'}" role="img" aria-label="${stage.name}; ${stage.known?(stage.next?build.phase.toLowerCase()+' toward '+stage.next:'construction complete'):'awaiting measured supplies'}; ${busy?'construction crew working':'crew resting'}${trafficLabel?'; '+trafficLabel:''}">${cityArtwork(stage.index,stage.progress,key)}${convoy?'<g class="city-supply-road"><path d="M292 132h620" class="road incoming-road"/><path d="M292 178h620" class="road outgoing-road"/><path d="M320 153h592" class="road-divider"/><path d="m570 116-5 5 5 5m60-10-5 5 5 5" class="lane-arrow incoming-road"/><path d="m565 164 5 5-5 5m60-10 5 5-5 5" class="lane-arrow outgoing-road"/></g>':''}</svg>`;
+  const scene=CITY_ROUTE_SCENE;
+  return `<svg class="application-city ${convoy?'convoy-svg city-route-scene ':''}${busy?'city-working':'city-resting'} ${airdrop?'has-airdrop':''} ${stage.known?'':'city-unmeasured'}" data-city-key="${key}" data-stage="${stage.index}" data-progress="${stage.progress}" data-build-phase="${build.phase}" ${convoy} viewBox="${convoy?`0 -20 930 ${scene.height}`:'0 -20 330 178'}" role="img" aria-label="${stage.name}; ${stage.known?(stage.next?build.phase.toLowerCase()+' toward '+stage.next:'construction complete'):'awaiting measured supplies'}; ${busy?'construction crew working':'crew resting'}${trafficLabel?'; '+trafficLabel:''}">${cityArtwork(stage.index,stage.progress,key)}${convoy?`<g class="city-supply-road"><path d="M292 ${scene.upload.road}h620" class="road outgoing-road"/><path d="M292 ${scene.download.road}h620" class="road incoming-road"/><path d="M320 ${scene.divider}h592" class="road-divider"/><path d="m565 ${scene.upload.arrow} 5 5-5 5m60-10 5 5-5 5" class="lane-arrow outgoing-road"/><path d="m570 ${scene.download.arrow}-5 5 5 5m60-10-5 5 5 5" class="lane-arrow incoming-road"/></g>`:''}</svg>`;
 }

@@ -74,6 +74,16 @@
 .sidebar-service-buttons{display:flex;gap:6px}
 .sidebar-service-buttons .button{font-size:10px;padding:9px 8px;gap:6px;justify-content:center;flex:1;white-space:nowrap}
 .display-status{font-size:9px;line-height:1.6;color:#797f73;margin:0}
+.source-status-card{border:1px solid var(--line);border-radius:8px;background:#f8faf5;padding:12px}
+.source-status-card h3{margin:0 0 10px;font-size:11px;color:#455638}
+.source-status-card dl{display:grid;gap:8px;margin:0}
+.source-status-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:0;font-size:10px;line-height:1.4}
+.source-status-row dt{color:#697461}
+.source-status-row dd{margin:0;max-width:92px;font-family:inherit;text-align:right;overflow-wrap:anywhere}
+.source-state.ready{color:#487000}
+.source-state.off{color:#8a9185}
+.source-state.pending{color:#947228}
+.source-status-card p{margin:10px 0 0;padding-top:8px;border-top:1px solid var(--line);font-size:9px;line-height:1.5;color:#947228}
 .sidebar .side-bottom{flex-shrink:0;margin-top:auto;padding-top:8px}
 .sidebar .version{display:flex;align-items:center;font-size:7px;letter-spacing:.6px;gap:8px;padding:14px 8px 0}
 .sidebar .version>span{white-space:nowrap;font-size:9px;letter-spacing:0;color:#797f73}

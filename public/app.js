@@ -7,7 +7,7 @@ import { companionPreferences, handleCompanionAction, setupSlot, setupVersion, r
 import { speedUnit, nextSpeedUnit, speedButton } from './speed.js';
 import { releaseYear } from './version.js';
 import { serviceDisplayLabel, transportHint } from './service-evidence.js';
-import {evidenceDetails,enrichmentPreferences,sourceDetails} from './enrichment.js';
+import {evidenceDetails,enrichmentPreferences,sourceDetails,evidenceHealth} from './enrichment.js';
 import {updateMarkup} from './render.js';
 const analyticsView = new AnalyticsView();
 const transportAnimator = new TransportAnimator();
@@ -44,7 +44,7 @@ function shell(){
     </aside><div class="workspace"><main id="main"></main><footer><span><i class="tiny-dot"></i> Collected locally · Nothing leaves this app</span><span>Take the scenic route. <span class="footer-arrow">↗</span></span></footer></div><div id="overlay"></div>`;
   renderContent();
 }
-function networkControls() { return `<span class="live-pill ${state.error || state.restarting || state.collecting&&!state.snapshot?'muted':''}" role="status"><i></i>${state.restarting?'Restarting service':state.error?'Collector offline':state.collecting&&!state.snapshot?'Connecting':'Live network'}</span><div class="sidebar-service-buttons"><button class="button" data-action="pause" aria-label="${state.paused?'Resume':'Pause'} updates" aria-pressed="${state.paused}" title="${state.paused?'Resume':'Pause'} display updates">${icon(state.paused?'play':'pause',15)}${state.paused?'Resume':'Pause'}</button>${restartButton()}</div>${state.paused?'<p class="display-status">Display paused · Collection continues</p>':''}`; }
+function networkControls() { return `<span class="live-pill ${state.error || state.restarting || state.collecting&&!state.snapshot?'muted':''}" role="status"><i></i>${state.restarting?'Restarting service':state.error?'Collector offline':state.collecting&&!state.snapshot?'Connecting':'Live network'}</span><div class="sidebar-service-buttons"><button class="button" data-action="pause" aria-label="${state.paused?'Resume':'Pause'} updates" aria-pressed="${state.paused}" title="${state.paused?'Resume':'Pause'} display updates">${icon(state.paused?'play':'pause',15)}${state.paused?'Resume':'Pause'}</button>${restartButton()}</div>${state.paused?'<p class="display-status">Display paused · Collection continues</p>':''}${evidenceHealth(state.snapshot,esc)}`; }
 function refreshNetworkControls() { const controls=$('#network-controls'); if(!controls)return; const markup=networkControls(); if(controls.controlsMarkup===markup)return; const action=controls.contains(document.activeElement)?document.activeElement.dataset.action:null; controls.innerHTML=markup; controls.controlsMarkup=markup; if(action)controls.querySelector(`[data-action="${action}"]`)?.focus({preventScroll:true}); }
 function heading(kicker,title,subtitle,action='') { return `<div class="page-heading"><div><div class="eyebrow">${kicker}</div><h1>${title}</h1><p>${subtitle}</p></div>${action?`<div class="heading-actions">${action}</div>`:''}</div>`; }
 function statusBanner(){ if(state.restarting)return `<div class="notice" role="status">${restartIcon} Restarting the service… This page will reconnect automatically.</div>`; if(state.error)return `<div class="notice error-notice">${icon('info',17)} ${esc(state.error)}${state.snapshot?' · Showing the last successful snapshot.':''}</div>`; const issues=state.snapshot?.issues || [];return issues.length?`<div class="notice">${icon('info',17)} ${issues.map(esc).join(' · ')}</div>`:''; }

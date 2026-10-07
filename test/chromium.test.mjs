@@ -57,7 +57,7 @@ test('three browsers sharing an IP retain separate page context, independent swi
  store.snapshot({systemProxy:{known:true,configured:true},connections:[]},now);assert.equal(store.annotate({...connection,app:'msedge'},now).browserEvidence.length,0);
  assert.equal(store.annotate({...connection,app:'firefox'},now+45000).browserEvidence.length,0);
  const prefs=enrichmentPreferences({browser:false,chrome:false,edge:false,enhancedLookup:false},String);assert.equal((prefs.match(/aria-checked="false"/g)||[]).length,4);assert.match(prefs,/chrome:\/\/extensions/);assert.match(prefs,/edge:\/\/extensions/);
- const health=evidenceHealth({enrichment:{chrome:true,edge:false},evidence:{sources:{chrome:{available:true,updatedAt:now}}}},String);assert.match(health,/Chrome: connected/);assert.match(health,/Edge: off/);
+ const health=evidenceHealth({enrichment:{chrome:true,edge:false},evidence:{sources:{chrome:{available:true,updatedAt:now}}}},String);assert.match(health,/<dt>Chrome<\/dt><dd class="source-state ready">connected/);assert.match(health,/<dt>Edge<\/dt><dd class="source-state off">off/);
 });
 
 test('Chromium extension archives and stable IDs match their native host allowlists',async()=>{

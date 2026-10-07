@@ -48,10 +48,11 @@ export function evidenceHealth(snapshot,esc) {
   const states=Object.entries(labels).map(([key,label])=>{
     const s=sources[key],fresh=s&&Date.now()-s.updatedAt<30000;
     const state=Object.hasOwn(browserNames,key)?(snapshot?.enrichment?.[key==='firefox'?'browser':key]?(fresh&&s.available?'connected':'waiting for extension'):'off'):(s?.available?'listening':s?'unavailable':'starting');
-    return `<span title="${esc(s?.message||'No source status yet')}">${label}: ${state}</span>`;
+    const tone=['listening','connected'].includes(state)?'ready':state==='off'?'off':'pending';
+    return `<div class="source-status-row" title="${esc(s?.message||'No source status yet')}"><dt>${label}</dt><dd class="source-state ${tone}">${state}</dd></div>`;
   });
   const blocked=(snapshot?.evidence?.firewallEvents||[]).filter(r=>r.outcome==='blocked');
-  return `<small class="evidence-health">${states.join(' · ')}${blocked.length?` · ${blocked.length} recent blocked audit endpoint${blocked.length===1?'':'s'}`:''}</small>`;
+  return `<section class="source-status-card" aria-label="Process status"><h3>Process status</h3><dl>${states.join('')}</dl>${blocked.length?`<p>${blocked.length} recent blocked audit endpoint${blocked.length===1?'':'s'}</p>`:''}</section>`;
 }
 
 export function sourceDetails(snapshot,esc) {

@@ -145,7 +145,7 @@ test('downloads enter the city on the left and stop to unload; uploads leave to 
     assert.equal(journeyPose(outgoing,1,true).x,900);
     assert.equal(journeyPose(outgoing,.93,true).unloaded,0);
     const air=VEHICLE_STAGES.find(s=>s.id===type).mode==='air';
-    assert.equal(journeyPose(incoming,0,true).y,air?55:121);
-    assert.equal(journeyPose(outgoing,0,true).y,air?111:169);
+    assert.equal(journeyPose(incoming,0,true).y,air?70:115);
+    assert.equal(journeyPose(outgoing,0,true).y,air?24:71);
   }
 });

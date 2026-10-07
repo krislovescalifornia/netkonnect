@@ -24,11 +24,11 @@ app.whenReady().then(async()=>{
     await new Promise(resolve=>setTimeout(resolve,1000));
     await window.webContents.executeJavaScript(`document.querySelector('[data-map-expand="firefox"]').click()`);
     await new Promise(resolve=>setTimeout(resolve,200));
-    const inspect=()=>window.webContents.executeJavaScript(`(()=>({insight:document.querySelector('.service-insight').textContent,
+    const inspect=()=>window.webContents.executeJavaScript(`(()=>({insight:!!document.querySelector('.service-insight'),
       labels:[...document.querySelectorAll('.application-child .route-terminal strong')].map(e=>e.textContent),
-      health:document.querySelector('.evidence-health').textContent,overflow:document.documentElement.scrollWidth>innerWidth}))()`);
+      health:[...document.querySelectorAll('.source-status-row')].map(e=>e.querySelector('dt').textContent+': '+e.querySelector('dd').textContent).join(' · '),overflow:document.documentElement.scrollWidth>innerWidth}))()`);
     const desktop=await inspect();
-    assert.match(desktop.insight,/0 named · 4 network hints · 1 unidentified or shared/);
+    assert.equal(desktop.insight,false);
     assert.equal(desktop.labels.filter(s=>s.includes('service unknown')).length,4);
     assert.ok(desktop.labels.includes('Unidentified service'));
     assert.equal(desktop.overflow,false);

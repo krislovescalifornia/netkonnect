@@ -101,7 +101,7 @@ test('destination UI explains unidentified and provider-only traffic and keeps e
   const state={snapshot:{connections,traffic:{available:true}},mode:'live',mapApp:'all',mapQuery:'',mapDetail:'service',mapLimit:10,mapSort:'total',mapSortDirection:'desc',mapVehicle:'auto',motion:false,mapExpanded:new Set(['firefox'])};
   const helpers={esc:String,rate:String,bytes:String,icon:()=>''};
   const html=renderNetworkMap({state,...helpers});
-  assert.match(html,/0 named · 1 network hint · 1 unidentified or shared/);
+  assert.doesNotMatch(html,/Destination insight|service-insight|source-status-card/);
   assert.match(html,/AT&T network · service unknown/);
   assert.match(html,/Unidentified service/);
   assert.match(html,/203.0.113.17:443/);
