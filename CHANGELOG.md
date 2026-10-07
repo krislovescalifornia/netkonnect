@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.0 — 2026-10-06
+
+- Compact application cards with larger app names, bold speeds at the right of each lane, and a shared footer for city progress, hourly usage graphs, and the services dropdown. Move PIDs and protocols into expandable Info.
+- Build hourly graphs from measured one-minute byte totals, preserving route filters and completed transfers across the rolling hour.
+- Add App Filter and Sort Options with App Name, Download Speed, Upload Speed, Total Download, Total Upload, and Total Bandwidth. Repeated clicks alternate ascending and descending; speed ordering follows displayed smoothed rates.
+- Increase download/upload lane spacing, fit roads to available width, and reduce departure density on narrow screens while preserving existing journeys.
+- Turn walkers to face their direction of travel and add helpers as cities grow, keeping existing workers and their animation progress through refreshes and growth.
+- Verify all six sort choices in both directions, compact desktop/narrow layouts, hourly graph totals, and worker turning and growth.
+
 ## 1.5.0 — 2026-10-06
 
 - Give each application one roomy city with services available in a collapsed dropdown, with colorful architectural line art and 20 measured-data growth stages, from a small shack to a space-age metropolis. Show the current level and progress toward the next milestone.

@@ -30,6 +30,36 @@ try {
     return {count:cities.length,stages:cities.map(c=>Number(c.dataset.stage)),helpers:document.querySelectorAll('.application-city .helper-person').length,overflow:document.documentElement.scrollWidth>innerWidth};
   })()`);
   const initial=await inspect();assert.equal(initial.count,3);assert.deepEqual(initial.stages,[12,8,3]);assert.ok(initial.helpers>=9);
+  const sortOrders=[
+    ['app',['Firefox','OneDrive','Visual Studio Code']],
+    ['downloadSpeed',['OneDrive','Visual Studio Code','Firefox']],
+    ['uploadSpeed',['Visual Studio Code','Firefox','OneDrive']],
+    ['download',['OneDrive','Visual Studio Code','Firefox']],
+    ['upload',['Visual Studio Code','Firefox','OneDrive']],
+    ['total',['Visual Studio Code','OneDrive','Firefox']]
+  ];
+  for(const [key,ascending] of sortOrders) {
+    for(const [direction,expected] of [['ascending',ascending],['descending',[...ascending].reverse()]]) {
+      const sorted=await window.webContents.executeJavaScript(`(()=>{
+        const button=document.querySelector('[data-map-sort="${key}"]');button.click();
+        return {direction:document.querySelector('[data-map-sort="${key}"]').parentElement.getAttribute('aria-sort'),names:[...document.querySelectorAll('.application-city-card .route-origin strong')].map(el=>el.textContent)};
+      })()`);
+      assert.equal(sorted.direction,direction);assert.deepEqual(sorted.names,expected);
+    }
+  }
+  const compact=await window.webContents.executeJavaScript(`(()=>{
+    const cards=[...document.querySelectorAll('.application-city-card')];
+    return {heights:cards.map(c=>c.getBoundingClientRect().height),graphs:document.querySelectorAll('.usage-graph').length,
+      footerAligned:cards.every(c=>{const cells=[c.querySelector('.city-caption'),...c.querySelectorAll('.route-usage'),c.querySelector('.city-services')];const centers=cells.map(el=>{const b=el.getBoundingClientRect();return b.top+b.height/2});return Math.max(...centers)-Math.min(...centers)<2;})};
+  })()`);
+  assert.ok(compact.heights.every(h=>h<240),'compact city cards stay below 240px');assert.equal(compact.graphs,9);assert.equal(compact.footerAligned,true);
+  const facing=await window.webContents.executeJavaScript(`(()=>{
+    const person=document.querySelector('.crew-carrier>.helper-person'),animation=person.getAnimations()[0],saved=animation.currentTime;
+    animation.currentTime=1200;const left=new DOMMatrix(getComputedStyle(person).transform).a;
+    animation.currentTime=8000;const right=new DOMMatrix(getComputedStyle(person).transform).a;
+    animation.currentTime=saved;return {left,right};
+  })()`);
+  assert.deepEqual(facing,{left:-1,right:1},'walker faces in the direction of travel');
   await window.webContents.executeJavaScript(`window.cityNode=document.querySelector('.application-city');window.convoyNode=document.querySelector('.convoy-svg');`);
   const workerTime=()=>window.webContents.executeJavaScript(`document.querySelector('.crew-carrier').getAnimations().find(a=>a.animationName==='city-carry').currentTime`);
   const firstWorkerTime=await workerTime();
@@ -41,15 +71,19 @@ try {
   await window.webContents.executeJavaScript(`document.querySelector('[data-map-expand="firefox"]').click()`);
   const expanded=await window.webContents.executeJavaScript(`({children:document.querySelectorAll('.application-child').length,childCities:document.querySelectorAll('.application-child .application-city').length,sameCity:window.cityNode===document.querySelector('.application-city')})`);
   assert.equal(expanded.children,3);assert.equal(expanded.childCities,0);assert.equal(expanded.sameCity,true);
+  assert.equal(await window.webContents.executeJavaScript(`document.querySelector('.city-info').textContent.includes('Info')&&document.querySelector('.city-info').textContent.includes('PID')`),true);
   assert.equal((await inspect()).count,3,'expanding services must not create cities');
   await window.webContents.executeJavaScript(`document.querySelector('[data-map-expand="firefox"]').click()`);
   assert.equal(await window.webContents.executeJavaScript(`window.cityNode===document.querySelector('.application-city')`),true,'collapsing services preserves the city');
   assert.ok(await workerTime()>firstWorkerTime+2100,'expanding/collapsing services must preserve worker playback');
-  await window.webContents.executeJavaScript(`window.growingCity=document.querySelector('[data-city-key="application|vscode"]');window.growingWorker=window.growingCity.querySelector('.crew-carrier');window.growthTime=window.growingWorker.getAnimations()[0].currentTime;`);
+  await window.webContents.executeJavaScript(`window.growingCity=document.querySelector('[data-city-key="application|vscode"]');window.growingWorker=window.growingCity.querySelector('.crew-carrier');window.growingHelper=window.growingCity.querySelector('.crew-walker');window.helperCount=window.growingCity.querySelectorAll('.helper-person').length;window.growthTime=window.growingWorker.getAnimations()[0].currentTime;`);
   cityBoost=1024**3;
   await new Promise(resolve=>setTimeout(resolve,2400));
   const growthStage=cityStage(1.12*1024**3).index;
   assert.equal(await window.webContents.executeJavaScript(`window.growingCity===document.querySelector('[data-city-key="application|vscode"]')&&window.growingWorker===window.growingCity.querySelector('.crew-carrier')&&window.growingCity.dataset.stage==='${growthStage}'&&window.growingWorker.getAnimations()[0].currentTime>window.growthTime+2100`),true,'growth preserves the worker and its animation time');
+  assert.equal(await window.webContents.executeJavaScript(`window.growingCity.querySelectorAll('.helper-person').length>window.helperCount&&window.growingHelper===window.growingCity.querySelector('.crew-walker')`),true,'growth adds helpers and retains existing walkers');
+  await window.webContents.executeJavaScript(`document.querySelector('[data-action="settings"]').click()`);
+  await new Promise(resolve=>setTimeout(resolve,300));
   await window.webContents.executeJavaScript(`document.querySelector('[data-action="motion"]').click()`);
   const paused=await window.webContents.executeJavaScript(`(()=>{const a=document.querySelector('.crew-carrier').getAnimations()[0];return {paused:getComputedStyle(document.querySelector('.crew-carrier')).animationPlayState,at:a?.currentTime,progress:document.querySelector('.transport-vehicle')?.dataset.progress};})()`);
   assert.equal(paused.paused,'paused');
@@ -57,6 +91,7 @@ try {
   const frozen=await window.webContents.executeJavaScript(`({at:document.querySelector('.crew-carrier').getAnimations()[0]?.currentTime,progress:document.querySelector('.transport-vehicle')?.dataset.progress})`);
   assert.ok(Math.abs(frozen.at-paused.at)<40);assert.equal(frozen.progress,paused.progress);
   await window.webContents.executeJavaScript(`document.querySelector('[data-action="motion"]').click()`);
+  await window.webContents.executeJavaScript(`document.querySelector('[data-action="close"]').click()`);
   await new Promise(resolve=>setTimeout(resolve,6200));
   assert.ok(await workerTime()>12000,'worker must complete a full carrying and return cycle across repeated polls');
   await mkdir(resolve('test-results/cities'),{recursive:true});

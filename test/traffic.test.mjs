@@ -85,6 +85,29 @@ test('hourly usage survives departed flows and expires individual intervals at t
   assert.equal(store.decorate(snapshot,now+USAGE_WINDOW_MS+2000).traffic.usageConnections.length,0);
 });
 
+test('minute graphs conserve measured bytes, age with the rolling hour and respect route filters',()=>{
+  const store=new TrafficStore(),snapshot=enrichSnapshot(raw,null);
+  const ingest=(at,flows)=>store.ingest({type:'traffic',timestamp:new Date(at).toISOString(),elapsed:2,flows},at,snapshot);
+  ingest(now,[{...flow,receivedBytes:100,sentBytes:10},{...flow,localPort:50124,receivedBytes:50,sentBytes:5}]);
+  ingest(now+60000,[{...flow,receivedBytes:200,sentBytes:20},{...flow,remoteAddress:'8.8.8.8',receivedBytes:400,sentBytes:40}]);
+  const decorated=store.decorate(snapshot,now+60000);
+  const options={usageConnections:decorated.traffic.usageConnections};
+  const routes=buildRoutes(decorated.connections,options);
+  const youtube=routes.find(r=>r.endpoint.remoteAddress===flow.remoteAddress);
+  assert.equal(youtube.usageHistory.length,60);
+  assert.deepEqual(youtube.usageHistory[58],{received:150,sent:15});
+  assert.deepEqual(youtube.usageHistory[59],{received:200,sent:20});
+  for(const route of routes) {
+    assert.equal(route.usageHistory.reduce((sum,p)=>sum+p.received,0),route.receivedBytes60m);
+    assert.equal(route.usageHistory.reduce((sum,p)=>sum+p.sent,0),route.sentBytes60m);
+  }
+  const filtered=buildRoutes(decorated.connections,{...options,query:flow.remoteAddress});
+  assert.equal(filtered.length,1);
+  assert.deepEqual(filtered[0].usageHistory,youtube.usageHistory);
+  const expired=store.decorate(snapshot,now+USAGE_WINDOW_MS).traffic.usageConnections;
+  assert.equal(expired.find(c=>c.remoteAddress===flow.remoteAddress).usageHistory.reduce((sum,p)=>sum+p.received,0),200);
+});
+
 test('route ranking uses hourly bytes despite reversed live speeds and counts TCP usage once',()=>{
   const store=new TrafficStore();
   const tcp={...flow,protocol:'TCP',app:'firefox',state:'Established'};
@@ -116,6 +139,19 @@ test('sorts names, download, upload and connection count with deterministic ties
   assert.equal(buildRoutes(connections,{sort:'download'})[0].app,'Alpha');
   assert.equal(buildRoutes(connections,{sort:'upload'})[0].app,'Zulu');
   assert.equal(buildRoutes([...connections,connections[0]],{sort:'connections'})[0].app,'Zulu');
+});
+
+test('speed sorting is independent of hourly totals and leaves unavailable speeds last in either direction',()=>{
+  const connections=[
+    {...flow,app:'Fast download',scope:'Internet',receiveRate:900,sendRate:10,receivedBytes60m:100,sentBytes60m:900},
+    {...flow,app:'Fast upload',scope:'Internet',receiveRate:100,sendRate:90,receivedBytes60m:900,sentBytes60m:100},
+    {...flow,app:'Unknown speed',scope:'Internet',receiveRate:null,sendRate:null,receivedBytes60m:1000,sentBytes60m:1000}
+  ];
+  assert.deepEqual(buildRoutes(connections,{sort:'downloadSpeed'}).map(r=>r.app),['Fast download','Fast upload','Unknown speed']);
+  assert.deepEqual(buildRoutes(connections,{sort:'downloadSpeed',direction:'asc'}).map(r=>r.app),['Fast upload','Fast download','Unknown speed']);
+  assert.deepEqual(buildRoutes(connections,{sort:'uploadSpeed'}).map(r=>r.app),['Fast upload','Fast download','Unknown speed']);
+  assert.deepEqual(buildRoutes(connections,{sort:'uploadSpeed',direction:'asc'}).map(r=>r.app),['Fast download','Fast upload','Unknown speed']);
+  assert.equal(buildRoutes(connections,{sort:'download'})[0].app,'Unknown speed');
 });
 
 test('history respects filters, endpoint granularity and original application despite PID reuse',()=>{
@@ -152,7 +188,7 @@ test('renders sortable columns and completed endpoint routes with their usage de
   const format={state,icon:()=>'',rate:n=>String(n),bytes:n=>String(n),esc:s=>String(s)};
   const html=renderNetworkMap(format);
   assert.match(html,/aria-sort="descending"/);
-  for (const column of ['app','service','total','download','upload']) assert.ok(html.includes(`data-map-sort="${column}"`));
+  for (const column of ['app','downloadSpeed','uploadSpeed','total','download','upload']) assert.ok(html.includes(`data-map-sort="${column}"`));
   assert.match(html,/6004000/);
   assert.match(html,/142.250.1.1:443/);
   assert.match(html,/No active connections/);

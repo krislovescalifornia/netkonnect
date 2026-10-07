@@ -19,10 +19,13 @@ export function cityStage(bytes) {
 }
 export function worker({woman=false,color='#76bdd2',carry=false}={}) {
   return `<g class="helper-person" stroke="#385065" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round">
-    ${woman?'<path d="M-3-18q-4 3-2 7l4-1" fill="#735847"/>':''}<circle cy="-17" r="3" fill="#f2c5a0"/>
-    <path d="M-4-19q1-5 7-2l1 2z" fill="#efbe58"/><path d="M-5-19h10"/>
+    <g class="helper-head">${woman?'<path d="M-3-18q-4 3-2 7l4-1" fill="#735847"/>':''}<circle cy="-17" r="3" fill="#f2c5a0"/><path d="M2-18l2 2-2 1" fill="#f2c5a0"/><path d="M1-18h.2"/>
+    <path d="M-4-19q1-5 7-2l1 2z" fill="#efbe58"/><path d="M-5-19h10"/></g>
     <path d="M-2-13h4l2 8h-8z" fill="${color}"/><path class="helper-legs" d="M-2-5-4 0M2-5 5 0" fill="none"/>
     <g class="helper-arms"><path d="M-2-11-5-7M2-11 6-8" fill="none"/>${carry?'<g class="worker-cargo"><path d="M2-10h10v5H2z" fill="#dfb36f"/><path d="M3-9 11-6M11-9 3-6"/></g>':''}</g></g>`;
+}
+export function cityHelpers(stage) {
+  return Array.from({length:Math.floor(stage/2)},(_,i)=>`<g data-helper="${i}" transform="translate(${48+(i*23)%165} ${i%2?138:134})"><g class="crew-walker" style="--walk-distance:${24+(i%3)*10}px;--walk-duration:${9+i%4}s;--walk-delay:-${i*1.7}s">${worker({woman:i%2===0,color:['#aace81','#82bdca','#e9a18a','#c5b0d7'][i%4],carry:i%3===0})}</g></g>`).join('');
 }
 function tree(x,y=131,size=1) {
   return `<g transform="translate(${x} ${y}) scale(${size})"><path d="M0 0v-21"/><path d="M0-39c-12-1-12 21-3 24 15 5 17-19 8-23z" fill="#b3d58b"/></g>`;
@@ -93,6 +96,7 @@ export function cityArtwork(stage) {
     <g transform="translate(292 131)"><g class="crew-carrier">${worker({woman:true,carry:true,color:'#e9a18a'})}</g></g>
     <g transform="translate(238 131)"><g class="crew-builder">${worker({color:'#82bdca'})}<path class="helper-hammer" d="M6-8 10-15h5"/></g></g>
     <g transform="translate(85 131)"><g class="crew-receiver">${worker({woman:true,color:'#aace81'})}</g></g>
+    <g class="city-helpers">${cityHelpers(stage)}</g>
     <g class="material-stack" fill="#e9c48a"><path d="M59 127h17v4H59zM62 123h17v4H62zM59 119h17v4H59z"/><path d="M205 126h13v5h-13zM209 121h13v5h-13z"/></g>
     <g class="city-airdrop" transform="translate(222 28)"><path d="M-13 0q13-23 26 0z" fill="#d2e9a8"/><path d="M-13 0 0 20 13 0M-5 0 0 20 5 0M-5 0q0-13 5-13 5 0 5 13"/><path d="M-6 20H6v9H-6z" fill="#ebc282"/><path d="M-5 21 5 28M5 21-5 28"/></g>
   </g>`;
@@ -100,5 +104,5 @@ export function cityArtwork(stage) {
 export function renderCity({key,bytes,busy=false,airdrop=false,convoy='',trafficLabel=''}) {
   const stage=cityStage(bytes);
   // key is escaped by the caller; stage names and geometry are internal constants.
-  return `<svg class="application-city ${convoy?'convoy-svg city-route-scene ':''}${busy?'city-working':'city-resting'} ${airdrop?'has-airdrop':''} ${stage.known?'':'city-unmeasured'}" data-city-key="${key}" data-stage="${stage.index}" data-progress="${stage.progress}" ${convoy} viewBox="${convoy?'0 -20 930 195':'0 -20 330 178'}" role="img" aria-label="${stage.name}; ${busy?'construction crew working':'crew resting'}${trafficLabel?'; '+trafficLabel:''}">${cityArtwork(stage.index)}${convoy?'<g class="city-supply-road"><path d="M292 132h620" class="road incoming-road"/><path d="M292 158h620" class="road outgoing-road"/><path d="M320 143h592" class="road-divider"/><path d="m570 116-5 5 5 5m60-10-5 5 5 5" class="lane-arrow incoming-road"/><path d="m565 144 5 5-5 5m60-10 5 5-5 5" class="lane-arrow outgoing-road"/></g>':''}</svg>`;
+  return `<svg class="application-city ${convoy?'convoy-svg city-route-scene ':''}${busy?'city-working':'city-resting'} ${airdrop?'has-airdrop':''} ${stage.known?'':'city-unmeasured'}" data-city-key="${key}" data-stage="${stage.index}" data-progress="${stage.progress}" ${convoy} viewBox="${convoy?'0 -20 930 215':'0 -20 330 178'}" role="img" aria-label="${stage.name}; ${busy?'construction crew working':'crew resting'}${trafficLabel?'; '+trafficLabel:''}">${cityArtwork(stage.index)}${convoy?'<g class="city-supply-road"><path d="M292 132h620" class="road incoming-road"/><path d="M292 178h620" class="road outgoing-road"/><path d="M320 153h592" class="road-divider"/><path d="m570 116-5 5 5 5m60-10-5 5 5 5" class="lane-arrow incoming-road"/><path d="m565 164 5 5-5 5m60-10 5 5-5 5" class="lane-arrow outgoing-road"/></g>':''}</svg>`;
 }

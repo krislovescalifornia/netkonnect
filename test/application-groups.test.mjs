@@ -31,6 +31,17 @@ test('one parent combines all process IDs, destinations, protocols and completed
   assert.equal(groupApplicationRoutes(buildRoutes(connections,options),{direction:'asc'})[0].app,'Codex');
 });
 
+test('application hourly graphs aggregate aliases and Info is only shown after expanding services',()=>{
+  const history=received=>Array.from({length:60},(_,i)=>({received:i===59?received:0,sent:i===59?10:0}));
+  const groups=groupApplicationRoutes(buildRoutes(connections.map(c=>({...c,usageHistory:history(c.receivedBytes60m)})),{usageConnections:[{...departed,usageHistory:history(40)}]}));
+  const firefox=groups.find(g=>g.key==='firefox');
+  assert.deepEqual(firefox.usageHistory[59],{received:340,sent:30});
+  assert.doesNotMatch(render(),/class="city-info"/);
+  const expanded=render({mapExpanded:new Set(['firefox'])});
+  assert.match(expanded,/class="city-info"[^>]*><strong>Info<\/strong><span>PID 11, 10, 12<\/span><span>UDP \+ TCP<\/span>/);
+  assert.equal((expanded.match(/class="usage-graph"/g)||[]).length,6);
+});
+
 test('search, endpoint mode and missing capture preserve matching parent totals',()=>{
   const filtered=groupApplicationRoutes(buildRoutes(connections,{...options,query:'2.3.4.5'}));
   assert.equal(filtered.length,1);

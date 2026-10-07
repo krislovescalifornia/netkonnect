@@ -17,6 +17,10 @@ export function demoSnapshot() {
     state:protocol==='UDP'?'Observed':'Established',scope:'Internet',domainCandidates:[domain],
     receiveRate:download/count,sendRate:upload/count,trafficSource:'Sample',receivedBytes:download*60/count,sentBytes:upload*60/count,
     receivedBytes60m:download/(i===0?wave:1)*3600/count,sentBytes60m:upload/(i===3?wave:1)*3600/count,
+    usageHistory:Array.from({length:60},(_,minute)=>({
+      received:download/(i===0?wave:1)*60/count*(1+.5*Math.sin((minute+i)*Math.PI/10)),
+      sent:upload/(i===3?wave:1)*60/count*(1+.4*Math.sin((minute+i)*Math.PI/6))
+    })),
     firstSeen:new Date(now-180000-i*1000).toISOString(),lastSeen:new Date(now).toISOString()
   })));
   const receiveRate = specs.reduce((sum,s)=>sum+s[6],0), sendRate = specs.reduce((sum,s)=>sum+s[7],0);

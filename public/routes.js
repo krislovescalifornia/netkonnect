@@ -1,5 +1,13 @@
 import { appIdentity, appName, hostnameIdentity } from './brands.js';
 import {VEHICLE_STAGES,transportSpec} from './vehicles.js';
+function addHistory(target,history) {
+  if(!history)return;
+  target.usageHistory ??= Array.from({length:60},()=>({received:0,sent:0}));
+  for(let i=0;i<60;i++) {
+    target.usageHistory[i].received+=history[i]?.received || 0;
+    target.usageHistory[i].sent+=history[i]?.sent || 0;
+  }
+}
 export function serviceIdentity(connection) {
   const names = (connection.domainCandidates || []).map(n => n.toLowerCase().replace(/\.$/, ''));
   const labels = names.map(hostnameIdentity).map(identity=>[identity.key, identity]);
@@ -9,7 +17,8 @@ export function serviceIdentity(connection) {
   return {key:connection.remoteAddress, label:connection.remoteAddress, hint:'No cached hostname', confidence:'IP only'};
 }
 export function sortRoutes(routes, sort = 'total', direction = 'desc') {
-  const numeric = {total:r=>r.totalBytes60m, download:r=>r.receivedBytes60m, upload:r=>r.sentBytes60m, connections:r=>r.connections.length};
+  const numeric = {total:r=>r.totalBytes60m, download:r=>r.receivedBytes60m, upload:r=>r.sentBytes60m, connections:r=>r.connections.length,
+    downloadSpeed:r=>r.measured?(r.sortReceiveRate??r.receiveRate):null, uploadSpeed:r=>r.measured?(r.sortSendRate??r.sendRate):null};
   const value = numeric[sort] || (sort === 'app' ? r=>appName(r.app) : r=>r.service.label);
   const sign = direction === 'asc' ? 1 : -1;
   return routes.sort((a,b) => {
@@ -34,6 +43,7 @@ export function buildRoutes(connections, { app = 'all', query = '', detail = 'se
     return route;
   }
   function addUsage(route, c) {
+    addHistory(route,c.usageHistory);
     if (Number.isFinite(c.receivedBytes60m) && Number.isFinite(c.sentBytes60m)) {
       route.receivedBytes60m = (route.receivedBytes60m || 0) + c.receivedBytes60m;
       route.sentBytes60m = (route.sentBytes60m || 0) + c.sentBytes60m;
@@ -85,6 +95,7 @@ export function groupApplicationRoutes(routes, {sort = 'total', direction = 'des
     if (!groups.has(key)) groups.set(key, {key, app:route.app, service:route.service, routes:[], connections:[], addresses:new Set(), pids:new Set(), protocols:new Set(), receiveRate:0, sendRate:0, measured:false, receivedBytes60m:null, sentBytes60m:null, totalBytes60m:null});
     const group = groups.get(key);
     group.routes.push(route);
+    addHistory(group,route.usageHistory);
     if(Number.isFinite(route.cityBytes))group.cityBytes=(group.cityBytes||0)+route.cityBytes;
     group.connections.push(...route.connections);
     for (const address of route.addresses) group.addresses.add(address);
@@ -174,9 +185,9 @@ export class JourneyQueue {
   constructor() { this.now = 0; this.serial = 0; this.lanes = new Map(); }
   configure(configurations) {
     const visible = new Set();
-    for (const {key, rate, type, incoming} of configurations) {
+    for (const {key, rate, type, incoming,capacity=Infinity} of configurations) {
       visible.add(key);
-      const count = fleet(rate,type).count;
+      const count = Math.min(fleet(rate,type).count,capacity);
       let lane = this.lanes.get(key);
       if (!lane) {
         lane = {vehicles:[], lastDeparture:null, nextDeparture:null, count:0};

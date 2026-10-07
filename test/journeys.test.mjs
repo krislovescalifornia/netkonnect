@@ -62,6 +62,17 @@ test('idle and unavailable rates stop departures while every in-flight vehicle f
   }
 });
 
+test('narrow lanes limit departure density without altering in-flight vehicles or their arrival times',()=>{
+  const queue=new JourneyQueue(),config={...settings('truck',3000000),capacity:2};
+  queue.configure([config]);queue.advance(0);
+  const first=queue.lanes.get(config.key).vehicles[0];
+  assert.equal(queue.lanes.get(config.key).count,2);
+  travel(queue,2000);queue.configure([{...config,capacity:1}]);
+  assert.equal(queue.lanes.get(config.key).count,1);
+  assert.equal(queue.lanes.get(config.key).vehicles[0],first);
+  assert.equal(first.arrives,12000);
+});
+
 test('repeated redraws keep the departure schedule; each direction uses its own queue',()=>{
   const queue = new JourneyQueue();
   const configurations=[settings('bicycle',2000),settings('plane',3000000,'route|upload',false)];
@@ -134,6 +145,6 @@ test('downloads enter the city on the left and stop to unload; uploads leave to 
     assert.equal(journeyPose(outgoing,.93,true).unloaded,0);
     const air=VEHICLE_STAGES.find(s=>s.id===type).mode==='air';
     assert.equal(journeyPose(incoming,0,true).y,air?55:121);
-    assert.equal(journeyPose(outgoing,0,true).y,air?85:149);
+    assert.equal(journeyPose(outgoing,0,true).y,air?111:169);
   }
 });

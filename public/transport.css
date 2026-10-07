@@ -5,7 +5,7 @@
 .transport-controls { display:flex; flex:1; flex-wrap:wrap; align-items:center; gap:8px; }
 .transport-controls label { display:flex; align-items:center; gap:6px; font-size:9px; font-weight:600; color:#69798b; }
 .transport-controls select,.transport-controls input { font-size:10px; padding:5px 7px; background:#fff; border:1px solid #dfe5eb; border-radius:5px; color:#334257; height:30px; min-width:0; }
-#map-app { width:112px; } #map-detail { width:110px; } #map-vehicle { width:156px; } #map-sort { width:126px; }
+#map-app { width:112px; } #map-detail { width:110px; } #map-vehicle { width:156px; }
 .transport-controls .route-search { flex:1; min-width:170px; }
 .transport-controls .route-search input { width:100%; min-width:0; }
 .transport-controls .icon-button { height:30px; width:30px; padding:5px; color:#66768b; }
@@ -122,30 +122,22 @@
 .city-caption strong { font-size:11px; color:#526a7e; font-weight:550; }
 .city-caption span { white-space:normal; }
 .city-caption small { font-size:9px; }
-.transport-table .application-city-card { grid-template-columns:repeat(6,minmax(0,1fr)); gap:0 18px; padding:16px 20px 12px; background:#fff; }
-.transport-table .application-city-card>div:first-child { grid-column:1/4; grid-row:1; }
-.transport-table .application-city-card>.route-road { grid-column:1/-1; grid-row:2; padding-top:24px; }
-.transport-table .application-city-card>div:nth-child(3) { grid-column:4/-1; grid-row:1; justify-self:end; }
-.transport-table .application-city-card .route-terminal { border:0; padding:0 10px; }
-.transport-table .application-city-card>.route-city { min-width:0; width:100%; }
-.transport-table .application-city-card>.route-usage { grid-column:span 2; grid-row:3; margin-top:10px; padding:10px 0 0; border-top:1px solid #edf0f3; text-align:left; font-size:12px; }
-.application-city-card .usage-label { display:block; margin-bottom:3px; color:#8996a4; font-size:9px; font-weight:450; }
-.transport-table .application-city-card .convoy-svg { height:auto; max-height:260px; overflow:visible; }
-.transport-table .application-city-card .route-speeds { top:18px; left:36%; right:2%; font-size:11px; }
-.application-scene .city-caption { width:34%; min-width:150px; padding-left:0; }
-.application-scene .road-idle { left:36%; width:62%; top:60%; }
 .lane-arrow { fill:none; stroke-width:1.5; }
 .application-city .site-crane { opacity:.85; }
 .application-city[data-stage="0"] .site-crane,.application-city[data-stage="1"] .site-crane { display:none; }
 .city-airdrop { opacity:0; }
 .application-city .crew-carrier { animation:city-carry 12s linear infinite; }
+.application-city .crew-carrier>.helper-person { animation:city-face 12s steps(1,end) infinite; }
+.application-city .crew-walker { animation:city-patrol var(--walk-duration) linear infinite; animation-delay:var(--walk-delay); }
+.application-city .crew-walker>.helper-person { animation:city-face var(--walk-duration) steps(1,end) infinite; animation-delay:var(--walk-delay); }
+.application-city .crew-walker .helper-legs { animation:helper-step .7s ease-in-out infinite alternate; transform-origin:0 -5px; }
 .application-city .crew-carrier .worker-cargo { animation:city-cargo 12s linear infinite; }
 .application-city .crew-carrier .helper-legs { animation:helper-step .7s ease-in-out infinite alternate; transform-origin:0 -5px; }
 .application-city .crew-receiver .helper-arms { animation:city-receive 4s ease-in-out infinite; transform-origin:0 -11px; }
 .application-city .crew-builder .helper-arms,.application-city .helper-hammer { animation:city-hammer 2.6s ease-in-out infinite; transform-origin:2px -11px; }
 .application-city .crane-load { animation:city-hoist 10s ease-in-out infinite; }
 .application-city .construction-beam { animation:city-build 10s ease-in-out infinite; }
-.city-resting .crew-carrier,.city-resting .crew-carrier *,.city-resting .crew-receiver *,.city-resting .crew-builder *,.city-resting .crane-load,.city-resting .construction-beam { animation-play-state:paused; }
+.city-resting .crew-carrier,.city-resting .crew-carrier *,.city-resting .crew-walker,.city-resting .crew-walker *,.city-resting .crew-receiver *,.city-resting .crew-builder *,.city-resting .crane-load,.city-resting .construction-beam { animation-play-state:paused; }
 .city-new-stage .city-linework { animation:city-reveal 1.8s ease-out both; }
 .city-resting .construction-site { opacity:.35; }
 .city-unmeasured .city-linework { opacity:.4; }
@@ -159,6 +151,8 @@
 .still .vehicle-rotor,.no-motion .vehicle-rotor { animation-play-state:paused !important; }
 @media(prefers-reduced-motion:reduce) { .vehicle-rotor { animation:none !important; } }
 @keyframes city-carry { 0%,8%,100% { transform:translateX(0); } 44%,56% { transform:translateX(-80px); } 92% { transform:translateX(0); } }
+@keyframes city-face { 0% { transform:scaleX(-1); } 56% { transform:scaleX(1); } 100% { transform:scaleX(-1); } }
+@keyframes city-patrol { 0%,8%,100% { transform:translateX(0); } 44%,56% { transform:translateX(calc(-1 * var(--walk-distance))); } 92% { transform:translateX(0); } }
 @keyframes city-cargo { 0%,42%,100% { opacity:1; transform:translateY(0); } 48% { opacity:1; transform:translateY(10px); } 52%,94% { opacity:0; transform:translateY(10px); } 98% { opacity:0; transform:translateY(0); } }
 @keyframes city-receive { 0%,100% { transform:rotate(0); } 45% { transform:rotate(-25deg); } }
 @keyframes city-hammer { 0%,100% { transform:rotate(0); } 40% { transform:rotate(-30deg); } 55% { transform:rotate(12deg); } }
@@ -205,12 +199,69 @@
   .transport-table .route-terminal>svg:last-child { display:none; }
   .route-usage .usage-label { font-size:8px; }
 }
+/* Compact application cards: one scene, then growth, hourly charts and services. */
+.transport-table .application-city-card { grid-template-columns:minmax(155px,1.25fr) repeat(3,minmax(110px,1fr)) minmax(165px,1.2fr); gap:0 14px; padding:10px 16px; }
+.transport-table .application-city-card>.city-app-heading { grid-column:1/-1; grid-row:1; }
+.transport-table .application-city-card .route-origin { display:flex; align-items:center; gap:10px; width:auto; }
+.transport-table .application-city-card .origin-mark { width:32px; height:32px; }
+.transport-table .application-city-card .route-origin strong { font-size:26px; line-height:32px; letter-spacing:-.5px; }
+.transport-table .application-city-card>.route-road { grid-column:1/-1; grid-row:2; padding:0 106px 0 0; margin-top:-8px; }
+.transport-table .application-city-card .convoy-svg { height:142px; max-height:none; overflow:visible; }
+.transport-table .application-city-card .route-speeds { left:auto; right:0; top:auto; bottom:3px; width:102px; height:54px; display:grid; gap:12px; }
+.application-city-card .route-speeds>span { display:flex; align-items:baseline; justify-content:flex-end; gap:4px; white-space:nowrap; }
+.application-city-card .route-speeds>span>small { font-size:8px; }
+.application-city-card .route-speeds .speed-value { font-size:15px; font-weight:750; padding:0; }
+.application-city-card .route-speeds .speed-value small { font-size:9px; font-weight:500; }
+.application-scene .road-idle { left:38%; width:45%; top:65%; background:none; }
+.transport-table .application-city-card>.city-caption { grid-column:1; grid-row:3; width:auto; min-width:0; padding:3px 0 0; gap:2px; font-size:9px; }
+.application-city-card .city-caption strong { font-size:10px; }
+.application-city-card .city-progress { margin-top:1px; }
+.transport-table .application-city-card>.route-usage { grid-column:auto; grid-row:3; display:flex; align-items:center; justify-content:flex-start; gap:6px; border:0; padding:0; margin:0; text-align:left; font-size:13px; font-weight:650; }
+.application-city-card .usage-label { display:block; margin-bottom:3px; color:#8996a4; font-size:8px; font-weight:450; }
+.usage-graph { width:60px; height:27px; min-width:30px; color:currentColor; overflow:visible; }
+.usage-graph polygon { fill:currentColor; opacity:.1; }
+.usage-graph polyline { fill:none; stroke:currentColor; stroke-width:1.4; stroke-linejoin:round; }
+.usage-baseline { stroke:#e3eaf0; stroke-width:1; }
+.usage-graph-empty { color:#9aa5b2; padding:0 15px; }
+.transport-table .application-city-card>.city-services { grid-column:5; grid-row:3; justify-self:end; }
+.transport-table .application-city-card .route-terminal { border:0; padding:4px 0; gap:7px; }
+.application-city-card .route-terminal strong { font-size:10px; line-height:1.3; }
+.application-city-card .route-terminal small { font-size:8px; margin-top:3px; }
+.transport-table .application-city-card>.city-info { grid-column:1/-1; grid-row:4; display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; margin-top:8px; padding-top:8px; border-top:1px solid #edf0f3; font-size:10px; color:#69798b; overflow-wrap:anywhere; }
+.city-info strong { color:#334257; }
+.transport-table .transport-header { display:block; min-width:0; padding:8px 33px 10px; }
+.sort-options-label { display:block; margin-bottom:6px; font-size:10px; font-weight:650; color:#526a7e; letter-spacing:0; }
+.sort-option-row { display:grid; grid-template-columns:minmax(120px,1fr) auto auto minmax(16px,1fr) auto auto auto; align-items:center; gap:14px; }
+.sort-option-row>span:nth-child(4) { grid-column:5; }
+.sort-option-row>span:nth-child(5) { grid-column:6; }
+.sort-option-row>span:nth-child(6) { grid-column:7; }
+.transport-header .route-sort { font-size:10px; }
+@media(max-width:1150px) {
+  .transport-table .application-city-card { grid-template-columns:minmax(135px,1.1fr) repeat(3,minmax(85px,1fr)) minmax(145px,1.15fr); gap:0 10px; }
+  .usage-graph { width:40px; }
+}
 @media(max-width:900px) {
-  .transport-table .application-city-card { grid-template-columns:repeat(6,minmax(0,1fr)); gap:12px; padding:16px; }
-  .transport-table .application-city-card>div:first-child { grid-column:1/4; grid-row:1; }
-  .transport-table .application-city-card>div:nth-child(3) { grid-column:4/-1; grid-row:1; }
-  .transport-table .application-city-card>.route-road { grid-column:1/-1; grid-row:2; padding-top:28px; }
-  .transport-table .application-city-card .route-speeds { top:10px; font-size:9px; gap:5px; }
-  .application-scene .city-caption { width:100%; font-size:9px; }
-  .transport-table .application-city-card>.route-usage { grid-column:span 2; grid-row:3; }
+  .transport-table .transport-header { display:block; padding:8px 29px; }
+  .sort-option-row { grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px 12px; }
+  .sort-option-row>span:nth-child(n+4) { grid-column:auto; }
+  .transport-header .route-sort { font-size:9px; }
+  .transport-table .application-city-card { grid-template-columns:repeat(3,minmax(0,1fr)); padding:10px 12px; gap:6px 12px; }
+  .transport-table .application-city-card>.city-caption { grid-column:1/3; grid-row:3; }
+  .transport-table .application-city-card>.city-services { grid-column:3; grid-row:3; }
+  .transport-table .application-city-card>.route-usage { grid-row:4; padding-top:6px; border-top:1px solid #edf0f3; }
+  .transport-table .application-city-card>.city-info { grid-row:5; }
+  .transport-table .application-city-card .route-origin strong { font-size:24px; }
+  .transport-table .application-city-card>.route-road { margin-top:-4px; }
+  .transport-table .application-city-card .convoy-svg { height:122px; }
+  .transport-table .application-city-card .route-speeds { height:49px; gap:7px; }
+  .usage-graph { width:60px; }
+}
+@media(max-width:520px) {
+  .transport-table .application-city-card { gap:6px 8px; }
+  .transport-table .application-city-card>.route-road { padding-right:86px; }
+  .transport-table .application-city-card .route-speeds { width:84px; }
+  .application-city-card .route-speeds>span>small { font-size:7px; }
+  .application-city-card .route-speeds .speed-value { font-size:12px; }
+  .application-city-card .route-speeds .speed-value small { font-size:7px; }
+  .usage-graph { width:34px; }
 }
