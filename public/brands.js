@@ -28,11 +28,25 @@ export const brands = {
   cloudflare: ['Cloudflare', 'cloudflare']
 };
 const aliases = { code:'vscode', 'code - insiders':'vscode', 'claude code':'claude', msedge:'edge', 'ms-teams':'teams', 'msedgewebview2':'edge' };
+let operatingSystemIcons = Object.create(null);
+const failedIcons=new Map();
+export function appIconFailed(url) {
+  if(!validAppIcon(url))return;
+  failedIcons.set(url,Date.now()+60000);
+  if(failedIcons.size>512)failedIcons.delete(failedIcons.keys().next().value);
+}
+export const validAppIcon = value => typeof value === 'string' && /^\/app-icons\/[a-f0-9]{64}\.png$/.test(value);
+export function setAppIcons(icons = {}) {
+  operatingSystemIcons = Object.fromEntries(Object.entries(icons).filter(([,value])=>validAppIcon(value)));
+}
+export const hasWatercolor = identity => Object.hasOwn(BRAND_ART, identity.logo);
 export function appIdentity(name) {
   const raw = String(name ?? '').replace(/\.exe$/i, '');
   const key = raw.toLowerCase();
   const brand = aliases[key] || key;
-  return brands[brand] ? { key:brand, label:brands[brand][0], logo:brands[brand][1] } : { key, label:raw.charAt(0).toUpperCase()+raw.slice(1), logo:null };
+  const identity = brands[brand] ? { key:brand, label:brands[brand][0], logo:brands[brand][1] } : { key, label:raw.charAt(0).toUpperCase()+raw.slice(1), logo:null };
+  if (Object.hasOwn(operatingSystemIcons, key)) identity.osIcon = operatingSystemIcons[key];
+  return identity;
 }
 export const appName = name => appIdentity(name).label;
 const matches = (name, domain) => name === domain || name.endsWith('.'+domain);
@@ -62,7 +76,8 @@ export function hostnameIdentity(hostname) {
 }
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function brandBadge(identity, className = '') {
-  const art = Object.hasOwn(BRAND_ART, identity.logo) ? BRAND_ART[identity.logo] : null;
+  const art = hasWatercolor(identity) ? BRAND_ART[identity.logo] : null;
+  const osIcon=validAppIcon(identity.osIcon)&&(failedIcons.get(identity.osIcon)||0)<=Date.now();
   let content = `<span class="brand-monogram">${escape(identity.label.charAt(0).toUpperCase() || '?')}</span>`;
   if (art) {
     // Normalize transparent padding without resampling the generated pixels.
@@ -70,6 +85,8 @@ export function brandBadge(identity, className = '') {
     const side = Math.max(w, h) * 1.06;
     const view = [x + w/2 - side/2, y + h/2 - side/2, side, side].join(' ');
     content = `<svg class="watercolor-brand" width="24" height="24" viewBox="${view}" focusable="false"><image href="/artwork/brands/${escape(identity.logo)}.png" width="${art.size[0]}" height="${art.size[1]}"/></svg>`;
+  } else if (osIcon) {
+    content += `<img class="os-app-icon" src="${identity.osIcon}" alt="" width="64" height="64" decoding="async" loading="lazy">`;
   }
-  return `<span class="app-badge brand-badge ${escape(className)}" aria-hidden="true">${content}</span>`;
+  return `<span class="app-badge brand-badge ${!art&&osIcon?'os-brand ':''}${escape(className)}" data-icon-tier="${art?'watercolor':osIcon?'windows':'letter'}" aria-hidden="true">${content}</span>`;
 }

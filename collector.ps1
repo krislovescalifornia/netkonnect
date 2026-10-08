@@ -30,6 +30,12 @@ try {
     }
   }
 } catch { $issues.Add('Some process identity fields are unavailable.') }
+foreach ($detail in $processDetails.Values) {
+  $detail.localPath=$false
+  try {
+    if ($detail.path -match '^[a-zA-Z]:\\') { $detail.localPath=([IO.DriveInfo]::new([IO.Path]::GetPathRoot($detail.path))).DriveType -eq [IO.DriveType]::Fixed }
+  } catch {}
+}
 try {
   $services=@(Get-CimInstance Win32_Service -Property Name,DisplayName,ProcessId,State -ErrorAction Stop | Where-Object {$_.ProcessId -gt 0 -and $_.State -eq 'Running'})
   foreach ($service in $services) {

@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.13.0 — 2026-10-08
+
+- Add twenty distinct city backgrounds with local-clock lighting, clouds and birds; bundle the complete painted world with the evolving transport routes.
+
+- Paint six evolving road surfaces: dirt, gravel, single-lane paving, boulevards, small highways and large highways. Add separate rail, canal and flight corridors with airport and spaceport destinations.
+- Keep the existing side-profile fleet level on horizontal contact lines, with grounded wheel shadows and ship wakes. Preserve deliveries, in-flight departure geometry, polling, growth, pause and reduced motion.
+- Bundle original transparent imagegen atlases locally; verify all city stages, mixed transport, corridor draining and desktop/phone layouts.
+
+## 1.12.0 — 2026-10-07
+
+- Prefer watercolor badges, then cached Windows icons, then single-letter badges. Extract transparent 64-pixel Shell icons from packaged apps, executables, and exact-target Start Menu shortcuts; keep remote service identities tied to hostname evidence.
+- Share background extraction across process IDs, persist the local cache, check executable changes, and retry unavailable icons without blocking traffic collection. Failed image loads retain their letter fallback.
+- Add the Watercolor wishlist in Preferences: a persistent top ten ranked by observed network time over one calendar month. Combine overlapping TCP/UDP observations, retain all candidates and byte totals, and preserve the final ranking across restarts.
+- Gate builds on native icon extraction and responsive badge/wishlist checks alongside the existing tests.
+- Keep the animation loop running through two-second refreshes and preserve each vehicle's departure geometry when speed labels resize the road. Update city growth in place and retain live crew/delivery state; add resize and all-tier growth regressions plus a growing-city stress check.
+
 ## 1.11.1 — 2026-10-07
 
 - Keep application speed values anchored to the right edge when changing units. Wider measurements expand leftward and shorten the road; verify all seven units at seven window widths.

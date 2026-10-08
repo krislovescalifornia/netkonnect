@@ -1,4 +1,4 @@
-import { appName, appIdentity, brandBadge } from './brands.js';
+import { appName, appIdentity, brandBadge, setAppIcons } from './brands.js';
 import { defaults, parseSearch, weekdays, months } from './analytics-model.js';
 import { demoAnalytics } from './analytics-demo.js';
 import { localRequest } from './client.js';
@@ -29,7 +29,7 @@ export class AnalyticsView {
       if(mode==='demo')data=demoAnalytics(options);
       else {const response=await localRequest('/api/analytics?'+new URLSearchParams(options),{signal:AbortSignal.timeout(20000)});data=await response.json();if(!response.ok)throw new Error(data.error||'History could not be loaded.');}
       if(request!==this.request)return;
-      this.result=data;this.loadedAt=Date.now();
+      setAppIcons(mode==='demo'?{}:data.appIcons||{});this.result=data;this.loadedAt=Date.now();
     } catch(error){if(request!==this.request)return;this.error=error.message;}
     finally {if(request===this.request){this.loading=false;render();}}
   }

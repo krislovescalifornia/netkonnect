@@ -6,7 +6,7 @@ Brand colors are white (`#ffffff`) and neon green (`#b6ff00`). The app, tray, an
 
 ## Run
 
-Launch the built **netKonnect-Setup-1.11.1.exe** installer. Installation uses its Windows Administrator approval to set up the background companion, privileged capture helper, sign-in startup and outbound app protection together. There are no customer scripts, terminals, dependency downloads or separate setup switches.
+Launch the built **netKonnect-Setup-1.13.0.exe** installer. Installation uses its Windows Administrator approval to set up the background companion, privileged capture helper, sign-in startup and outbound app protection together. There are no customer scripts, terminals, dependency downloads or separate setup switches.
 
 The dashboard's large **Easy Button · Set up everything** performs the same setup if installation could not finish, and repairs or checks it later. A six-stage progress trail follows the real work: companion, checkup, helper, sign-in, live data and local journal. The tiny network crew explains each step, shows elapsed time and calls out Windows approval or live-data waits. Ready/Pending checks update during setup, including in Preferences or with dashboard updates paused. Progress reaches 100% only after fresh observations, measured TCP/UDP capture and a successful local history checkpoint. Windows may ask for Administrator approval to install or repair privileged components. A healthy recheck does not need another approval. Completed steps survive canceled approval; click the same button to retry. Reduced-motion preferences disable the trail and mascot animations.
 
@@ -45,6 +45,11 @@ After startup, click **Restart Service** in the left navigation. The button show
 
 ## Live transport
 
+The illustrated routes grow with the application's recorded downloads. Levels 1–2 use dirt roads, 3–4 gravel, 5–6 single-lane paving, 7–10 boulevards, 11–14 small highways, and 15–20 large highways. Rail unlocks at level 11, airports at level 12, river ports at level 13, and spaceports at level 19. These corridors accumulate alongside the roads. A selected train, ship or aircraft preview opens its matching corridor earlier and keeps it visible until the last in-flight journey finishes.
+
+All routes use level horizontal contact lines for the existing side-profile fleet. Wheel shadows and ship wakes tie the moving sprites to the painted surfaces. The original transparent imagegen atlases are bundled locally; no artwork loads from the Internet. Validate the progression and mixed road/water/air scenes with `electron scripts/qa-transport-world.mjs`.
+
+
 Version 1.5.0 gives each application one city and aggregate traffic lanes; expand its dropdown to inspect services or endpoints in compact rows. City size uses cumulative recorded download bytes across all of the application's destinations, saved locally across restarts and unaffected by destination filters; the existing usage columns still cover the last 60 minutes. Existing installations start with the measured history they retain. Downloads arrive from the right and unload into the city on the left; uploads leave the city. Worker and vehicle animation progress survives refreshes, pause/resume, and city growth. Cities never infer bytes from animation, connection counts, or adapter traffic.
 
 Version 1.6.0 compacts the application cards, places bold speeds at the right of separated download/upload lanes, and combines city progress, hourly usage graphs and the services dropdown in one footer. Expand the dropdown to see **Info** with PIDs and protocols. Each graph displays measured bytes per minute over the last 60 minutes. Walkers turn with their direction of travel, and larger cities gain more helpers.
@@ -80,6 +85,8 @@ Twenty progressively larger supply vehicles carry timber, crates, and containers
 
 Each city also has staggered construction sites that progress through foundations, framing, building floors, and finishing using measured downloads toward its next milestone. Partial homes and towers gain walls and roofs, scaffolding clears as each site finishes, and the next illustrated skyline rises behind them. Large cities have up to six independently animated cranes, six scaffold crews, excavators, and a cement mixer; incoming deliveries animate the supply pile. Refreshes and level changes preserve existing crew and machinery animation. The final city stays complete. Run `electron scripts/qa-construction.mjs` for a contact sheet of construction phases across small homes and giant cities under `test-results/construction`.
 
+Live refreshes keep the pending animation frame and update within-level growth directly on the existing artwork. Vehicles keep their departure geometry when changing speed labels resize the road, and new departures use the updated width. Run `electron scripts/qa-animation.mjs --growing` to verify this continuity, all 20 growth tiers, and frame timing across repeated updates of ten busy cities.
+
 - Each application appears once in a parent card with combined traffic and 60-minute usage. Services start collapsed; click the services and destinations dropdown to expand or collapse them. Endpoint detail mode reveals IP/port/protocol entries. Expanded entries retain their individual traffic, usage, and connection drawers. Expansion stays open across live refreshes and sorting. Local brand logos and consistent names identify apps such as Firefox and Claude; ambiguous DNS destinations retain their IP label. The cards stack their traffic and usage details on smaller screens.
 - View all applications, filter by application or destination, and expand the initial ten applications with **Show more applications**. Filters apply to child routes and their parent totals, sorting ranks parents by combined usage, and expanded children follow the selected sort order.
 - Switch between **App to service** and **App to IP / port** for individual destination addresses, ports, and protocols.
@@ -91,6 +98,10 @@ Each city also has staggered construction sites that progress through foundation
 - The illustrative sample includes Firefox to YouTube video CDN, Firefox to YouTube TV, and upload-heavy OneDrive traffic. It is always labeled as sample data.
 
 ## Other dashboards
+
+Application badges prefer bundled watercolor artwork, then a cached local Windows icon, then the application's first letter. Windows extraction uses packaged-app Shell identities, executable resources, and exact-target Start Menu shortcuts, with Electron's file-icon API as a fallback. The background helper preserves 64-pixel transparency; resource-less executables retain a letter instead of a generic Windows application icon. The cache shares extraction across process IDs, persists across restarts, checks executable changes every five minutes, and retries unavailable icons after ten minutes. Remote destination badges use observed hostname/provider identities; a local app icon is never substituted for a website's identity.
+
+Preferences includes **Watercolor wishlist**, a persistent top ten of applications missing watercolor artwork, ranked by observed network time. Collection starts the first time the updated companion runs and ends one calendar month later. Established TCP connection intervals and measured TCP/UDP transfer intervals count once per application, combining process IDs and overlapping sources. Idle established connections count; bare UDP bindings and TCP listeners do not. Snapshot intervals are capped at eight seconds so sleep, failed collection, and a stopped companion never fill gaps. Byte totals are retained alongside the time ranking. The companion updates `watercolor-wishlist.json` every 15 seconds and at orderly shutdown in its local data directory (shown in Preferences); the optional web server keeps its own copy under `data/analytics/`. All candidates remain in that file so the top ten can evolve. The final month stays available across restarts; sample mode does not contribute observations. Apps newly given watercolor artwork disappear from the displayed candidates.
 
 Traffic Management includes adapter traffic metrics, recent connections, and application dossiers. Data Analytics explores saved app and service bandwidth across calendar days, weeks, months, and years. Connections provides TCP sockets and UDP endpoints/observed peers, PID, IPs, ports, state, scope, search, filters, details, and CSV export. Little Secrets groups outside connections by application and destination, with a browser-local watchlist. Network adapters displays configuration, cumulative traffic, and packet error counters.
 
@@ -127,6 +138,8 @@ npm run check
 npm test
 npm run test:windows
 npm run test:desktop
+npm run test:icons:windows # Native extraction, exact shortcut matching and transparent 64px output
+npm run test:icons # Three badge tiers and responsive wishlist screenshots
 npm run test:release # Recheck the latest packaged build
 npm run test:installed # Close the installed dashboard first; verify real setup and the sign-in launch command
 ```

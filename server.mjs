@@ -5,6 +5,8 @@ import { enrichSnapshot } from './lib/network.mjs';
 import { TrafficStore } from './lib/traffic.mjs';
 import { AnalyticsStore } from './lib/analytics.mjs';
 import { EvidenceStore } from './lib/evidence.mjs';
+import { AppIcons, windowsIconReader } from './lib/app-icons.mjs';
+import { IconWishlist } from './lib/icon-wishlist.mjs';
 
 import { randomUUID } from 'node:crypto';
 import { createAppServer } from './lib/http.mjs';
@@ -21,6 +23,10 @@ const traffic = new TrafficStore();
 const evidence = new EvidenceStore();
 const analytics = new AnalyticsStore(fileURLToPath(new URL('./data/analytics/', import.meta.url)));
 await analytics.load();
+const root=fileURLToPath(new URL('./',import.meta.url));
+const icons=new AppIcons(analytics.directory,{readIcons:windowsIconReader(root)}),wishlist=new IconWishlist(analytics.directory);
+await Promise.all([icons.load(),wishlist.load()]);
+let lastObservation=Date.now();
 let trafficWorker;
 function startTraffic() {
   if (process.platform !== 'win32') { traffic.ingest({ type:'status', available:false, message:'Detailed traffic capture requires Windows.' }); return; }
@@ -33,6 +39,8 @@ function startTraffic() {
       const observed=evidence.snapshot(snapshot,now);
       const annotated=batch.type==='traffic'?{...batch,flows:(batch.flows||[]).map(c=>evidence.annotate({...c,app:c.owner?.name||snapshot?.processes?.[c.pid],owner:c.owner||snapshot?.processDetails?.[c.pid]},now))}:batch;
       traffic.ingest(annotated,now,observed);analytics.ingest(annotated,now,observed);
+      wishlist.ingest(annotated,observed,now);
+      if(annotated.type==='traffic')icons.observe({processDetails:snapshot?.processDetails,connections:annotated.flows});
     } catch { traffic.ingest({ type:'status', available:false, message:'Detailed collector returned invalid data.' }); }
   });
   let errorText = '';
@@ -51,13 +59,15 @@ async function collect() {
     if (stopping) return;
     const raw = JSON.parse(stdout.replace(/^\uFEFF/, '').trim());
     snapshot = enrichSnapshot(raw, snapshot, snapshot?.history || [], sightings);
+    icons.observe(snapshot);wishlist.observe(snapshot,Math.min(8,(Date.now()-lastObservation)/1000));lastObservation=Date.now();
     collectorError = null;
   } catch (error) { collectorError = error.message; }
   finally { busy = false; }
 }
 const server = createAppServer({
-  getAnalytics: options => analytics.query(options),
-  getSnapshot: () => ({ snapshot: evidence.snapshot(traffic.decorate(snapshot, Date.now(), [...analytics.cityUsage.values()])), collecting: busy, error: collectorError, interval: 2000,
+  getAnalytics: options => ({...analytics.query(options),appIcons:icons.catalog()}),
+  getIcon: id=>icons.read(id),
+  getSnapshot: () => ({ snapshot: snapshot?{...evidence.snapshot(traffic.decorate(snapshot, Date.now(), [...analytics.cityUsage.values()])),appIcons:icons.catalog(),iconWishlist:wishlist.report()}:null, collecting: busy, error: collectorError, interval: 2000,
     service: { instanceId, pid: process.pid, restarting } }),
   requestRestart: async () => {
     if (restarting) throw new Error('The service is already restarting.');
@@ -73,7 +83,7 @@ const server = createAppServer({
 });
 server.listen(port, '127.0.0.1', () => { console.log(`netKonnect is ready at http://127.0.0.1:${port}`); collect(); startTraffic(); });
 const timer = setInterval(collect, 8000);
-const historyTimer = setInterval(() => analytics.flush(), 15000);
+const historyTimer = setInterval(() => Promise.all([analytics.flush(),wishlist.flush(),icons.flush()]), 15000);
 function stop() {
   if (stopping) return;
   stopping = true;
@@ -87,7 +97,7 @@ function stop() {
     trafficWorker.once('exit', resolve);
     trafficWorker.stdin.end('stop\n');
   });
-  Promise.all([closed, traceStopped]).then(() => analytics.flush()).then(() => process.exit(0));
+  Promise.all([closed, traceStopped]).then(() => Promise.all([analytics.flush(),wishlist.flush(),icons.close()])).then(() => process.exit(0));
   // Parent-exit detection remains a fallback if a broken collector ignores stdin.
   setTimeout(() => process.exit(0), 10000).unref();
 }

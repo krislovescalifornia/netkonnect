@@ -75,3 +75,92 @@ lane sizes), `electron scripts/qa-progression.mjs`,
 at scene size, the Secrets postcard/banner, and setup states at desktop and phone
 widths. Construction and delivery QA also check that these layers contain images
 instead of geometric artwork and preserve unload/landing behavior.
+
+Living city landscapes
+----------------------
+
+`world/meadow-v1.png` paints the entire terrain with grass, distant hills,
+sky, a stream and edge wildlife. `world/environment-v1.png` supplies six
+transparent watercolor cells: clouds, birds, trees, streetlamps, freight dock
+and park. Both were generated with the built-in imagegen tool, using the
+original poster as the style reference; exact prompts are in
+`world/generation-prompts.json`. Source PNG pixels and alpha are preserved.
+
+`world.js` layers evolving painted dirt, gravel, paved, boulevard and highway
+terraces beneath the existing city art. Downloads flow from the left app
+card into the right city and unload; uploads take a separate return road.
+Rail unlocks at level 11; river ports unlock at level 13. Explicit rail or ship
+transport previews open their matching corridor earlier, and that corridor
+remains until its last in-flight journey finishes.
+
+More measured lifetime downloads add trees, parks, lamps, bird flocks and
+road capacity. Traffic density and vehicle type still use measured throughput.
+The local computer clock sets sunrise (05–08), day (08–17), sunset (17–20)
+and night (20–05); this is a clock-based art cycle, not a geographic solar
+calculation. Sun position advances with the clock. Clouds and birds retain
+their animation objects through polling, resizing and growth. Motion settings
+and reduced motion freeze animation; the clock can still update lighting.
+All assets are bundled and served locally, without runtime network requests.
+
+`electron scripts/qa-cities.mjs` checks all 20 growth stages, clocks while
+paused, cleanup, cloud continuity, responsive layout, deliveries and reduced
+motion, and renders sunrise/day/sunset/night screenshots. The animation stress
+test checks ten busy cities without per-frame animation or layout reads.
+
+Twenty evolving backgrounds
+---------------------------
+
+`world/backgrounds/` now contains one individually generated panorama per
+city level, in the exact order of the twenty city milestones. The progression
+moves from untouched woodland and a cabin clearing through gardens, farmland,
+estates, neighborhoods, suburbs, village and town landscapes; the later levels
+add modern skylines, regional transport hubs, metropolitan ports, civic
+districts, megacity density, green towers, smart transit, arcologies, spaceports
+and a space-age city with orbital infrastructure and floating gardens.
+
+All twenty backgrounds use the built-in imagegen tool and the original poster
+and meadow as style/composition references. The source PNG pixels are preserved.
+Exact prompts and generated-source provenance are saved in
+`world/backgrounds/generation-prompts.json`.
+
+`WORLD_BACKGROUNDS` in `world.js` maps each measured stage to its own file.
+Level changes update the existing terrain image, preserving the SVG, clouds,
+crews and traffic animation timelines. The local-clock lighting applies to every
+background. The old meadow remains a style reference. The local HTTP allowlist
+and required desktop bundle include all twenty new background files.
+
+`electron scripts/qa-world-backgrounds.mjs` renders a gallery of the full
+20-image progression and a live comparison of levels 2, 15 and 20. City QA
+checks the correct background during all twenty stage transitions. Unit tests
+verify matching level names, distinct source hashes, panoramic geometry,
+stage selection and offline asset availability.
+
+Evolving transport terraces
+---------------------------
+
+`world/transport/` contains three original transparent imagegen atlases: six
+road surfaces, rail/water/runway strips, and airport/spaceport destinations.
+`generation-prompts.json` preserves the exact built-in prompts and source
+provenance. The approved design references remain in `output/road-concepts/`.
+No vehicle pixels are baked into the scenery; all live fleet sprites remain
+independent.
+
+`scripts/measure-transport-art.py` measures the alpha bands into `frames.js`.
+SVG viewports clip the unchanged source pixels, with terrain strips stretched
+horizontally to fit each responsive scene. Dirt and gravel have separate
+material textures; paved tiers add markings, curbs and low barriers. All
+moving contact lines are horizontal, so the static side-profile fleet stays
+level and keeps its original proportions. Rail, canal and air corridors
+accumulate beside the road pair; airport/spaceport destinations follow growth.
+Contact shadows and ship wakes are lightweight independent overlays.
+
+Levels 1–2: dirt; 3–4: gravel; 5–6: single lane; 7–10: boulevard;
+11–14: small highway; 15–20: large highway. Rail unlocks at 11, airport at 12,
+port at 13 and spaceport at 19. Transport previews expose matching corridors
+earlier; each stays visible until its last in-flight journey completes.
+The shared WORLD_ASSETS list supplies HTTP and desktop bundle verification.
+
+`electron scripts/qa-transport-world.mjs` checks all six road materials,
+mixed sea/air traffic, flat sprites, retained departure geometry, loaded
+artwork, corridor draining and desktop/phone layouts. City and animation QA
+continue to verify live growth, delivery, pause/reduced motion and polling.

@@ -13,11 +13,15 @@ import { StringDecoder } from 'node:string_decoder';
 import { companionProtocol } from './companion-identity.mjs';
 import {EvidenceStore} from '../lib/evidence.mjs';
 import {EnhancedLookup} from '../lib/enhanced-lookup.mjs';
+import { AppIcons, windowsIconReader } from '../lib/app-icons.mjs';
+import { IconWishlist } from '../lib/icon-wishlist.mjs';
 
-export async function startCompanion({ directory, root, version, packaged, onSmokeStop = null, onQuit = null }) {
+export async function startCompanion({ directory, root, version, packaged, onSmokeStop = null, onQuit = null, getFileIcon = null }) {
   await mkdir(directory, { recursive: true, mode: 0o700 });
   const history = new SQLiteHistory(directory, { legacyDirectory: packaged ? null : join(root, 'data', 'analytics') });
   await history.load();
+  const icons=new AppIcons(directory,{readIcons:windowsIconReader(root),getFileIcon}),wishlist=new IconWishlist(directory);
+  await Promise.all([icons.load(),wishlist.load()]);
   let enrichment={browser:false,chrome:false,edge:false,enhancedLookup:false};
   try {const saved=JSON.parse(await readFile(join(directory,'enrichment.json'),'utf8'));enrichment={browser:saved.browser===true,chrome:saved.chrome===true,edge:saved.edge===true,enhancedLookup:saved.enhancedLookup===true};}catch{}
   const evidence=new EvidenceStore({browserEnabled:enrichment.browser,browsers:enrichment}),lookup=new EnhancedLookup(root);
@@ -43,6 +47,8 @@ export async function startCompanion({ directory, root, version, packaged, onSmo
       const enrichedBatch=batch.type==='traffic'?{...batch,flows:(batch.flows||[]).map(c=>enriched({...c,app:c.owner?.name||snapshot?.processes?.[c.pid],owner:c.owner||snapshot?.processDetails?.[c.pid]},now))}:batch;
       const observed=evidence.snapshot(snapshot,now);
       traffic.ingest(enrichedBatch, now, observed); history.ingest({...enrichedBatch,eventsLost:delta,buffersLost:buffersDelta}, now, observed);
+      wishlist.ingest(enrichedBatch,observed,now);
+      if(enrichedBatch.type==='traffic')icons.observe({processDetails:snapshot?.processDetails,connections:enrichedBatch.flows});
       if(batch.type==='traffic'){lastLost=cumulative;lastBuffersLost=buffers;}
     }
     catch { traffic.ingest({ type: 'status', available: false, message: 'The detailed collector returned invalid data.' }); }
@@ -90,12 +96,13 @@ export async function startCompanion({ directory, root, version, packaged, onSmo
       });
       if (stopping) return;
       snapshot = evidence.snapshot(enrichSnapshot(raw, snapshot, snapshot?.history || [], sightings));
+      icons.observe(snapshot);wishlist.observe(snapshot,Math.min(8,(Date.now()-lastSnapshot)/1000));
       history.observe(snapshot, Math.min(8, (Date.now() - lastSnapshot) / 1000)); lastSnapshot = Date.now(); error = null;
     } catch (e) { error = e.message; } finally { collecting = false; }
   }
   const getSnapshot = () => {
     const now=Date.now(),decorated=evidence.snapshot(traffic.decorate(snapshot,now,[...history.cityUsage.values()]),now);
-    if(decorated){decorated.connections=decorated.connections.map(c=>lookup.annotate(c));decorated.enrichment={...enrichment};}
+    if(decorated){decorated.connections=decorated.connections.map(c=>lookup.annotate(c));decorated.enrichment={...enrichment};decorated.appIcons=icons.catalog();decorated.iconWishlist=wishlist.report(now);}
     return { snapshot:decorated, collecting, error, interval:2000,
     service: { instanceId, pid:process.pid, restarting:false, companion:true, startedAt,
       identity:{ protocol:companionProtocol, root, version }, protection:{ firewall:!!traceSocket && privilegedFirewall },
@@ -136,9 +143,10 @@ export async function startCompanion({ directory, root, version, packaged, onSmo
     if (method === 'set-enrichment') return setEnrichment(params);
     if (method === 'enhanced-lookup') return lookup.lookup(params?.address);
     if (method === 'browser-evidence') return evidence.browserBatch(params);
-    if (method === 'analytics') return queryHistory(history, params);
+    if (method === 'analytics') return {...queryHistory(history, params),appIcons:icons.catalog()};
+    if (method === 'app-icon') return icons.read(params?.id).then(png=>({png:png?.toString('base64')||null}));
     if (method === 'restart') return restart();
-    if (method === 'checkpoint') return history.flush().then(() => {
+    if (method === 'checkpoint') return Promise.all([history.flush(),wishlist.flush(),icons.flush()]).then(() => {
       if (history.error) throw new Error(history.error);
       return { saved:true };
     });
@@ -148,7 +156,7 @@ export async function startCompanion({ directory, root, version, packaged, onSmo
   await new Promise((resolve, reject) => { ipc.server.once('error', reject); ipc.server.listen(endpoint.pipe, resolve); });
   await writeEndpoint(directory, endpoint);
   collect(); startBasicTrace();
-  const collectTimer = setInterval(collect, 8000), saveTimer = setInterval(() => history.flush(), 15000);
+  const collectTimer = setInterval(collect, 8000), saveTimer = setInterval(() => Promise.all([history.flush(),wishlist.flush(),icons.flush()]), 15000);
   // Retry failed basic capture periodically; an installed elevated task connects independently.
   const retryTimer = setInterval(() => { if (!traceSocket && trafficWorker?.exitCode !== null && Date.now() >= retryAt) startBasicTrace(); }, 15000);
   return {
@@ -165,6 +173,7 @@ export async function startCompanion({ directory, root, version, packaged, onSmo
       await Promise.race([Promise.all(ended), new Promise(resolve => setTimeout(resolve, 8000).unref())]);
       traceSocket?.destroy(); traceServer.close();
       await history.close();
+      await wishlist.flush();await icons.close();
     }
   };
 }

@@ -134,18 +134,24 @@ test('supply sprites carry wood, crates and walking helpers in both directions',
   }
 });
 
-test('downloads enter the city on the left and stop to unload; uploads leave to the right',()=>{
+test('downloads flow from the app into the city on the right and unload; uploads return left',()=>{
   for(const type of VEHICLE_STAGES.map(s=>s.id)) {
     const incoming={incoming:true,type},outgoing={incoming:false,type};
-    assert.ok(journeyPose(incoming,.5,true).x<journeyPose(incoming,0,true).x);
+    assert.ok(journeyPose(incoming,.5,true).x>journeyPose(incoming,0,true).x);
     const arrival=journeyPose(incoming,.82,true),delivery=journeyPose(incoming,.93,true);
-    assert.equal(arrival.x,292);assert.equal(delivery.x,arrival.x);
+    const mode=VEHICLE_STAGES.find(s=>s.id===type).mode,end=655+(mode==='water'?155:0);
+    assert.equal(arrival.x,end);assert.equal(delivery.x,arrival.x);
     assert.equal(arrival.unloaded,0);assert.equal(delivery.unloaded,1);
-    assert.equal(journeyPose(outgoing,0,true).x,292);
-    assert.equal(journeyPose(outgoing,1,true).x,900);
+    assert.equal(journeyPose(outgoing,0,true).x,end);
+    assert.equal(journeyPose(outgoing,1,true).x,28);
     assert.equal(journeyPose(outgoing,.93,true).unloaded,0);
-    const air=VEHICLE_STAGES.find(s=>s.id===type).mode==='air';
-    assert.equal(journeyPose(incoming,0,true).y,air?70:115);
-    assert.equal(journeyPose(outgoing,0,true).y,air?24:71);
+    const baseline={road:[132,164],rail:[184,200],water:[216,244],air:[32,67]}[mode];
+    const offset=mode==='air'?0:mode==='water'?6:11*Math.min(.85,88/VEHICLE_STAGES.find(s=>s.id===type).width);
+    assert.equal(journeyPose(incoming,0,true).y,baseline[0]-offset);
+    assert.equal(journeyPose(outgoing,0,true).y,baseline[1]-offset);
+    for(const t of [0,.25,.5,.75,1]) {
+      assert.equal(journeyPose(incoming,t,true).angle,0);
+      assert.equal(journeyPose(outgoing,t,true).angle,0);
+    }
   }
 });

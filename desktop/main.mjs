@@ -150,7 +150,7 @@ async function start() {
   Menu.setApplicationMenu(null);
   if (collectorMode) {
     const { startCompanion } = await import('./companion.mjs');
-    collector = await startCompanion({directory,root,version:app.getVersion(),packaged:app.isPackaged, onQuit:()=>app.quit(), onSmokeStop:smokeTest ? ()=>app.quit() : null});
+    collector = await startCompanion({directory,root,version:app.getVersion(),packaged:app.isPackaged, getFileIcon:(path,options)=>app.getFileIcon(path,options), onQuit:()=>app.quit(), onSmokeStop:smokeTest ? ()=>app.quit() : null});
     tray = new Tray(trayImage()); tray.setToolTip('netKonnect companion · observing locally');
     const open = () => launch([]);
     tray.on('double-click',open);
@@ -172,6 +172,13 @@ async function start() {
   protocol.handle('netkonnect', async request => {
     if (!isLocalAsset(request.url)) return new Response('Denied',{status:403});
     const u=new URL(request.url); let name;
+    const iconMatch=/^\/app-icons\/([a-f0-9]{64})\.png$/.exec(u.pathname);
+    if(iconMatch) {
+      try {
+        const {png}=await callCompanion(directory,'app-icon',{id:iconMatch[1]});
+        return png?new Response(Buffer.from(png,'base64'),{headers:{'Content-Type':'image/png','Cache-Control':'private, max-age=31536000, immutable','X-Content-Type-Options':'nosniff'}}):new Response('Icon unavailable',{status:404});
+      }catch{return new Response('Icon unavailable',{status:404});}
+    }
     try { name=decodeURIComponent(u.pathname === '/' ? '/index.html' : u.pathname); } catch { return new Response('Bad path',{status:400}); }
     const path=resolve(root,'public','.'+name), publicRoot=resolve(root,'public');
     if (!path.startsWith(publicRoot + '\\') || !types[extname(path)]) return new Response('Not found',{status:404});

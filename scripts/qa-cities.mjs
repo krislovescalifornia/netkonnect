@@ -51,9 +51,11 @@ try {
   const compact=await window.webContents.executeJavaScript(`(()=>{
     const cards=[...document.querySelectorAll('.application-city-card')];
     return {heights:cards.map(c=>c.getBoundingClientRect().height),graphs:document.querySelectorAll('.usage-graph').length,
-      footerAligned:cards.every(c=>{const cells=[c.querySelector('.city-caption'),...c.querySelectorAll('.route-usage'),c.querySelector('.city-services')];const centers=cells.map(el=>{const b=el.getBoundingClientRect();return b.top+b.height/2});return Math.max(...centers)-Math.min(...centers)<2;})};
+      identitySeparated:cards.every(c=>{const app=c.querySelector('.city-app-card'),detail=c.querySelector('.city-detail-card');return app.querySelector('.route-origin')&&app.querySelectorAll('.route-usage').length===3&&app.getBoundingClientRect().right<=detail.getBoundingClientRect().left;}),
+      footerAligned:cards.every(c=>{const cells=[c.querySelector('.city-caption'),c.querySelector('.city-services')];const centers=cells.map(el=>{const b=el.getBoundingClientRect();return b.top+b.height/2});return Math.max(...centers)-Math.min(...centers)<2;}),
+      pairedDetails:cards.every(c=>{const pairs=[[c.querySelector('.city-caption strong'),c.querySelector('.city-download-progress')],[c.querySelector('.city-services strong'),c.querySelector('.city-services small')]];return pairs.every(pair=>{const bounds=pair.map(el=>el.getBoundingClientRect());return Math.max(...bounds.map(b=>b.top))<Math.min(...bounds.map(b=>b.bottom));});})};
   })()`);
-  assert.ok(compact.heights.every(h=>h<240),'compact city cards stay below 240px');assert.equal(compact.graphs,9);assert.equal(compact.footerAligned,true);
+  assert.ok(compact.heights.every(h=>h<270),'living city cards stay below 270px: '+JSON.stringify(compact));assert.equal(compact.graphs,9);assert.equal(compact.identitySeparated,true);assert.equal(compact.footerAligned,true,JSON.stringify(compact));assert.equal(compact.pairedDetails,true,JSON.stringify(compact));
   const facing=await window.webContents.executeJavaScript(`(()=>{
     const person=document.querySelector('.crew-carrier>.helper-person'),animation=person.getAnimations()[0],saved=animation.currentTime;
     animation.currentTime=1200;const left=new DOMMatrix(getComputedStyle(person).transform).a;
@@ -62,12 +64,13 @@ try {
   })()`);
   assert.deepEqual(facing,{left:-1,right:1},'walker faces in the direction of travel');
   await window.webContents.executeJavaScript(`window.cityNode=document.querySelector('.application-city');window.convoyNode=document.querySelector('.convoy-svg');
-    window.workerAnimation=document.querySelector('.crew-carrier').getAnimations().find(a=>a.animationName==='city-carry');
+    window.worldCloud=document.querySelector('.world-cloud');window.worldCloudAnimation=window.worldCloud.getAnimations()[0];window.workerAnimation=document.querySelector('.crew-carrier').getAnimations().find(a=>a.animationName==='city-carry');
     window.sceneRemovals=0;window.sceneObserver=new MutationObserver(records=>{for(const record of records)for(const node of record.removedNodes)if(node.nodeType===1&&(node.matches('.application-city,.convoy-svg')||node.querySelector('.application-city,.convoy-svg')))window.sceneRemovals++;});window.sceneObserver.observe(document.querySelector('#main'),{childList:true,subtree:true});`);
   const workerTime=()=>window.webContents.executeJavaScript(`document.querySelector('.crew-carrier').getAnimations().find(a=>a.animationName==='city-carry').currentTime`);
   const firstWorkerTime=await workerTime();
   await new Promise(resolve=>setTimeout(resolve,2400));
   const refreshedWorkerTime=await workerTime();
+  assert.equal(await window.webContents.executeJavaScript(`window.worldCloud===document.querySelector('.world-cloud')&&window.worldCloudAnimation===window.worldCloud.getAnimations()[0]`),true,'polling retains cloud nodes and their animation timelines');
   assert.ok(refreshedWorkerTime>firstWorkerTime+2100,`worker playback must advance through a polling refresh: ${firstWorkerTime} → ${refreshedWorkerTime}`);
   assert.equal(await window.webContents.executeJavaScript(`window.cityNode===document.querySelector('.application-city')&&window.convoyNode===document.querySelector('.convoy-svg')`),true,'polling must preserve animation nodes');
   assert.equal(await window.webContents.executeJavaScript(`window.sceneRemovals===0&&window.workerAnimation===document.querySelector('.crew-carrier').getAnimations().find(a=>a.animationName==='city-carry')`),true,'refresh must keep scenes connected and preserve the CSS Animation object');
@@ -100,6 +103,7 @@ try {
   await window.webContents.executeJavaScript(`document.querySelector('[data-action="motion"]').click()`);
   const paused=await window.webContents.executeJavaScript(`(()=>{const a=document.querySelector('.crew-carrier').getAnimations()[0];return {paused:getComputedStyle(document.querySelector('.crew-carrier')).animationPlayState,at:a?.currentTime,progress:document.querySelector('.transport-vehicle')?.dataset.progress};})()`);
   assert.equal(paused.paused,'paused');
+  assert.equal(await window.webContents.executeJavaScript(`[...document.querySelectorAll('.world-cloud,.world-birds')].every(el=>getComputedStyle(el).animationPlayState==='paused')`),true,'pause freezes living scenery');
   assert.equal(await window.webContents.executeJavaScript(`[...document.querySelectorAll('.crane-load,.site-vehicle')].every(el=>getComputedStyle(el).animationPlayState==='paused')`),true,'pause freezes every construction machine');
   await new Promise(resolve=>setTimeout(resolve,300));
   const frozen=await window.webContents.executeJavaScript(`({at:document.querySelector('.crew-carrier').getAnimations()[0]?.currentTime,progress:document.querySelector('.transport-vehicle')?.dataset.progress})`);
@@ -136,8 +140,46 @@ try {
     assert.equal(await window.webContents.executeJavaScript(`document.querySelector('.application-city').querySelectorAll('.site-crane').length`),6,'giant cities have six cranes');
     await writeFile(resolve('test-results/cities/'+type+'.png'),(await window.webContents.capturePage()).toPNG());
   }
+    const worldChecks=await window.webContents.executeJavaScript(`(async()=>{
+    const {renderCity,CITY_STAGES}=await import('/cities.js');
+    const {TransportAnimator}=await import('/map.js');
+    const {updateWorldTime,WORLD_BACKGROUNDS}=await import('/world.js');
+    const {updateMarkup}=await import('/render.js');
+    const root=document.createElement('div');root.style.cssText='position:absolute;left:0;top:0;width:900px;height:180px';
+    document.body.append(root);
+    let date=new Date(2026,9,8,12);
+    const animator=new TransportAnimator({wallClock:()=>date,requestFrame:()=>1,cancelFrame:()=>{}});
+    let cloud=null,animation=null;
+    for(let stage=0;stage<20;stage++) {
+      updateMarkup(root,renderCity({key:'world-probe',bytes:CITY_STAGES[stage].at,convoy:'data-route-key="world-probe" data-download-rate="100000" data-upload-rate="20000" data-download-type="pickup" data-upload-type="cargo-bicycle"'}));
+      root.querySelector('svg').style.height='180px';
+      animator.mount(root,{source:'world-probe',active:false});
+      const svg=root.querySelector('svg'),port=svg.querySelector('.world-port');
+      if(svg.querySelector('.world-terrain').getAttribute('href')!==WORLD_BACKGROUNDS[stage].file)throw new Error('Wrong background at tier '+stage);
+      if(port.getAttribute('opacity')!==(stage>=12?'1':'0'))throw new Error('Port at tier '+stage);
+      if(svg.querySelector('.world-city').getBoundingClientRect().right<=svg.getBoundingClientRect().left+svg.getBoundingClientRect().width/2)throw new Error('City must be on the right');
+      if(stage===0){cloud=svg.querySelector('.world-cloud');animation=cloud.getAnimations()[0];}
+      if(svg.querySelector('.world-cloud')!==cloud||cloud.getAnimations()[0]!==animation)throw new Error('Growth restarted a cloud');
+    }
+    date=new Date(2026,9,8,21);animator.updateWorldClock();
+    if(root.querySelector('svg').dataset.time!=='night')throw new Error('Clock must update while motion is paused');
+    date=new Date(2026,9,8,6);animator.updateWorldClock();
+    if(root.querySelector('svg').dataset.time!=='sunrise')throw new Error('Sunrise clock');
+    animator.mount(document.createElement('div'),{source:'world-probe',active:false});
+    if(animator.worldTimer!==null)throw new Error('Detached scene clock leaked');
+    animator.resizeObserver?.disconnect();root.remove();
+    return {growthStages:20,distinctBackgrounds:20,cloudContinuity:true,clockWhilePaused:true,clockCleanup:true};
+  })()`);
+  window.setSize(1440,1340);
+  await window.webContents.executeJavaScript(`window.worldNoTransition=document.createElement('style');window.worldNoTransition.textContent='.application-city * {transition:none!important}';document.head.append(window.worldNoTransition);`);
+  for(const [phase,hour] of [['sunrise',6],['day',12],['sunset',18],['night',21]]) {
+    await window.webContents.executeJavaScript(`(async()=>{const {updateWorldTime}=await import('/world.js');for(const svg of document.querySelectorAll('.city-route-scene'))updateWorldTime(svg,new Date(2026,9,8,${hour}));})()`);
+    await new Promise(resolve=>setTimeout(resolve,80));
+    await writeFile(resolve('test-results/cities/'+phase+'.png'),(await window.webContents.capturePage()).toPNG());
+  }
+  await window.webContents.executeJavaScript(`window.worldNoTransition.remove();`);
   assert.deepEqual(errors,[]);
-  await writeFile(resolve('test-results/cities/results.json'),JSON.stringify({initial,narrow,persistentNodes:true,workerFullCycle:true,growthContinuity:true,pause:true,reducedMotion:true,topTierAirAndShips:true,errors},null,2));
+  await writeFile(resolve('test-results/cities/results.json'),JSON.stringify({initial,compact,narrow,worldChecks,persistentNodes:true,workerFullCycle:true,growthContinuity:true,pause:true,reducedMotion:true,topTierAirAndShips:true,errors},null,2));
   console.log('CITY_UI_VERIFIED '+JSON.stringify(initial));
-} finally {window.destroy();await new Promise(resolve=>server.close(resolve));app.quit();}
+} finally {await mkdir(resolve('test-results/cities'),{recursive:true});await writeFile(resolve('test-results/cities/latest.png'),(await window.webContents.capturePage()).toPNG());window.destroy();await new Promise(resolve=>server.close(resolve));app.quit();}
 }).catch(error=>{console.error(error);app.exit(1);});
