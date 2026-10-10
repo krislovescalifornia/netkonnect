@@ -1,20 +1,20 @@
 import {formatEndpoint} from './address.js';
 import { appIdentity, appName, brandBadge } from './brands.js';
 import { buildRoutes, groupApplicationRoutes, sortRoutes, transportForRate, JourneyQueue } from './routes.js';
-import { renderCity, cityStage, cityConstruction, CITY_ROUTE_SCENE } from './cities.js';
+import { renderCity, cityStage, cityConstruction, CITY_STAGES, CITY_ROUTE_SCENE } from './cities.js';
 import {illustratedDetail} from './illustration-art.js';
-import {vehicle,VEHICLE_STAGES,transportSpec} from './vehicles.js';
+import {vehicle,VEHICLE_STAGES,transportSpec,cityVehicleScale} from './vehicles.js';
 import { serviceDisplayLabel, transportHint } from './service-evidence.js';
 import {evidenceDetails} from './enrichment.js';
-import {worldRoute,routePoint,layoutWorld,updateWorldTime,infrastructure,laneLabelPosition} from './world.js';
+import {worldRoute,routePoint,layoutWorld,updateWorldTime,infrastructure,laneLabelPosition,SkySchedule,drawSkySighting} from './world.js';
 import {updateSVGMarkup} from './render.js';
 export {vehicle} from './vehicles.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
-// Road overlays use a steady, whole-number Mbit/s reading.
+// Road overlays keep sub-megabit measurements visible.
 export function roadSpeed(bytesPerSecond) {
-  const value=bytesPerSecond==null||!Number.isFinite(bytesPerSecond)?'—':String(Math.round(Math.max(0,bytesPerSecond)*8/1e6));
+  const value=bytesPerSecond==null||!Number.isFinite(bytesPerSecond)?'—':(Math.max(0,bytesPerSecond)*8/1e6).toFixed(1);
   return `<span class="speed-value">${value} <small>Mbit/s</small></span>`;
 }
 
@@ -26,19 +26,33 @@ export function usageGraph(history,direction,known) {
   return `<svg class="usage-graph" viewBox="0 0 72 26" role="img" aria-label="${direction==='received'?'Download':direction==='sent'?'Upload':'Total'} bytes per minute over the last 60 minutes"><title>Last 60 minutes · bytes per minute · oldest on the left</title><path d="M0 24H72" class="usage-baseline"/><polygon points="0,24 ${points} 72,24"/><polyline points="${points}"/></svg>`;
 }
 
+export function journeyRoute(journey,sceneEnd=655) {
+  const spec=transportSpec(journey.type);
+  const points=worldRoute(journey.incoming?'download':'upload',spec.mode,sceneEnd+(spec.mode==='water'?155:0));
+  if(journey.incoming)return points;
+  // Include the whole silhouette, cart handler and forward lights in the margin.
+  const margin=spec.width*cityVehicleScale(spec)/2+40;
+  const left=-margin,right=sceneEnd+245+margin;
+  return points.map((point,i)=>({...point,x:left+(right-left)*[0,.32,.69,1][i]}));
+}
+
 export function journeyPose(journey,progress,cityScene=false,sceneEnd=655,route) {
   if(!cityScene)return {x:journey.incoming?566-532*progress:34+532*progress,y:journey.incoming?19:51,unloaded:0,opacity:1,angle:0};
   const spec=transportSpec(journey.type),mode=spec.mode;
-  const points=route||worldRoute(journey.incoming?'download':'upload',mode,sceneEnd+(mode==='water'?155:0));
-  const travel=journey.incoming?Math.min(1,progress/.62):1-progress;
+  const points=route||journeyRoute(journey,sceneEnd);
+  // Continuous velocity at the bay: decelerate, unload, accelerate out.
+  const approach=progress/.62;
+  const travel=journey.incoming?(approach<=.8?approach/ .9:approach<1?1-(1-approach)**2/.36:1):1-progress;
   const point=routePoint(points,travel),dock=routePoint(points,1);
-  const departure=Math.max(0,Math.min(1,(progress-.78)/.22));
+  const departureTime=Math.max(0,Math.min(1,(progress-.78)/.22));
+  const departure=departureTime<.2?departureTime**2/.36:(departureTime-.1)/.9;
   // Pull into the delivery bay, hold while unloading, then merge and drive out.
-  const pullIn=journey.incoming&&mode==='road'?Math.min(1,Math.max(0,(progress-.50)/.12))*(1-Math.min(1,departure/.32))*8:0;
-  const offset=mode==='air'?0:mode==='water'?6:11*Math.min(.85,88/spec.width);
-  const exit=sceneEnd+245+spec.width*Math.min(.85,88/spec.width)/2;
+  const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t);};
+  const pullIn=journey.incoming&&mode==='road'?smooth((progress-.50)/.12)*(1-smooth(departureTime/.32))*8:0;
+  const offset=mode==='air'?0:mode==='water'?6:11*cityVehicleScale(spec);
+  const exit=sceneEnd+245+spec.width*cityVehicleScale(spec)/2;
   return {...point,x:journey.incoming?point.x+(exit-dock.x)*departure:point.x,y:point.y-offset-pullIn,angle:0,
-    deliveryX:dock.x,deliveryY:dock.y-offset-(mode==='road'?8:0),
+    deliveryX:dock.x,deliveryY:mode==='road'?118:dock.y-offset,
     unloaded:journey.incoming?Math.max(0,Math.min(1,(progress-.65)/.09)):0,
     opacity:journey.incoming?Math.max(0,Math.min(1,(1-progress)/.12)):1};
 }
@@ -49,13 +63,19 @@ export class TransportAnimator {
     this.queue = new JourneyQueue(); this.svgs = new Map(); this.source = null;
     this.vehicleNodes = new WeakMap(); this.sceneSizes = new WeakMap(); this.configurations=[];
     this.deliveryTimes = new WeakMap();
+    this.skyScenes = new WeakMap();
     this.wallClock=wallClock;this.worldTimer=null;
     this.lastTime = this.clock(); this.active = false; this.frame = null;
+    // Skip paints for cities outside the viewport, without pausing or recreating
+    // their timelines. Visibility preserves layout and in-flight geometry.
+    this.visibilityObserver=typeof IntersectionObserver==='undefined'?null:new IntersectionObserver(entries=>{
+      for(const {target,isIntersecting} of entries)target.toggleAttribute('data-offscreen',!isIntersecting);
+    });
     this.resizeObserver=typeof ResizeObserver==='undefined'?null:new ResizeObserver(entries=>{
       for(const {target} of entries)this.resizeCityScene(target,true);
       for(const config of this.configurations) {
         const svg=this.svgs.get(config.routeKey);
-        if(svg?.classList.contains('city-route-scene'))config.capacity=this.sceneCapacity(svg);
+        if(svg?.classList.contains('city-route-scene'))config.capacity=Math.min(config.incoming?3:Infinity,this.sceneCapacity(svg));
       }
       this.queue.configure(this.configurations);
       this.draw();
@@ -85,15 +105,18 @@ export class TransportAnimator {
   }
   tick() {
     const now = this.clock();
-    this.queue.advance(this.active ? now-this.lastTime : 0, this.active);
+    // A stalled/background renderer resumes from its last visible position.
+    this.queue.advance(this.active ? Math.min(50,now-this.lastTime) : 0, this.active);
     this.lastTime = now;
   }
   mount(root,{source,active}) {
     this.tick();
     if (source !== this.source) {
       this.resizeObserver?.disconnect();
+      this.visibilityObserver?.disconnect();
       for(const svg of this.svgs.values())for(const node of this.vehicleNodes.get(svg)?.values()||[])node.group.remove();
       this.queue = new JourneyQueue(); this.svgs.clear(); this.vehicleNodes=new WeakMap(); this.source = source;
+      this.skyScenes=new WeakMap();
     }
     this.active = active;
     const configurations = [], visible = new Map();
@@ -105,12 +128,12 @@ export class TransportAnimator {
       for (const [direction,incoming] of [['download',true],['upload',false]]) {
         configurations.push({key:`${key}|${direction}`,routeKey:key, incoming,
           rate:svg.dataset[`${direction}Rate`] === '' ? null : Number(svg.dataset[`${direction}Rate`]),
-          type:svg.dataset[`${direction}Type`],capacity});
+          type:svg.dataset[`${direction}Type`],capacity:incoming&&svg.classList.contains('city-route-scene')?Math.min(3,capacity):capacity});
       }
       visible.set(key,svg);
-      if(svg.classList.contains('city-route-scene') && newScene)this.resizeObserver?.observe(svg);
+      if(svg.classList.contains('city-route-scene') && newScene) {this.resizeObserver?.observe(svg);this.visibilityObserver?.observe(svg);}
     }
-    for(const [key,svg] of this.svgs)if(visible.get(key)!==svg)this.resizeObserver?.unobserve(svg);
+    for(const [key,svg] of this.svgs)if(visible.get(key)!==svg) {this.resizeObserver?.unobserve(svg);this.visibilityObserver?.unobserve(svg);}
     this.svgs = visible;
     this.updateWorldClock();
     if(this.svgs.size&&!this.worldTimer)this.worldTimer=setInterval(()=>this.updateWorldClock(),30000);
@@ -131,6 +154,12 @@ export class TransportAnimator {
   }
   draw() {
     for (const [key,svg] of this.svgs) {
+      if(svg.hasAttribute('data-offscreen'))continue;
+      if(svg.classList.contains('city-route-scene')) {
+        let sky=this.skyScenes.get(svg);
+        if(!sky){sky=new SkySchedule(key,this.queue.now);this.skyScenes.set(svg,sky);}
+        if(!svg.closest('.still,.no-motion'))drawSkySighting(svg,this.queue.now,sky);
+      }
       const journeys = ['download','upload'].flatMap(direction=>this.queue.lanes.get(`${key}|${direction}`)?.vehicles || []);
       let nodes=this.vehicleNodes.get(svg);
       if(!nodes) { nodes=new Map(); this.vehicleNodes.set(svg,nodes); }
@@ -143,18 +172,19 @@ export class TransportAnimator {
           group.dataset.journeyId = journey.id;
           group.dataset.transport = journey.type;
           const spec=transportSpec(journey.type);
-          const scale = Math.min(.85,(svg.classList.contains('city-route-scene')?88:53)/spec.width);
+          const scale = svg.classList.contains('city-route-scene')?cityVehicleScale(spec):Math.min(.85,53/spec.width);
           const cityScene=svg.classList.contains('city-route-scene');
           const facing=cityScene?(journey.incoming?scale:-scale):(journey.incoming?-scale:scale);
           const contact=cityScene&&spec.mode!=='air'?spec.mode==='water'
             ?`<path class="vehicle-wake" d="M${(journey.incoming?-1:1)*spec.width*scale*.45} 6h${(journey.incoming?-1:1)*12}m${(journey.incoming?1:-1)*5} 3h${(journey.incoming?-1:1)*9}" />`
             :`<ellipse class="vehicle-contact" cx="0" cy="${11*scale}" rx="${spec.width*scale*.43}" ry="1.1"/>`:'';
-          group.innerHTML = `${contact}<g transform="scale(${facing} ${scale})">${vehicle(journey.type,journey.incoming,journey.id)}</g>${svg.classList.contains('city-route-scene')&&journey.incoming?`<g class="delivery-parcel">${illustratedDetail('delivery-parcel',12,0,11)}</g>`:''}`;
+          const headlights=cityScene&&spec.mode==='road'?`<g class="vehicle-lights night-light" transform="translate(${(journey.incoming?1:-1)*spec.width*scale*.43} -4) scale(${journey.incoming?1:-1} 1)"><path d="M0 0L36 -3v10L0 2z" fill="#ffe8a2" stroke="none" opacity=".18"/><ellipse cx="0" cy="1" rx="2.3" ry="1.4" fill="#fff1c3" stroke="none"/></g>`:'';
+          group.innerHTML = `${headlights}${contact}<g transform="scale(${facing} ${scale})">${vehicle(journey.type,journey.incoming,journey.id)}</g>${svg.classList.contains('city-route-scene')&&journey.incoming?`<g class="delivery-parcel">${illustratedDetail('delivery-parcel',12,0,11)}</g>`:''}`;
           svg.append(group);
           // Speed labels can resize the road on every sample. A journey keeps
           // its departure geometry so a resize cannot teleport its vehicle.
           record={group,cargo:group.querySelector('.vehicle-cargo'),parcel:group.querySelector('.delivery-parcel'),sceneEnd:Number(svg.dataset.sceneEnd)||655};
-          if(cityScene)record.route=worldRoute(journey.incoming?'download':'upload',spec.mode,record.sceneEnd+(spec.mode==='water'?155:0));
+          if(cityScene)record.route=journeyRoute(journey,record.sceneEnd);
           nodes.set(journey.id,record);
         }
         existing.delete(journey.id);
@@ -229,6 +259,7 @@ export function renderNetworkMap({state,icon,rate,bytes,esc,scenes}) {
     const cityBytes=r.cityBytes ?? null, stage=cityStage(cityBytes);
     const milestone=stage.known?(stage.next?`${cityConstruction(stage.index,stage.progress).phase} · ${bytes(stage.nextAt-cityBytes)} to ${stage.next}`:'Final city tier · complete'):'Awaiting measured data';
     const level=stage.known?`Level ${stage.index+1} / ${20} · `:'';
+    const growth=stage.known?`<div class="city-download-progress"><div class="city-progress-labels"><span>Start ${bytes(CITY_STAGES[stage.index].at)}</span><span class="city-progress-remaining">${stage.next?`${bytes(stage.nextAt-cityBytes)} to go`:'Complete'}</span><span class="city-progress-finish">Finish ${bytes(stage.nextAt??CITY_STAGES[stage.index].at)} · ${stage.next?`Level ${stage.index+2} · ${stage.next}`:'Final level'}</span></div><div class="city-progress" role="progressbar" aria-label="Growth toward ${stage.next?`Level ${stage.index+2} · ${stage.next}`:'final city level'}" aria-valuetext="${esc(`${bytes(cityBytes)} downloaded · ${milestone}`.replace(/<[^>]*>/g,''))}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(stage.progress*100)}"><i style="width:${stage.progress*100}%"></i></div></div>`:'';
     const fleetLabel=`Incoming: ${transportSpec(downloadType).name}; outgoing: ${transportSpec(uploadType).name}`;
     const expanded = parent && state.mapExpanded?.has(r.key);
     const childrenId = 'app-routes-' + encodeURIComponent(r.key);
@@ -240,13 +271,11 @@ export function renderNetworkMap({state,icon,rate,bytes,esc,scenes}) {
       const convoy=`data-route-key="${esc('application|'+r.key)}" data-download-rate="${r.measured?download.rate:''}" data-upload-rate="${r.measured?upload.rate:''}" data-download-type="${downloadType}" data-upload-type="${uploadType}"`;
       const usage=(label,value,direction,css)=>`<span role="cell" class="route-usage ${css}"><span class="usage-reading"><small class="usage-label">${label} · 60 min</small>${bytes(value)}</span>${usageGraph(r.usageHistory,direction,value!==null)}</span>`;
       return `<article class="transport-route application-parent application-city-card" role="row">
-        <div class="city-app-card"><div class="city-app-heading" role="cell"><button class="route-origin" data-app="${esc(r.app)}">${brandBadge(appIdentity(r.app),'origin-mark')}<strong>${esc(appName(r.app))}</strong></button></div>
-        ${usage('Total',r.totalBytes60m,'total','route-total')}${usage('Download',r.receivedBytes60m,'received','download-rate')}${usage('Upload',r.sentBytes60m,'sent','upload-rate')}</div>
         <div class="city-detail-card">
-        <div class="route-road route-city application-scene" role="cell"><div class="route-speeds" title="Smooth average · approximately 10 seconds"><span class="upload-rate" style="--lane-y:${laneLabelPosition(uploadType,'upload')}%" title="Upload travels left toward the app · ${transportSpec(uploadType).mode}">${roadSpeed(upload.rate)}</span><span class="download-rate" style="--lane-y:${laneLabelPosition(downloadType,'download')}%" title="Download travels right into the city · ${transportSpec(downloadType).mode}">${roadSpeed(download.rate)}</span></div>${renderCity({key:esc('application|'+r.key),bytes:cityBytes,busy:r.measured&&download.rate>0,airdrop:transportSpec(downloadType).mode==='air',convoy,includeArtwork,trafficLabel:esc('Downloads travel from the app into its city on the right; uploads return to the app on the left; '+fleetLabel)})}${!r.measured?'<span class="road-idle">Awaiting byte-level capture</span>':!download.rate&&!upload.rate?`<span class="road-idle">${r.connections.length?'Idle':'No active connections'}</span>`:''}</div>
-        <div class="city-world-meta"><span class="city-infrastructure">${infrastructure(stage.index).name}${infrastructure(stage.index).rail?' · Rail':''}${infrastructure(stage.index).port?' · River port':''}${infrastructure(stage.index).spaceport?' · Spaceport':infrastructure(stage.index).airport?' · Airport':''}</span><span class="city-world-clock"></span></div><div class="city-detail-footer"><div class="city-caption" role="cell" title="${esc(`${level}${stage.name} · ${bytes(cityBytes)} downloaded · ${milestone}`.replace(/<[^>]*>/g,''))}"><strong>${level}${stage.name}</strong><div class="city-download-progress"><span>${bytes(cityBytes)} downloaded</span>${stage.known?`<div class="city-progress" role="progressbar" aria-label="Growth toward ${stage.next || stage.name}" aria-valuetext="${esc(milestone.replace(/<[^>]*>/g,''))}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(stage.progress*100)}"><i style="width:${stage.progress*100}%"></i></div>`:''}</div></div>
-        <div class="city-services" role="cell"><button class="route-terminal route-expand" data-map-expand="${esc(r.key)}" aria-expanded="${expanded?'true':'false'}" aria-controls="${esc(childrenId)}" aria-label="${expanded?'Hide':'Show'} ${count} for ${esc(appName(r.app))}" title="${expanded?'Hide':'Show'} ${state.mapDetail==='endpoint'?'endpoints':'services'}"><span><strong>${count}${state.mapDetail==='service'?' & destinations':''}</strong><small>${r.addresses.size} IP${r.addresses.size===1?'':'s'} · ${r.connections.length} active connection${r.connections.length===1?'':'s'}</small></span>${icon('chevron',14)}</button></div>
-        </div>${expanded?`<div class="city-info" role="cell"><strong>Info</strong><span>PID ${esc([...r.pids].join(', '))}</span><span>${esc(protocols)}</span></div>`:''}</div></article>`;
+        <div class="route-road route-city application-scene" role="cell"><div class="city-app-heading"><button class="route-origin" data-app="${esc(r.app)}">${brandBadge(appIdentity(r.app),'origin-mark')}<strong>${esc(appName(r.app))}</strong></button></div><div class="route-speeds" title="Smooth average · approximately 10 seconds"><span class="upload-rate" style="--lane-y:${laneLabelPosition(uploadType,'upload')}%" title="Upload travels left toward the app · ${transportSpec(uploadType).mode}"><small>Up</small>${roadSpeed(upload.rate)}</span><span class="download-rate" style="--lane-y:${laneLabelPosition(downloadType,'download')}%" title="Download travels right into the city · ${transportSpec(downloadType).mode}"><small>Down</small>${roadSpeed(download.rate)}</span></div>${renderCity({key:esc('application|'+r.key),bytes:cityBytes,busy:r.measured&&download.rate>0,date:state.worldDate,convoy,includeArtwork,trafficLabel:esc('Downloads travel from the app into its city on the right; uploads return to the app on the left; '+fleetLabel)})}${!r.measured?'<span class="road-idle">Awaiting byte-level capture</span>':!download.rate&&!upload.rate?`<span class="road-idle">${r.connections.length?'Idle':'No active connections'}</span>`:''}</div>
+        <div class="city-detail-footer"><div class="city-summary"><div class="city-caption" role="cell" title="${esc(`${level}${stage.name} · ${bytes(cityBytes)} downloaded · ${milestone}`.replace(/<[^>]*>/g,''))}"><strong>${level}${stage.name}</strong>${growth}</div>
+        </div><div class="city-services" role="cell"><button class="route-terminal route-expand" data-map-expand="${esc(r.key)}" aria-expanded="${expanded?'true':'false'}" aria-controls="${esc(childrenId)} ${esc(childrenId+'-info')}" aria-label="${expanded?'Hide':'Show'} App Info for ${esc(appName(r.app))}" title="${count} · ${r.addresses.size} IPs · ${r.connections.length} active connections"><span><strong>App Info</strong></span><span class="app-info-caret" aria-hidden="true">&#9662;</span></button></div>
+        </div>${expanded?`<div id="${esc(childrenId+'-info')}" class="city-info" role="cell"><div class="city-usage-graphs">${usage('Total',r.totalBytes60m,'total','route-total')}${usage('Download',r.receivedBytes60m,'received','download-rate')}${usage('Upload',r.sentBytes60m,'sent','upload-rate')}</div><div class="city-info-facts"><strong>${count}${state.mapDetail==='service'?' & destinations':''}</strong><span>${r.addresses.size} IP${r.addresses.size===1?'':'s'} · ${r.connections.length} active connection${r.connections.length===1?'':'s'}</span><span>PID ${esc([...r.pids].join(', '))}</span><span>${esc(protocols)}</span></div></div>`:''}</div></article>`;
     }
     return `<article class="transport-route application-child" data-render-key="${esc(state.mapDetail+'|'+r.key)}" role="row">
       <div role="cell"><div class="route-child-origin"><strong>${protocols}${protocols==='UDP'&&r.connections.some(c=>c.remotePort===443)?' / possible QUIC':''}</strong><small>PID ${[...r.pids].join(', ')}</small></div></div>

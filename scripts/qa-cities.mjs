@@ -51,11 +51,11 @@ try {
   const compact=await window.webContents.executeJavaScript(`(()=>{
     const cards=[...document.querySelectorAll('.application-city-card')];
     return {heights:cards.map(c=>c.getBoundingClientRect().height),graphs:document.querySelectorAll('.usage-graph').length,
-      identitySeparated:cards.every(c=>{const app=c.querySelector('.city-app-card'),detail=c.querySelector('.city-detail-card');return app.querySelector('.route-origin')&&app.querySelectorAll('.route-usage').length===3&&app.getBoundingClientRect().right<=detail.getBoundingClientRect().left;}),
+      identityOverlaid:cards.every(c=>{const app=c.querySelector('.city-app-heading'),scene=c.querySelector('.application-city'),a=app.getBoundingClientRect(),b=scene.getBoundingClientRect();return a.left>=b.left&&a.top>=b.top&&a.bottom<b.bottom;}),
       footerAligned:cards.every(c=>{const cells=[c.querySelector('.city-caption'),c.querySelector('.city-services')];const centers=cells.map(el=>{const b=el.getBoundingClientRect();return b.top+b.height/2});return Math.max(...centers)-Math.min(...centers)<2;}),
-      pairedDetails:cards.every(c=>{const pairs=[[c.querySelector('.city-caption strong'),c.querySelector('.city-download-progress')],[c.querySelector('.city-services strong'),c.querySelector('.city-services small')]];return pairs.every(pair=>{const bounds=pair.map(el=>el.getBoundingClientRect());return Math.max(...bounds.map(b=>b.top))<Math.min(...bounds.map(b=>b.bottom));});})};
+      pairedDetails:cards.every(c=>{const pairs=[[c.querySelector('.city-caption strong'),c.querySelector('.city-download-progress')]];return pairs.every(pair=>{const bounds=pair.map(el=>el.getBoundingClientRect());return Math.max(...bounds.map(b=>b.top))<Math.min(...bounds.map(b=>b.bottom));});})};
   })()`);
-  assert.ok(compact.heights.every(h=>h<270),'living city cards stay below 270px: '+JSON.stringify(compact));assert.equal(compact.graphs,9);assert.equal(compact.identitySeparated,true);assert.equal(compact.footerAligned,true,JSON.stringify(compact));assert.equal(compact.pairedDetails,true,JSON.stringify(compact));
+  assert.ok(compact.heights.every(h=>h<270),'living city cards stay below 270px: '+JSON.stringify(compact));assert.equal(compact.graphs,0);assert.equal(compact.identityOverlaid,true);assert.equal(compact.footerAligned,true,JSON.stringify(compact));assert.equal(compact.pairedDetails,true,JSON.stringify(compact));
   const facing=await window.webContents.executeJavaScript(`(()=>{
     const person=document.querySelector('.crew-carrier>.helper-person'),animation=person.getAnimations()[0],saved=animation.currentTime;
     animation.currentTime=1200;const left=new DOMMatrix(getComputedStyle(person).transform).a;
@@ -134,7 +134,9 @@ try {
   cityBoost=16*1024**4;firefoxBoost=16*1024**4;
   for(const type of ['helicopter','mega-ship']) {
     await window.webContents.executeJavaScript(`(()=>{const s=document.querySelector('#map-vehicle');s.value='${type}';s.dispatchEvent(new Event('change',{bubbles:true}));})()`);
-    await new Promise(resolve=>setTimeout(resolve,2400));
+    // Incoming bays admit at most three deliveries per 12-second journey.
+    // A fleet change applies to the next departure, preserving in-flight types.
+    await new Promise(resolve=>setTimeout(resolve,4400));
     const live=await window.webContents.executeJavaScript(`(()=>{const c=document.querySelector('.application-city');const g=c.querySelector('[data-transport="${type}"]');return {stage:Number(c.dataset.stage),type:c.dataset.downloadType,journey:!!g,progress:Number(g?.dataset.progress),bounds:g?g.getBBox().width:0};})()`);
     assert.equal(live.stage,19);assert.equal(live.type,type);assert.equal(live.journey,true);assert.ok(live.progress>0);assert.ok(live.bounds>0);
     assert.equal(await window.webContents.executeJavaScript(`document.querySelector('.application-city').querySelectorAll('.site-crane').length`),6,'giant cities have six cranes');

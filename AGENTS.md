@@ -13,3 +13,10 @@ measured data builds it. This is a permanent product requirement.
 - Honor the user's pause, motion setting and reduced-motion preference.
 - Verify visible motion and construction progression in the rendered UI; checks
   that merely count animation nodes do not establish that the city feels alive.
+
+# Artwork rule
+
+- Use imagegen for all new or replacement illustrated artwork, including small
+  scenery and sky assets. Match the established detailed watercolor style.
+- Do not substitute hand-drawn SVG shapes or emoji-style icons for artwork.
+- Sky visitors are subtle, rare, randomly timed easter eggs, with long quiet gaps.

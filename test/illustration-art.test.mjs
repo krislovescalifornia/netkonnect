@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {CITY_ART,FLEET_ART,PROP_ART,CONSTRUCTION_ART,DETAIL_ART,ILLUSTRATION_ASSETS,CITY_ART_IDS} from '../public/illustration-art.js';
+import {CITY_ART,FLEET_ART,PROP_ART,CONSTRUCTION_ART,DETAIL_ART,ILLUSTRATION_ASSETS,ACTIVITY_ASSETS,FLEET_TEXTURE_ASSETS,CITY_ART_IDS} from '../public/illustration-art.js';
 import {CITY_STAGES,cityArtwork} from '../public/cities.js';
 import {VEHICLE_STAGES,vehicle} from '../public/vehicles.js';
 import {TRUCK_ART} from '../public/truck-art.js';
@@ -56,7 +56,7 @@ test('fleet variants remain deterministic and cart unloading retains an empty bo
   for(const id of ['wheelbarrow','handcart','cargo-bicycle','cargo-trike','scooter','freight-train','helicopter','tiltrotor','barge','freighter','mega-ship']) {
     assert.ok(FLEET_ART[id].empty,'open cargo must unload: '+id);
     assert.match(vehicle(id,true,0),new RegExp(id+'-empty\\.png'));
-    assert.match(vehicle(id,true,0),/class="vehicle-cargo"><svg/);
+    assert.match(vehicle(id,true,0),/class="vehicle-cargo"><image/);
   }
   for(let i=0;i<CITY_STAGES.length;i++)assert.match(cityArtwork(i),new RegExp(`artwork/cities/${CITY_ART_IDS[i]}\\.png`));
 });
@@ -72,4 +72,28 @@ test('all new art loads through the local allowlist and unrelated files stay pri
   }
   assert.equal((await fetch(base+'/artwork/generation-prompts.json')).status,404);
   assert.equal((await fetch(base+'/artwork/cities/unlisted.png')).status,404);
+});
+
+// The frequently animated sprites have bounded texture size and genuine alpha.
+test('isolated crew and machine textures are included in the offline bundle',async()=>{
+  const {requiredAssets}=await import('../desktop/bundle.mjs');
+  assert.equal(ACTIVITY_ASSETS.length,9);
+  for(const file of ACTIVITY_ASSETS) {
+    const png=await readFile(new URL('../public/'+file,import.meta.url));
+    assert.equal(png[25],6);
+    assert.equal(png.readUInt32BE(16),file.includes('/fleet/')?96:256);
+    assert.ok(ILLUSTRATION_ASSETS.includes(file));
+    assert.ok(requiredAssets.includes('public/'+file));
+  }
+});
+
+test('moving fleet textures have bounded raster size, alpha, and offline packaging',async()=>{
+  const {requiredAssets}=await import('../desktop/bundle.mjs');
+  const {TRUCK_ASSETS}=await import('../public/truck-art.js');
+  for(const file of [...FLEET_TEXTURE_ASSETS,...TRUCK_ASSETS.filter(file=>file.includes('/traffic/'))]) {
+    const png=await readFile(new URL('../public/'+file,import.meta.url));
+    assert.equal(png.readUInt32BE(16),192);
+    assert.equal(png[25],6,'clipped cargo preserves transparency');
+    assert.ok(requiredAssets.includes('public/'+file));
+  }
 });

@@ -29,11 +29,17 @@ const aliases={bicycle:'handcart',truck:'pickup',plane:'cargo-plane'};
 export function transportSpec(type) {
   return VEHICLE_STAGES.find(s=>s.id===(aliases[type]||type))||VEHICLE_STAGES[0];
 }
+// One world scale: a person is ~14 units tall, a semi ~29, a cart ~11.
+// Throughput tiers select the vehicle; they do not determine its physical size.
+const ROAD_WIDTHS={wheelbarrow:18,handcart:24,'cargo-bicycle':30,'cargo-trike':34,scooter:30,microvan:44,pickup:52,'cargo-van':53,'box-truck':63,'rigid-truck':72,semi:94,'double-semi':122};
+export function cityVehicleScale(spec) {
+  return spec.mode==='road'?ROAD_WIDTHS[spec.id]/spec.width:Math.min(.85,88/spec.width);
+}
 export function vehicle(type,incoming=false,appearance) {
   const spec=transportSpec(type),i=VEHICLE_STAGES.indexOf(spec);
   const seed=Number.isFinite(appearance)?Math.abs(Math.floor(appearance)):i+(incoming?0:3);
   const {body,cargo}=i>=5&&i<=11?illustratedTruck(spec,seed):illustratedVehicle(spec,seed);
-  const handler=i<=1?`<g class="cart-handler" transform="translate(${i===0?-spec.width/2+3:spec.width/2-2} 11)">${illustratedWorker({woman:incoming})}</g>`:'';
+  const handler=i<=1?`<g class="cart-handler" transform="translate(${-spec.width/2-5} 11)">${illustratedWorker({woman:incoming,size:i===0?16:14})}</g>`:'';
   const legacyClass=i===1?'supply-pushcart':i===6?'supply-pickup':i===15?'supply-plane':`supply-${spec.id}`;
   return `<g class="${legacyClass}" stroke="#385065" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none">${body}<g class="vehicle-cargo">${cargo}</g>${handler}</g>`;
 }

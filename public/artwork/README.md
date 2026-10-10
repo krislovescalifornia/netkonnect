@@ -16,7 +16,8 @@ the original SVG machine drawings have been replaced. The exact built-in tool
 prompts and style references are saved in `construction/generation-prompts.json`.
 Original generated pixels and alpha are preserved, and `CONSTRUCTION_ART` in
 the measured manifest supplies the sprite frames and offline asset list.
-The whole machines retain their shuttle motion and respect pause/reduced motion.
+Machines follow supply-to-foundation circuits within construction yards and respect
+pause/reduced motion.
 `trucks/` contains seven road tiers. All 20 traveling vehicles are drawn in true
 side profile, facing right, with three paint/material variants. Downloads mirror
 the artwork horizontally. The broadside view follows the horizontal route.
@@ -176,16 +177,17 @@ responsive landscape. The original catalog illustrations remain available.
 `frames.js` clips individually measured alpha bands without changing PNG pixels.
 Exact built-in tool prompts and source provenance are in `generation-prompts.json`.
 
-Terrain, settlement, construction, road surfaces and landscape props now share
-one `world-landscape` lighting grade. The time wash sits above that entire group,
-so sunrise, daytime, sunset and night affect every static scene element together.
+Night grades the terrain, settlement pixels, roads and landscape props separately.
+Warm facade windows, street lamps, vehicle headlights, site floodlights and safety
+beacons remain emissive; residents and crews stay clearly visible. Facade lighting
+uses authored source-atlas coordinates and follows the measured skyline reveal.
 Growth still reveals the next skyline using measured downloads, and animation
 nodes survive growth, polling and resizing.
 
 Download and Upload readings sit on their actual road, rail, water or air
 baseline, using the same transport specifications as live vehicles. Both readings
-sit on the left in plain bold italic whole-number Mbit/s text, without borders
-or colored badges. The wider road spacing makes the two directions distinct.
+sit on the left as white Down/Up labels with one decimal place in Mbit/s, without
+borders or colored badges. The wider road spacing makes the directions distinct.
 Downloads pull in and unload, then continue right while fading out; parcels stay
 at the delivery point during departure.
 
@@ -199,15 +201,74 @@ records this permanent requirement for future work.
 Construction projects, crane hoists, machines, delivery crews and helpers now
 occupy independent anchors throughout the expanded settlement. Position metadata
 moves the anchors during layout without scaling or resetting animation nodes.
-Workers are larger in landscape scenes. All twenty measured stages keep their
+Residents are about 14 world units tall, semis about 29, and cart handlers taller
+than their carts. Machinery stays larger than its crew. Three depths of work yards
+hold supplies, projects and machine circuits above the dedicated Data Traffic road.
+All twenty measured stages keep their
 construction phases and live delivery behavior.
 
 `world/settlements/residents-v1.png` is an original transparent built-in imagegen
 atlas of two residents with four walking poses each. `resident-prompts.json`
 records its exact prompt, source and layout. Clipped SVG viewports cycle poses
 with CSS while residents walk and turn around. Resident count increases with
-city tier (4 to 22), and ordinary street life continues while construction waits
+city tier (8 to 27), and ordinary street life continues while construction waits
 for incoming traffic. Pause and reduced motion stop both ambient and work motion.
 
 QA must verify actual pose changes, animation continuity, visible population and
 construction distributed across the scene, and measured building progression.
+
+Night lighting and construction vibrancy
+---------------------------------------
+
+Construction has two to six machines per city tier, larger crews, supply haulers,
+staggered crane lifts, digging and mixer poses, dust, and tool sparks. Measured
+progress controls project phases, window completion and worksite retirement.
+Without incoming data the machinery and crews wait; residents keep walking.
+
+Run `electron scripts/qa-city-vibrancy.mjs` for desktop, compact and mobile
+frame captures, rendered pixel changes distributed across the city, measured
+growth, timeline preservation through polling/sorting/resizing, night and day
+lighting, pause, motion-disabled, reduced-motion and idle checks.
+
+The `fleet/activity/` and `construction/activity/` textures are isolated crops of
+the original artwork, resized for animation. Regenerate them with
+`electron scripts/build-activity-sprites.mjs` after atlas changes. Offscreen cities
+keep their animation timelines and journey geometry while skipping paint work.
+
+`fleet/traffic/` and `trucks/traffic/` hold 192px frame textures from the same source
+atlases, with their measured clip masks and alpha. The same build script packages
+them. Moving vehicles use these small textures to avoid repainting whole atlases.
+Vehicles brake into delivery bays, unload, then accelerate away on continuous
+paths. Slow frames advance at most 50ms of visual travel to prevent teleporting.
+Uploads start beyond the right viewport edge and finish beyond the left, including
+the full vehicle, handler and light beam. Departure geometry remains fixed through
+refreshes and responsive layout changes. Traffic positions have no CSS transition
+lag. Crane hoists replace the atlas's fixed rig with an attached moving load and
+a cable that extends from the authored boom trolley and tracks its lift exactly.
+`electron scripts/qa-city-traffic.mjs` verifies rendered proportions, road clearance,
+motion in depth, frame continuity, cargo delivery and pause/reduced motion at
+desktop, compact and phone sizes.
+`electron scripts/qa-crane-uploads.mjs` checks cable attachment throughout visible
+lifts and the full rendered upload silhouette entering/exiting the viewport.
+
+City cards now use the full scene width, with app identity over the upper-left
+scenery. One left-aligned footer contains the city level and measured growth,
+with start/finish download thresholds and the remaining bytes to the next level;
+App Info stays at the left edge with a dropdown caret. Its expanded panel holds the three hourly graphs,
+application facts and the associated service/destination rows. On narrow cards,
+growth fits beneath the level while keeping App Info reachable.
+
+All sky artwork uses built-in imagegen watercolor pixels from `world/sky/`:
+kites, swallows, drones, UFOs, clouds, sun, moon and distant starlight. Original
+transparent sources and exact prompts are retained in that folder. Regenerate
+small runtime textures with `electron scripts/build-sky-sprites.mjs`.
+The old code-drawn sky visitors and unattended parachute parcel are removed.
+Each city starts with 60–180 seconds of quiet, then shows one visitor for 18–28
+seconds followed by a freshly randomized 150–450 second quiet gap. No consecutive
+visitors repeat the same kind; UFOs have the lowest daytime selection weight.
+Schedules use the paused visual clock and survive polling, growth, sorting and
+resizing. Stars twinkle at night; birds and kites are daytime sightings.
+All activity honors pause, motion settings and reduced motion. Landscape framing
+and capped skyline height preserve open sky at wide card sizes.
+Run `electron scripts/qa-sky-cards.mjs` to verify visible sky movement, layout,
+App Info graphs, night stars, timeline continuity and motion controls.

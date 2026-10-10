@@ -111,7 +111,7 @@ test('Service lanes render smoothed labels and independent fleets while details 
   view.update(sample(100000,3000000),'live');
   const snapshot = sample(102000,0);
   view.update(snapshot,'live');
-  const state = {snapshot,trafficView:view,mode:'live',mapApp:'all',mapQuery:'',mapDetail:'service',mapLimit:10,mapSort:'total',mapSortDirection:'desc',mapVehicle:'auto',motion:true};
+  const state = {snapshot,trafficView:view,mode:'live',mapApp:'all',mapQuery:'',mapDetail:'service',mapLimit:10,mapSort:'total',mapSortDirection:'desc',mapVehicle:'auto',motion:true,mapExpanded:new Set(['firefox'])};
   const html = renderNetworkMap({state,icon:()=>'',rate:n=>String(n),bytes:n=>String(n),esc:s=>String(s)});
   assert.match(html,new RegExp(String(lane(view,snapshot).rate)));
   assert.match(html,/data-download-type="freight-train"/);

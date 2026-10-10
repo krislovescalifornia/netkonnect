@@ -39,7 +39,7 @@ app.whenReady().then(async()=>{
         const ctx=canvas.getContext('2d');ctx.drawImage(image,0,0);
         const rgba=ctx.getImageData(0,0,image.width,image.height).data;
         let clear=0,paint=0;for(let i=3;i<rgba.length;i+=4){if(rgba[i]===0)clear++;if(rgba[i]>240)paint++;}
-        if(clear>image.width*image.height*.25&&paint>10000)transparentMachines.push(path);
+        if(clear>image.width*image.height*.25&&paint>image.width*image.height*.08)transparentMachines.push(path);
       }
       const projects=[...document.querySelectorAll('.city-project')];
       const props=[...document.querySelectorAll('.crane-load,.site-supplies')];
@@ -49,13 +49,13 @@ app.whenReady().then(async()=>{
         props:props.length,illustratedProps:props.filter(el=>el.querySelector('image[href^="artwork/details/"]')).length,
         geometricProps:props.filter(el=>el.querySelector('path,circle,ellipse')).length,
         machines:machines.length,illustratedMachines:machines.filter(el=>el.querySelector('image[href^="artwork/construction/"]')).length,
-        geometricMachines:machines.filter(el=>el.querySelector('path,circle,ellipse')).length,transparentMachines,
+        geometricMachines:machines.filter(el=>el.querySelector('.illustrated-site-machine path,.illustrated-site-machine circle,.illustrated-site-machine ellipse')).length,transparentMachines,
         uniqueClips:new Set([...document.querySelectorAll('clipPath')].map(el=>el.id)).size,
         invalid:[...document.querySelectorAll('path')].filter(p=>!Number.isFinite(p.getTotalLength())).length,
         overflow:document.documentElement.scrollWidth>innerWidth};
     })()`);
     assert.equal(report.cities,24);assert.equal(report.uniqueClips,24);assert.equal(report.invalid,0);assert.equal(report.overflow,false);assert.deepEqual(errors,[]);
-    assert.equal(report.machines,56);assert.equal(report.illustratedMachines,report.machines);assert.equal(report.geometricMachines,0);assert.equal(report.transparentMachines.length,2);
+    assert.equal(report.machines,112);assert.equal(report.illustratedMachines,report.machines);assert.equal(report.geometricMachines,0);assert.equal(report.transparentMachines.length,6);
     assert.equal(report.illustratedProjects,report.projects);assert.equal(report.geometricProjects,0);
     assert.equal(report.illustratedProps,report.props);assert.equal(report.geometricProps,0);
     window.webContents.debugger.attach('1.3');

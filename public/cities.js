@@ -1,4 +1,4 @@
-import {illustratedCity,illustratedWorker,illustratedProp,illustratedConstructionVehicle,illustratedBuilding,illustratedDetail} from './illustration-art.js';
+import {illustratedCity,illustratedWorker,illustratedProp,illustratedConstructionVehicle,illustratedBuilding,illustratedDetail,craneHoistGeometry} from './illustration-art.js';
 import {illustratedSettlement,settlementTransform,illustratedResident,settlementHeight} from './settlement-art.js';
 import {worldBackdrop,worldRoads,worldNature,worldSky,worldTime,infrastructure} from './world.js';
 // Illustrated architecture with independent live supply and crew layers.
@@ -24,11 +24,11 @@ export function worker(options={}) {
   return illustratedWorker(options);
 }
 export function cityHelpers(stage,landscape=false) {
-  return Array.from({length:Math.floor(stage/2)},(_,i)=>`<g data-helper="${i}"${landscape?` class="city-activity-anchor" data-city-x="${48+(i*23)%165}" data-city-y="${i%2?98:94}"`:""} transform="translate(${48+(i*23)%165} ${i%2?138:134})"><g class="crew-walker" style="--walk-distance:${24+(i%3)*10}px;--walk-duration:${9+i%4}s;--walk-delay:-${i*1.7}s">${worker({woman:i%2===0,carry:i%3===0,size:landscape?12:8})}</g></g>`).join('');
+  return Array.from({length:3+Math.floor(stage/2)},(_,i)=>`<g data-helper="${i}"${landscape?` class="city-activity-anchor" data-city-x="${48+(i*23)%165}" data-city-y="${i%2?78:103}"`:""} transform="translate(${48+(i*23)%165} ${i%2?138:134})"><g class="crew-walker" style="--walk-distance:${24+(i%3)*10}px;--walk-duration:${9+i%4}s;--walk-delay:-${i*1.7}s">${worker({woman:i%2===0,carry:i%3===0,size:landscape?9:8})}</g></g>`).join('');
 }
 export function cityResidents(stage) {
-  const count=Math.min(22,4+Math.max(0,stage));
-  return `<g class="city-residents">${Array.from({length:count},(_,i)=>`<g class="city-activity-anchor resident-home" data-render-key="resident-${i}" data-city-x="${20+i*290/(count-1)}" data-city-y="${i%2?93:89}" transform="translate(${20+i*290/(count-1)} ${i%2?93:89})"><g class="resident-walk" style="--walk-distance:${24+i%3*12}px;--walk-duration:${11+i%5}s;--walk-delay:-${i*1.3}s;--stride-delay:-${i*.17}s"><g class="resident-facing">${illustratedResident(i)}</g></g></g>`).join('')}</g>`;
+  const count=Math.min(30,8+Math.max(0,stage));
+  return `<g class="city-residents"><path class="city-footpath" data-footpath-y="76" d="M0 76H330"/><path class="city-footpath" data-footpath-y="104" d="M0 104H330"/>${Array.from({length:count},(_,i)=>`<g class="city-activity-anchor resident-home" data-render-key="resident-${i}" data-city-x="${20+i*290/(count-1)}" data-city-y="${i%2?76:104}" data-city-scale="${i%2?.85:1}" transform="translate(${20+i*290/(count-1)} ${i%2?76:104})"><g class="resident-walk" style="--walk-distance:${20+i%3*10}px;--walk-duration:${10+i%5}s;--walk-delay:-${i*1.3}s;--stride-delay:-${i*.17}s"><g class="resident-facing">${illustratedResident(i)}</g></g></g>`).join('')}</g>`;
 }
 const clamp=n=>Math.max(0,Math.min(1,n));
 const PHASES=['Foundations','Framing','Building floors','Finishing','Complete'];
@@ -44,62 +44,98 @@ export function cityConstruction(stage,progress=0) {
       height:stage<6?24+i%2*8:stage<10?34+i%3*9:48+i%3*14,
       house:stage<8||i===count-1};
   });
-  return {progress,sites,cranes:stage<2?0:Math.min(6,1+Math.floor((stage-2)/3)),vehicles:stage<3?1:stage<10?2:3,
+  return {progress,sites,cranes:stage<2?0:Math.min(6,1+Math.floor((stage-2)/3)),vehicles:stage<3?2:stage<10?4:6,
     phase:PHASES[progress===1?4:Math.min(3,Math.floor(progress*4))]};
 }
 
-function buildingSite(site,i,landscape=false) {
+function buildingSite(site,i,landscape=false,baseline=landscape?88:128) {
   const {built,x,height,house}=site,width=house?36:42;
   const platform=Math.min(height-4,height*(.18+.82*built));
-  return `<g class="city-project${landscape?' city-activity-anchor':''}"${landscape?` data-city-x="${x+12}" data-city-y="88"`:""} data-render-key="project-${i}" data-build-progress="${built.toFixed(4)}" data-build-phase="${site.phase}" opacity="${1-clamp((built-.86)/.14)}" transform="translate(${x+12} 128)">
+  return `<g class="city-project${landscape?' city-activity-anchor':''}"${landscape?` data-city-x="${x+12}" data-city-y="${baseline}"`:""} data-render-key="project-${i}" data-build-progress="${built.toFixed(4)}" data-build-phase="${site.phase}" opacity="${1-clamp((built-.86)/.14)}" transform="translate(${x+12} ${baseline})">
     <title>${house?'House':'Tower'} · ${site.phase.toLowerCase()}</title>
     <g class="building-illustration">${illustratedBuilding(house,built,width,height+12)}</g>
+    <g class="site-window-lights"><g opacity="${clamp((built-.55)/.35)}" fill="#ffdb83" stroke="none">${Array.from({length:house?2:6},(_,j)=>`<rect x="${-width*.18+j%2*width*.22}" y="${-9-Math.floor(j/2)*8}" width="3" height="4" rx=".5"/>`).join('')}</g></g>
     <g class="site-scaffolding" opacity="${1-clamp((built-.84)/.16)}">
-      <g transform="translate(${width*.35} -${platform})"><g class="crew-builder" style="animation-delay:-${i*.7}s">${worker({woman:i%2===0,size:landscape?12:8})}</g></g>
+      <g transform="translate(${width*.35} -${platform})"><g class="crew-builder" style="animation-delay:-${i*.7}s">${worker({woman:i%2===0,size:9})}</g></g>
     </g>
   </g>`;
 }
 
-function siteVehicle(i,stage,landscape=false) {
+function siteVehicle(i,stage,landscape=false,withinYard=false) {
   // Render original imagegen pixels; paint choices stay stable across updates.
-  const id=i===1?'cement-mixer':'excavator';
-  return `<g data-render-key="site-vehicle-${i}"${landscape?` class="city-activity-anchor" data-city-x="${i===0?59:i===1?172:242}" data-city-y="${i===1?97:94}"`:""} transform="translate(${i===0?59:i===1?172:242} ${i===1?145:142})">
-    <g class="site-vehicle" style="--machine-delay:-${i*3}s;--machine-direction:${i===2?-1:1}">
-      <g transform="scale(${i===2?-1:1} 1)">${illustratedConstructionVehicle(id,stage+i)}</g>
+  const id=i%3===1?'cement-mixer':'excavator';
+  const x=withinYard?0:35+i*250/Math.max(1,cityConstruction(stage).vehicles-1);
+  return `<g data-render-key="site-vehicle-${i}"${landscape?` class="city-activity-anchor" data-city-x="${x}" data-city-y="${i%2?101:97}"`:""} transform="translate(${x} ${withinYard?0:i===1?145:142})">
+    <g class="site-vehicle" style="--machine-delay:-${i*3}s;--machine-direction:${i%2?-1:1}">
+      <g class="machine-facing" transform="scale(${withinYard?1:i%2?-1:1} 1)">${illustratedConstructionVehicle(id,stage+i)}</g>
+      <g class="machine-beacon night-light" transform="translate(-7 -24)"><circle class="beacon-flash" r="2.2" fill="#ffbc48" stroke="none"/></g>
     </g>
   </g>`;
+}
+
+
+function cityWorksites(build,landscape,withinYard=false,indexOffset=0) {
+  return '<g class="city-worksites">'+build.sites.map((site,i)=>{
+    i+=indexOffset;
+    const x=withinYard?0:site.x+12,y=withinYard?0:landscape?96:140;
+    return `<g class="worksite-home${landscape?' city-activity-anchor':''}" data-render-key="worksite-${i}"${landscape?` data-city-x="${x}" data-city-y="${y}"`:''} transform="translate(${x} ${y})" opacity="${1-clamp((site.built-.86)/.14)}" style="--work-delay:-${i*1.3}s;--walk-duration:${6+i%3}s;--walk-delay:-${i*1.7}s;--walk-distance:${28+i%3*9}px">
+      <g class="worksite-light night-light" stroke="none"><ellipse cx="0" cy="-9" rx="28" ry="23" fill="#ffcc78" opacity=".12"/><ellipse cx="0" cy="0" rx="27" ry="4" fill="#ffdb94" opacity=".26"/><path d="M-22 0v-26m-4 0h8" stroke="#aebec8" stroke-width="1.3"/><path d="M-24 -26l7 0 16 22-36 0z" fill="#ffe4a3" opacity=".12"/><rect x="-26" y="-28" width="8" height="3" rx="1" fill="#ffe9b8"/></g>
+      <g class="worksite-hauler"><g class="crew-walker">${worker({woman:i%2===0,carry:true,size:9})}</g></g>
+      <g transform="translate(17 -2)"><g class="crew-builder">${worker({woman:i%2!==0,size:9})}</g><g class="worksite-sparks" fill="#fff1a8" stroke="#ffd270" stroke-width=".7"><path d="M-5 -9l-4 -4m7 4l2 -5m-3 8l5 1"/></g></g>
+      <g class="worksite-dust" fill="#dac4a0" stroke="none"><circle cx="0" cy="-3" r="4"/><circle cx="6" cy="-2" r="3"/><circle cx="-5" cy="-2" r="2.5"/></g>
+    </g>`;
+  }).join('')+'</g>';
+}
+
+// Work yards are staggered into the settlement at three depths. Each machine
+// follows a supply-to-foundation circuit within its yard, above the data road.
+function cityDistricts(build,stage) {
+  return '<g class="city-districts">'+[0,1,2].map(depth=>`<g class="city-depth-layer" data-render-key="district-depth-${depth}" data-depth="${depth}">${build.sites.map((site,i)=>{
+    if(i%3!==depth)return '';
+    const y=[60,80,102][depth],scale=[.78,.9,1][depth];
+    return `<g class="construction-yard city-activity-anchor" data-render-key="yard-${i}" data-city-x="${site.x+12}" data-city-y="${y}" data-city-scale="${scale}" data-site-count="${build.sites.length}" opacity="${1-clamp((site.built-.86)/.14)}" transform="translate(${site.x+12} ${y}) scale(${scale})" style="--yard-span:44px;--machine-duration:${13+i*1.7}s;--machine-delay:-${i*3}s">
+      <path class="yard-ground" d="M-54 7L-37 -24H59L78 7Z"/>
+      <path class="yard-track" d="M-31 4L-12 -15H37L52 -4"/>
+      <g class="city-projects">${buildingSite({...site,x:18},i,false,-12)}</g>
+      <g transform="translate(-30 -12)">${illustratedDetail('site-supplies',25,0,10)}</g>
+      ${cityWorksites({sites:[site]},false,true,i)}
+      <g class="city-site-vehicles">${Array.from({length:i<build.vehicles?1:0},()=>siteVehicle(i,stage,false,true)).join('')}${i===build.sites.length-1&&build.vehicles>build.sites.length?`<g transform="translate(-35 -16) scale(.85)">${siteVehicle(build.vehicles-1,stage,false,true)}</g>`:''}</g>
+    </g>`;
+  }).join('')}</g>`).join('')+'</g>';
 }
 
 export function cityArtwork(stage,progress=0,sceneKey='catalog',landscape=false,end=655) {
   const cityImage=landscape?illustratedSettlement:illustratedCity;
-  const person=options=>worker({...options,size:landscape?12:8});
+  const person=options=>worker({...options,size:landscape?9:8});
   const anchor=(x,y)=>landscape?` class="city-activity-anchor" data-city-x="${x}" data-city-y="${y}"`:'';
   const build=cityConstruction(stage,progress),next=Math.min(stage+1,CITY_STAGES.length-1);
   const growthHeight=landscape?settlementHeight(next):145;
   const clipId='city-rise-'+stage+'-'+encodeURIComponent(sceneKey).replace(/%/g,'_');
   const cranes=Array.from({length:build.cranes},(_,i)=>{
     const x=build.cranes===1?286:42+i*244/(build.cranes-1),height=61+(i%3)*21;
-    return `<g class="site-crane${landscape?' city-activity-anchor':''}"${landscape?` data-city-x="${x}" data-city-y="-38"`:""} data-render-key="crane-${i}" transform="translate(${x} 0)" style="--hoist-delay:-${i*2.3}s;--hoist-duration:${9+i%3*2}s">
+    const rig=craneHoistGeometry(height);
+    return `<g class="site-crane${landscape?' city-activity-anchor':''}"${landscape?` data-city-x="${x}" data-city-y="-38"`:""} data-render-key="crane-${i}" transform="translate(${x} 0)" style="--hoist-delay:-${i*2.3}s;--hoist-duration:${6+i%3*1.5}s;--hoist-rest:${rig.rest};--hoist-lift:${rig.lift}">
       ${illustratedProp('crane',height*.65,126,height)}
-      <g transform="translate(12 ${119-height*.55})"><g class="crane-load">${illustratedDetail('crane-load',10,6,22)}</g></g>
+      <g class="crane-hoist-anchor" transform="translate(${rig.x} ${rig.y})">
+        <path class="crane-cable" d="M0 0V1" fill="none" stroke="#526a79" stroke-width="1" vector-effect="non-scaling-stroke"/>
+        <g class="crane-load">${illustratedDetail('crane-load',rig.loadWidth,rig.loadHeight,rig.loadHeight)}</g>
+      </g>
     </g>`;
   }).join('');
   return `<g class="city-linework" fill="none" stroke="#385065" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round">
-    <g class="city-buildings"${landscape?` data-growth-height="${growthHeight}"`:""}${landscape?` transform="${settlementTransform(end)}"`:""}>
+    <g class="city-buildings"${landscape?` data-growth-height="${growthHeight}"`:""}${landscape?` transform="${settlementTransform(end,stage)}"`:""}>
       <g class="city-established" opacity="${stage===next?1:1-build.progress*.95}">${cityImage(stage).replace('class="city-buildings"','class="city-illustration"')}</g>
       <defs><clipPath id="${clipId}">${build.sites.map((site,i)=>`<rect x="${i*330/build.sites.length}" y="${129-growthHeight*site.built}" width="${330/build.sites.length+.5}" height="${growthHeight*site.built}"/>`).join('')}</clipPath></defs>
       <g class="city-rising" clip-path="url(#${clipId})" opacity="${stage===next?0:clamp(build.progress*5)}">${cityImage(next).replace('class="city-buildings"','class="city-illustration"')}</g>
     </g>
-    ${landscape?cityResidents(stage):''}
     <g class="construction-site">${cranes}</g>
-    <g class="city-projects">${build.sites.map((site,i)=>buildingSite(site,i,landscape)).join('')}</g>
-    <g class="city-site-vehicles">${Array.from({length:build.vehicles},(_,i)=>siteVehicle(i,stage,landscape)).join('')}</g>
+    ${landscape?cityDistricts(build,stage):`<g class="city-projects">${build.sites.map((site,i)=>buildingSite(site,i)).join('')}</g>${cityWorksites(build,false)}<g class="city-site-vehicles">${Array.from({length:build.vehicles},(_,i)=>siteVehicle(i,stage)).join('')}</g>`}
+    ${landscape?cityResidents(stage):''}
     <g class="site-supplies${landscape?' city-activity-anchor':''}"${landscape?' data-city-x="267" data-city-y="96"':''} transform="translate(267 139)"><g transform="translate(5 0)">${illustratedDetail('site-supplies',34,0,15)}</g></g>
     <g${anchor(292,97)} transform="translate(292 135)"><g class="crew-carrier">${person({woman:true,carry:true})}</g></g>
     <g${anchor(258,96)} transform="translate(258 135)"><g class="crew-builder">${person()}</g></g>
     <g${anchor(85,95)} transform="translate(85 135)"><g class="crew-receiver">${person({woman:true})}</g></g>
     <g class="city-helpers">${cityHelpers(stage,landscape)}</g>
-    <g class="city-airdrop">${illustratedProp('airdrop',25,39,39)}</g>
   </g>`;
 }
 // Shared by the initial SVG and the animator's responsive layout.
@@ -113,12 +149,17 @@ export function updateCityGrowth(svg,stage,progress) {
   const set=(node,name,value)=>{const text=String(value);if(node.getAttribute(name)!==text)node.setAttribute(name,text);};
   set(svg.querySelector('.city-established'),'opacity',final?1:1-build.progress*.95);
   set(svg.querySelector('.city-rising'),'opacity',final?0:clamp(build.progress*5));
-  const clips=svg.querySelectorAll('.city-buildings clipPath rect'),projects=svg.querySelectorAll('.city-project');
+  const clips=svg.querySelectorAll('.city-buildings clipPath rect');
   build.sites.forEach((site,i)=>{
     set(clips[i],'y',129-growthHeight*site.built);set(clips[i],'height',growthHeight*site.built);
-    const project=projects[i],platform=Math.min(site.height-4,site.height*(.18+.82*site.built));
+    const project=svg.querySelector(`[data-render-key="project-${i}"]`),platform=Math.min(site.height-4,site.height*(.18+.82*site.built));
     set(project,'data-build-progress',site.built.toFixed(4));set(project,'data-build-phase',site.phase);
     set(project,'opacity',1-clamp((site.built-.86)/.14));
+    const worksite=svg.querySelector(`[data-render-key="worksite-${i}"]`);
+    if(worksite)set(worksite,'opacity',1-clamp((site.built-.86)/.14));
+    const yard=svg.querySelector(`[data-render-key="yard-${i}"]`);
+    if(yard)set(yard,'opacity',1-clamp((site.built-.86)/.14));
+    set(project.querySelector('.site-window-lights>g'),'opacity',clamp((site.built-.55)/.35));
     const title=project.querySelector('title'),label=`${site.house?'House':'Tower'} · ${site.phase.toLowerCase()}`;
     if(title.textContent!==label)title.textContent=label;
     const scaffold=project.querySelector('.site-scaffolding');
@@ -135,6 +176,6 @@ export function renderCity({key,bytes,busy=false,airdrop=false,convoy='',traffic
   // key is escaped by the caller; stage names and geometry are internal constants.
   const scene=CITY_ROUTE_SCENE;
   const end=655,growth=infrastructure(stage.index);
-  const world=convoy?`<g class="world-landscape">${worldBackdrop(stage.index)}<g class="world-infrastructure">${worldRoads(stage.index,end)}</g><g class="world-city" transform="translate(${end-80} 28)">${includeArtwork?cityArtwork(stage.index,stage.progress,key,true,end):''}</g><g class="world-decoration">${worldNature(stage.index,end)}</g></g><g class="world-atmosphere">${worldSky(stage.index,end)}</g>`:includeArtwork?cityArtwork(stage.index,stage.progress,key):'';
+  const world=convoy?`<g class="world-landscape">${worldBackdrop(stage.index)}<g class="world-infrastructure">${worldRoads(stage.index,end)}</g><g class="world-city" transform="translate(${end-80} 28)">${includeArtwork?cityArtwork(stage.index,stage.progress,key,true,end):''}</g><g class="world-decoration">${worldNature(stage.index,end)}</g></g><g class="world-atmosphere">${worldSky(stage.index,end,key)}</g>`:includeArtwork?cityArtwork(stage.index,stage.progress,key):'';
   return `<svg class="application-city ${convoy?'convoy-svg city-route-scene ':''}${busy?'city-working':'city-resting'} ${airdrop?'has-airdrop':''} ${stage.known?'':'city-unmeasured'}" data-city-key="${key}" data-stage="${stage.index}" data-progress="${stage.progress}" data-build-phase="${build.phase}" data-time="${worldTime(date).phase}" data-infrastructure="${growth.tier}" ${convoy} viewBox="${convoy?`0 -20 900 ${scene.height}`:'0 -20 330 178'}" role="img" aria-label="${stage.name}; ${stage.known?(stage.next?build.phase.toLowerCase()+' toward '+stage.next:'construction complete'):'awaiting measured supplies'}; ${growth.name.toLowerCase()}; ${busy?'construction crew working':'crew resting'}${trafficLabel?'; '+trafficLabel:''}">${world}</svg>`;
 }

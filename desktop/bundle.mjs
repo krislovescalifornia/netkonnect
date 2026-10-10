@@ -2,7 +2,7 @@ import { access, readFile } from 'node:fs/promises';
 import { join, resolve, relative, isAbsolute } from 'node:path';
 import {TRUCK_ASSETS} from '../public/truck-art.js';
 import {WORLD_ASSETS} from '../public/world.js';
-import {ILLUSTRATION_ASSETS} from '../public/artwork/manifest.js';
+import {ILLUSTRATION_ASSETS} from '../public/illustration-art.js';
 
 export const requiredAssets = [
   'package.json', 'collector.ps1', 'traffic.ps1', 'lib/TrafficTrace.cs',

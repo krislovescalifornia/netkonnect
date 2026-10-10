@@ -31,15 +31,18 @@ test('one parent combines all process IDs, destinations, protocols and completed
   assert.equal(groupApplicationRoutes(buildRoutes(connections,options),{direction:'asc'})[0].app,'Codex');
 });
 
-test('application hourly graphs aggregate aliases and Info is only shown after expanding services',()=>{
+test('application hourly graphs aggregate aliases and appear beneath App Info when expanded',()=>{
   const history=received=>Array.from({length:60},(_,i)=>({received:i===59?received:0,sent:i===59?10:0}));
   const groups=groupApplicationRoutes(buildRoutes(connections.map(c=>({...c,usageHistory:history(c.receivedBytes60m)})),{usageConnections:[{...departed,usageHistory:history(40)}]}));
   const firefox=groups.find(g=>g.key==='firefox');
   assert.deepEqual(firefox.usageHistory[59],{received:340,sent:30});
   assert.doesNotMatch(render(),/class="city-info"/);
   const expanded=render({mapExpanded:new Set(['firefox'])});
-  assert.match(expanded,/class="city-info"[^>]*><strong>Info<\/strong><span>PID 11, 10, 12<\/span><span>UDP \+ TCP<\/span>/);
-  assert.equal((expanded.match(/class="usage-graph"/g)||[]).length,6);
+  assert.match(expanded,/class="city-usage-graphs"/);
+  assert.match(expanded,/<span>PID 11, 10, 12<\/span><span>UDP \+ TCP<\/span>/);
+  assert.equal((expanded.match(/class="usage-graph"/g)||[]).length,3);
+  assert.doesNotMatch(render(),/city-app-card|class="usage-graph"|city-world-meta/);
+  assert.match(render(),/application-scene"[^>]*><div class="city-app-heading"/);
 });
 
 test('search, endpoint mode and missing capture preserve matching parent totals',()=>{
@@ -70,7 +73,7 @@ test('manual collapse and expansion remain keyed across sorting',()=>{
   assert.match(firefox,/No active connections/);
   const endpoints=render({mapDetail:'endpoint',mapExpanded:new Set(['firefox'])});
   assert.match(endpoints,/1.2.3.4:443/);
-  assert.match(endpoints,/Show endpoints|Hide endpoints/);
+  assert.match(endpoints,/Hide App Info for Firefox/);
 });
 
 test('application cities stay visible while services default to collapsed and expand without cities',()=>{
@@ -123,7 +126,7 @@ test('parent smooth speeds equal child speeds and filtered display does not inhe
   view.update(quiet,'live');
   const parent=groupApplicationRoutes(buildRoutes(quiet.connections,options))[0];
   assert.ok(Math.abs(view.lane(parent,'application','receiveRate').rate-100*Math.exp(-.2))<1e-8);
-  const filtered=render({snapshot:quiet,trafficView:view,mapQuery:'2.3.4.5'});
+  const filtered=render({snapshot:quiet,trafficView:view,mapQuery:'2.3.4.5',mapExpanded:new Set(['firefox'])});
   assert.match(filtered,new RegExp(`data-download-rate="${70*Math.exp(-.2)}`));
   assert.match(filtered,/<small class="usage-label">Total · 60 min<\/small>230/);
 });

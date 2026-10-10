@@ -49,7 +49,7 @@ app.whenReady().then(async()=>{
       const fleetVariety=new Set(original.map(n=>n.querySelector('.supply-pickup').innerHTML)).size;
       for(let n=0;n<72;n++){now+=100;animator.tick();animator.draw();}
       const unloaded=first.querySelector('.vehicle-cargo').style.opacity==='0';
-      const emptyBed=!!first.querySelector('image[href="artwork/trucks/pickup-empty.png"]');
+      const emptyBed=!!first.querySelector('image[data-art-source="artwork/trucks/pickup-empty.png"]');
       const bodyVisible=Number(first.style.opacity)>0;
       animator.active=false;animator.resizeObserver?.disconnect();root.remove();
       return {stable,fleetVariety,fleetSize:original.length,transparentImages,assets:TRUCK_ASSETS.length,unloaded,emptyBed,bodyVisible,overflow:document.documentElement.scrollWidth>innerWidth};

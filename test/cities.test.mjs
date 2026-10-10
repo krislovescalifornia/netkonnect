@@ -30,12 +30,12 @@ test('construction scales from houses to multiple tower sites and cranes',()=>{
   assert.equal(small.cranes,0);assert.equal(small.sites.length,2);
   assert.ok(small.sites.every(s=>s.house));
   assert.ok(town.cranes>=3);assert.equal(giant.cranes,6);
-  assert.equal(giant.sites.length,6);assert.equal(giant.vehicles,3);
+  assert.equal(giant.sites.length,6);assert.equal(giant.vehicles,6);
   assert.ok(giant.sites.some(s=>!s.house));assert.ok(giant.sites.some(s=>s.house));
   assert.equal((cityArtwork(18,.2).match(/class="site-crane"/g)||[]).length,6);
   assert.match(cityArtwork(18,.2),/site-scaffolding/);
-  assert.match(cityArtwork(18,.2),/artwork\/construction\/excavator\.png/);
-  assert.match(cityArtwork(18,.2),/artwork\/construction\/cement-mixer\.png/);
+  assert.match(cityArtwork(18,.2),/artwork\/construction\/activity\/excavator-0\.png/);
+  assert.match(cityArtwork(18,.2),/artwork\/construction\/activity\/cement-mixer-1\.png/);
 });
 test('measured progress steadily finishes staggered projects before the next level',()=>{
   for(let stage=0;stage<19;stage++) {

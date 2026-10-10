@@ -1,8 +1,9 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {JourneyQueue} from '../public/routes.js';
-import {vehicle,journeyPose,roadSpeed} from '../public/map.js';
-import {VEHICLE_STAGES} from '../public/vehicles.js';
+import {vehicle,journeyPose,roadSpeed,TransportAnimator} from '../public/map.js';
+import {VEHICLE_STAGES,cityVehicleScale} from '../public/vehicles.js';
+import {WORLD_ROUTE_BASELINES} from '../public/world.js';
 
 const settings = (type='truck',rate=400000,key='route|download',incoming=true) => ({key,type,rate,incoming});
 const travel = (queue,milliseconds) => { for(let elapsed=0;elapsed<milliseconds;elapsed+=100) queue.advance(Math.min(100,milliseconds-elapsed)); };
@@ -127,7 +128,7 @@ test('supply sprites carry wood, crates and walking helpers in both directions',
   for(const incoming of [true,false]) {
     assert.match(vehicle('bicycle',incoming),/supply-pushcart/);
     assert.match(vehicle('bicycle',incoming),/cart-handler/);
-    assert.match(vehicle('bicycle',incoming),/artwork\/fleet\/crew\.png/);
+    assert.match(vehicle('bicycle',incoming),/artwork\/fleet\/activity\/crew-\d\.png/);
     assert.doesNotMatch(vehicle('bicycle',incoming),/class="bicycle"|bicycle-spokes/);
     assert.match(vehicle('truck',incoming),/supply-pickup/);
     assert.match(vehicle('plane',incoming),/supply-plane/);
@@ -146,13 +147,14 @@ test('downloads stop to unload then depart right and fade; uploads return left',
     assert.equal(departure.unloaded,1);assert.ok(departure.opacity<1);
     assert.equal(departure.deliveryX,delivery.x);
     assert.ok(journeyPose(incoming,1,true).x>900);assert.equal(journeyPose(incoming,1,true).opacity,0);
-    assert.equal(journeyPose(outgoing,0,true).x,end);
-    assert.equal(journeyPose(outgoing,1,true).x,28);
+    const halfWidth=VEHICLE_STAGES.find(s=>s.id===type).width*cityVehicleScale(VEHICLE_STAGES.find(s=>s.id===type))/2;
+    assert.ok(journeyPose(outgoing,0,true).x-halfWidth>900);
+    assert.ok(journeyPose(outgoing,1,true).x+halfWidth<0);
     assert.equal(journeyPose(outgoing,.93,true).unloaded,0);
-    const baseline={road:[124,204],rail:[150,226],water:[176,248],air:[32,67]}[mode];
-    const offset=mode==='air'?0:mode==='water'?6:11*Math.min(.85,88/VEHICLE_STAGES.find(s=>s.id===type).width);
-    assert.equal(journeyPose(incoming,0,true).y,baseline[0]-offset);
-    assert.equal(journeyPose(outgoing,0,true).y,baseline[1]-offset);
+    const baseline=WORLD_ROUTE_BASELINES[mode];
+    const offset=mode==='air'?0:mode==='water'?6:11*cityVehicleScale(VEHICLE_STAGES.find(s=>s.id===type));
+    assert.equal(journeyPose(incoming,0,true).y,baseline.download-offset);
+    assert.equal(journeyPose(outgoing,0,true).y,baseline.upload-offset);
     for(const t of [0,.25,.5,.75,1]) {
       assert.equal(journeyPose(incoming,t,true).angle,0);
       assert.equal(journeyPose(outgoing,t,true).angle,0);
@@ -160,8 +162,39 @@ test('downloads stop to unload then depart right and fade; uploads return left',
   }
 });
 
+test('uploads enter and leave wholly outside every responsive scene without changing their departure route',()=>{
+  for(const sceneEnd of [115,655,1450])for(const spec of VEHICLE_STAGES) {
+    const journey={type:spec.id,incoming:false},halfWidth=spec.width*cityVehicleScale(spec)/2;
+    assert.ok(journeyPose(journey,0,true,sceneEnd).x-halfWidth>sceneEnd+245);
+    assert.ok(journeyPose(journey,.999,true,sceneEnd).x+halfWidth<0);
+    let previous=Infinity;
+    for(let i=0;i<=100;i++) {
+      const pose=journeyPose(journey,i/100,true,sceneEnd);
+      assert.ok(pose.x<previous);previous=pose.x;assert.equal(pose.opacity,1);
+    }
+  }
+});
 
-test('road overlays show whole Mbit/s numbers for measured rates and an unknown reading',()=>{
-  for(const [rate,value] of [[0,'0'],[125000,'1'],[1250000,'10'],[12500000,'100'],[null,'—']])
+
+test('road overlays keep one decimal place, including sub-megabit rates',()=>{
+  for(const [rate,value] of [[0,'0.0'],[100000,'0.8'],[125000,'1.0'],[1250000,'10.0'],[12500000,'100.0'],[null,'—']])
     assert.equal(roadSpeed(rate),`<span class="speed-value">${value} <small>Mbit/s</small></span>`);
+});
+
+test('delivery braking, bay entry, unloading and acceleration have continuous positions and velocities',()=>{
+  const journey={incoming:true,type:'semi'},epsilon=.000001;
+  for(const boundary of [.50,.62*.8,.62,.65,.74,.78,.78+.22*.2,.78+.22*.32]) {
+    const a=journeyPose(journey,boundary-epsilon,true),b=journeyPose(journey,boundary,true),c=journeyPose(journey,boundary+epsilon,true);
+    assert.ok(Math.hypot(a.x-c.x,a.y-c.y)<.01);
+    assert.ok(Math.abs((b.x-a.x)-(c.x-b.x))/epsilon<.2,'horizontal speed remains continuous');
+    assert.ok(Math.abs((b.y-a.y)-(c.y-b.y))/epsilon<.2,'bay steering remains continuous');
+  }
+});
+
+test('a stalled paint resumes without jumping forward through the journey',()=>{
+  let time=0;const animator=new TransportAnimator({clock:()=>time});
+  animator.active=true;animator.queue.configure([settings()]);animator.queue.advance(0);
+  time=16;animator.tick();assert.equal(animator.queue.now,16);
+  time=1016;animator.tick();assert.equal(animator.queue.now,66);
+  animator.active=false;time=3016;animator.tick();assert.equal(animator.queue.now,66);
 });

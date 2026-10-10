@@ -1,0 +1,56 @@
+{
+  "generator": "Built-in imagegen",
+  "reference": "artwork/world/backgrounds/level-06-estate-v1.png",
+  "assets": [
+    {
+      "id": "kite",
+      "prompt": "Use case: stylized-concept. Asset type: one isolated transparent-background watercolor sprite for the sky of a detailed living-city desktop app. Style reference: the supplied estate panorama ONLY for its refined watercolor paper texture, fine subtle navy ink detail, restrained natural colors and eye-level landscape perspective. A tasteful architectural travel-journal illustration for adults, not a children's cartoon or UI icon. The sprite will be a small, rare distant sighting. Keep silhouettes legible and delicate. No emoji appearance, thick outlines, exaggerated proportions, bright neon, surrounding scene, text, labels, border, checkerboard, ground shadow, extra objects, floating detached parts or speed lines. Real alpha transparency. Keep the object fully inside the canvas, with generous transparent padding on all sides. Subject: ONE realistic distant diamond fabric kite, faded terracotta and ivory panels, slender wooden cross brace, a subtle short trailing fabric tail and a fine curved tether. Side view slightly tilted in a breeze. Small, understated, carefully inked fabric details. No bows floating independently. Center composition.",
+      "source": "public/artwork/world/sky/kite-source-v1.png",
+      "runtime": [
+        "public/artwork/world/sky/kite-v1.png"
+      ]
+    },
+    {
+      "id": "birds",
+      "prompt": "Use case: stylized-concept. Asset type: one isolated transparent-background watercolor sprite for the sky of a detailed living-city desktop app. Style reference: the supplied estate panorama ONLY for its refined watercolor paper texture, fine subtle navy ink detail, restrained natural colors and eye-level landscape perspective. A tasteful architectural travel-journal illustration for adults, not a children's cartoon or UI icon. The sprite will be a small, rare distant sighting. Keep silhouettes legible and delicate. No emoji appearance, thick outlines, exaggerated proportions, bright neon, surrounding scene, text, labels, border, checkerboard, ground shadow, extra objects, floating detached parts or speed lines. Real alpha transparency. Keep the object fully inside the canvas, with generous transparent padding on all sides. Subject: ONE loose distant flock of seven small swallows in natural staggered flight, varied realistic wing poses, slim bodies, restrained blue-gray and charcoal plumage. Panoramic scattered formation, plenty of transparent space between birds. Delicate individually inked wings, no oversized cute faces or eyes. Center composition.",
+      "source": "public/artwork/world/sky/birds-source-v1.png",
+      "runtime": [
+        "public/artwork/world/sky/birds-v1.png"
+      ]
+    },
+    {
+      "id": "drone",
+      "prompt": "Use case: stylized-concept. Asset type: one isolated transparent-background watercolor sprite for the sky of a detailed living-city desktop app. Style reference: the supplied estate panorama ONLY for its refined watercolor paper texture, fine subtle navy ink detail, restrained natural colors and eye-level landscape perspective. A tasteful architectural travel-journal illustration for adults, not a children's cartoon or UI icon. The sprite will be a small, rare distant sighting. Keep silhouettes legible and delicate. No emoji appearance, thick outlines, exaggerated proportions, bright neon, surrounding scene, text, labels, border, checkerboard, ground shadow, extra objects, floating detached parts or speed lines. Real alpha transparency. Keep the object fully inside the canvas, with generous transparent padding on all sides. Subject: ONE realistic small distant quadcopter drone, a compact charcoal/slate-gray body, FOUR correctly connected arms and propellers, clean coherent geometry, discreet underslung camera. Eye-level side three-quarter view, level in flight. Restrained ivory highlights. No rotor trails, duplicate propellers, extra dots, artifacts, motion streaks, separate rings or disconnected objects in front of it. Center composition.",
+      "source": "public/artwork/world/sky/drone-source-v1.png",
+      "runtime": [
+        "public/artwork/world/sky/drone-v1.png"
+      ]
+    },
+    {
+      "id": "ufo",
+      "prompt": "Use case: stylized-concept. Asset type: one isolated transparent-background watercolor sprite for the sky of a detailed living-city desktop app. Style reference: the supplied estate panorama ONLY for its refined watercolor paper texture, fine subtle navy ink detail, restrained natural colors and eye-level landscape perspective. A tasteful architectural travel-journal illustration for adults, not a children's cartoon or UI icon. The sprite will be a small, rare distant sighting. Keep silhouettes legible and delicate. No emoji appearance, thick outlines, exaggerated proportions, bright neon, surrounding scene, text, labels, border, checkerboard, ground shadow, extra objects, floating detached parts or speed lines. Real alpha transparency. Keep the object fully inside the canvas, with generous transparent padding on all sides. Subject: ONE subtle classic flying saucer as a rare whimsical easter egg: small elegant brushed pewter elliptical hull, shallow pale-blue glass canopy, just a few restrained warm pinprick lights inset in the rim. Side three-quarter view, level in flight. Refined thin ink detail and watercolor shading. No beams, aliens, rainbow colors, vapor, neon, extra objects or cartoon styling. Center composition.",
+      "source": "public/artwork/world/sky/ufo-source-v1.png",
+      "runtime": [
+        "public/artwork/world/sky/ufo-v1.png"
+      ]
+    },
+    {
+      "id": "cloud",
+      "prompt": "Use case: stylized-concept. Asset type: one subtle isolated transparent watercolor cloud sprite for a detailed illustrated city panorama. Use the supplied estate image ONLY as style reference: fine watercolor texture, ivory paper highlights, muted pale blue-gray shading. Subject: one small wispy distant fair-weather cloud, natural uneven contour, feathered delicate watercolor edge, understated. Centered fully within canvas with generous transparent padding. No cartoon puffs, thick outlines, face, sky background, green tint, surrounding glow, ground, other objects, text, frame, checkerboard. Real alpha transparency.",
+      "source": "public/artwork/world/sky/cloud-source-v1.png",
+      "runtime": [
+        "public/artwork/world/sky/cloud-v1.png"
+      ]
+    },
+    {
+      "id": "celestial",
+      "prompt": "Use case: stylized-concept. Asset type: ONE three-cell horizontal transparent watercolor sprite atlas for the sky of a refined city panorama. Use the estate panorama ONLY as style reference for restrained watercolor, delicate hand-ink detail, adult travel-journal style. Three equally sized cells left to right: (1) a small softly shaded pale warm golden sun disk with very subtle feathered edges, no rays; (2) a softly shaded ivory crescent moon with delicate gray-blue texture, no face; (3) a single tiny subtle ivory distant starlight dot with soft watercolor halo, a point of light not a cartoon star shape. Each object is centered in its own cell and completely separated with ample fully transparent empty gutters. No labels, text, border, sky, checkerboard, thick outlines, neon, surrounding objects. True alpha transparency.",
+      "source": "public/artwork/world/sky/celestial-source-v1.png",
+      "runtime": [
+        "public/artwork/world/sky/sun-v1.png",
+        "public/artwork/world/sky/moon-v1.png",
+        "public/artwork/world/sky/star-v1.png"
+      ]
+    }
+  ]
+}

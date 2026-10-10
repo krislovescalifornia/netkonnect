@@ -2,12 +2,41 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
-import {worldTime,infrastructure,worldRoute,routePoint,worldRoads,WORLD_ASSETS,WORLD_BACKGROUNDS,worldBackground,WORLD_ROUTE_BASELINES} from '../public/world.js';
+import {worldTime,worldSky,SkySchedule,infrastructure,worldRoute,routePoint,worldRoads,WORLD_ASSETS,WORLD_BACKGROUNDS,worldBackground,WORLD_ROUTE_BASELINES} from '../public/world.js';
 import {renderCity,CITY_STAGES} from '../public/cities.js';
 import {createAppServer} from '../lib/http.mjs';
 test('local sky phases cover midnight, sunrise, daytime and sunset boundaries',()=>{
   for(const [hour,minute,phase] of [[0,0,'night'],[4,59,'night'],[5,0,'sunrise'],[7,59,'sunrise'],[8,0,'day'],[16,59,'day'],[17,0,'sunset'],[19,59,'sunset'],[20,0,'night'],[23,59,'night']])
     assert.equal(worldTime(new Date(2026,9,8,hour,minute)).phase,phase);
+});
+test('sky sightings vary by app while keeping their schedules through growth and resize',()=>{
+  const a=worldSky(5,655,'firefox'),b=worldSky(5,655,'Code');
+  assert.notEqual(a,b);
+  assert.equal(a,worldSky(5,655,'firefox'));
+  const first=new SkySchedule('firefox'),again=new SkySchedule('firefox');
+  assert.equal(first.nextAt,again.nextAt);
+  assert.notEqual(first.nextAt,new SkySchedule('Code').nextAt);
+  for(const kind of ['birds','kite','drone','ufo'])assert.ok(a.includes(`data-sky-kind="${kind}"`));
+  assert.equal((a.match(/class="sky-star"/g)||[]).length,40);
+  assert.doesNotMatch(a.split('<g class="world-night-lights')[0],/<path|<ellipse|<circle/,'sky objects use generated images');
+  assert.doesNotMatch(a,/environment-v1/,'sky no longer includes neighboring green atlas pixels');
+  assert.doesNotMatch(renderCity({key:'test',bytes:1e12}),/city-airdrop/);
+});
+test('sky easter eggs have long randomized quiet gaps and one visitor at a time',()=>{
+  const sky=new SkySchedule('firefox'),starts=[],gaps=[],kinds=new Set();let visible=0;
+  assert.ok(sky.nextAt>=60000&&sky.nextAt<=180000);
+  assert.equal(sky.sample(0),null);
+  for(let i=0;i<100;i++) {
+    const time=sky.nextAt,event=sky.sample(time);
+    starts.push(time);kinds.add(event.kind);visible+=event.duration;
+    assert.equal(event.progress,0);assert.ok(event.duration>=18000&&event.duration<=28000);
+    assert.ok(Math.abs(sky.sample(time+event.duration/2).progress-.5)<1e-10);
+    assert.equal(sky.sample(time+event.duration),null);
+    const gap=sky.nextAt-time-event.duration;gaps.push(gap);assert.ok(gap>=150000&&gap<=450000);
+  }
+  assert.equal(kinds.size,4);assert.ok(visible/starts.at(-1)<.12);
+  assert.ok(new Set(gaps.map(Math.round)).size>90);
+  const night=new SkySchedule('night');for(let i=0;i<20;i++)assert.ok(['drone','ufo'].includes(night.sample(night.nextAt,true).kind));
 });
 test('twenty measured city stages grow roads, trees, parks, rail and river ports',()=>{
   assert.deepEqual([0,2,4,6,10,14].map(i=>infrastructure(i).tier),['trail','gravel','road','boulevard','highway','superhighway']);

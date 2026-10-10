@@ -1,6 +1,7 @@
 import {SETTLEMENT_ASSETS,settlementTransform,layoutSettlementActivity} from './settlement-art.js';
 import {transportSpec} from './vehicles.js';
 import {TRANSPORT_FRAMES} from './artwork/world/transport/frames.js';
+import {SKY_ART} from './artwork/world/sky/frames.js';
 // Infrastructure uses measured growth. The sky follows the computer's local clock.
 export const WORLD_BACKGROUNDS=Object.freeze([
   {
@@ -105,11 +106,12 @@ export const WORLD_BACKGROUNDS=Object.freeze([
   }
 ]);
 export const WORLD_ASSETS=[...SETTLEMENT_ASSETS,'artwork/world/meadow-v1.png','artwork/world/environment-v1.png',...WORLD_BACKGROUNDS.map(background=>background.file),
-  'artwork/world/transport/frames.js',...new Set(Object.values(TRANSPORT_FRAMES).map(frame=>frame.file))];
+  'artwork/world/transport/frames.js',...new Set(Object.values(TRANSPORT_FRAMES).map(frame=>frame.file)),
+  'artwork/world/sky/frames.js',...Object.values(SKY_ART).map(frame=>frame.file)];
 export const WORLD_ROUTE_BASELINES=Object.freeze({
-  road:Object.freeze({download:124,upload:204}),
-  rail:Object.freeze({download:150,upload:226}),
-  water:Object.freeze({download:176,upload:248}),
+  road:Object.freeze({download:154,upload:213}),
+  rail:Object.freeze({download:176,upload:234}),
+  water:Object.freeze({download:194,upload:253}),
   air:Object.freeze({download:32,upload:67})
 });
 export function worldBackground(stage=0) {
@@ -182,21 +184,72 @@ export function worldNature(stage,end=655,modes=[]) {
   const lamps=Array.from({length:growth.lamps},(_,i)=>`<g class="world-lamp" data-render-key="world-lamp-${i}">${worldSprite('lamps',end*.33+i*65,91,18,33)}</g>`).join('');
   return `<g class="world-nature">${trees}${parks}${lamps}<g class="world-air-terminal" opacity="${air?1:0}" data-airport="${growth.spaceport?'spaceport':'airport'}">${transportScenery(growth.spaceport?'spaceport':'airport',end+52,49,115,55)}</g><g class="world-port" opacity="${port?1:0}">${worldSprite('port',extent-123,203,104,49)}</g></g>`;
 }
-export function worldSky(stage,end=655) {
-  const extent=end+245,flocks=1+Math.floor(stage/7);
-  return `<rect class="world-time-wash" x="0" y="-20" width="${extent}" height="280" fill="#18325c"/><g class="world-sky" aria-hidden="true"><g class="world-cloud" style="--cloud-delay:-12s">${worldSprite('cloud',extent*.18,-12,105,63)}</g><g class="world-cloud" style="--cloud-delay:-39s;--cloud-duration:83s">${worldSprite('cloud',extent*.61,-6,78,48)}</g>
-    ${Array.from({length:flocks},(_,i)=>`<g class="world-birds" data-render-key="world-birds-${i}" style="--bird-delay:-${i*11}s;--bird-duration:${39+i*7}s">${worldSprite('birds',extent*.16+i*extent*.22,17+i%2*16,38,22)}</g>`).join('')}
-    <circle class="world-sun" cx="${extent*.75}" cy="12" r="11"/><g class="world-moon"><circle cx="${extent*.75}" cy="12" r="10" fill="#fff1c5"/><circle cx="${extent*.75+5}" cy="8" r="9" fill="#283c68"/></g>
-    <g class="world-stars" fill="#fff1c5">${Array.from({length:18},(_,i)=>`<circle cx="${25+(i*113)%(extent-50)}" cy="${-9+(i*17)%62}" r="${i%3===0?1.2:.7}"/>`).join('')}</g></g>`;
+function cityStreetLights(stage,extent) {
+  const count=2+Math.floor(stage/2);
+  return '<g class="world-night-lights night-light" aria-hidden="true">'+Array.from({length:count},(_,i)=>{
+    const x=extent*(.12+i*.78/Math.max(1,count-1)),y=i%3===0?202:121;
+    return `<g data-render-key="street-light-${i}" transform="translate(${x} ${y})"><path d="M0 0v-30q0 -4 4 -4h4" fill="none" stroke="#8396a7" stroke-width="1.2"/><ellipse cx="9" cy="1" rx="24" ry="4" fill="#ffcd77" opacity=".22"/><path d="M7 -31L-9 0h36L11 -31z" fill="#ffdc91" opacity=".07"/><ellipse class="lamp-halo" cx="9" cy="-31" rx="9" ry="8" fill="#ffd88e" opacity=".15"/><rect class="lamp-bulb" x="5" y="-34" width="8" height="3" rx="1.5" fill="#ffeab6"/></g>`;
+  }).join('')+'</g>';
+}
+// A session seed varies sightings between launches; per-city seeds retain their
+// schedules across polling, growth, sorting and responsive layout changes.
+const skySessionSeed=Math.floor(Math.random()*0xffffffff);
+function skyRandom(key) {
+  let seed=skySessionSeed;
+  for(const char of String(key))seed=Math.imul(seed^char.charCodeAt(0),16777619)>>>0;
+  return ()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+}
+export function skySprite(id,x,y,width,attributes='') {
+  const frame=SKY_ART[id],height=width*frame.size.height/frame.size.width;
+  return '<image '+attributes+' href="'+frame.file+'" x="'+x+'" y="'+y+'" width="'+width+'" height="'+height+'"/>';
+}
+// One visitor at a time with fresh random paths and quiet gaps. The paused
+// visual clock drives this schedule; polling never creates or restarts a visit.
+export class SkySchedule {
+  constructor(key,now=0,random=skyRandom(key)) {
+    this.random=random;this.nextAt=now+60000+random()*120000;this.event=null;this.previous=null;
+  }
+  sample(now,night=false) {
+    while(now>=this.nextAt) {
+      const choices=(night?['drone','drone','ufo']:['birds','birds','birds','kite','kite','drone','drone','ufo']).filter(kind=>kind!==this.previous);
+      const kind=choices[Math.floor(this.random()*choices.length)];
+      this.event={kind,start:this.nextAt,duration:18000+this.random()*10000,direction:this.random()>.5?1:-1,y:3+this.random()*20,bend:(this.random()-.5)*6};
+      this.previous=kind;this.nextAt=this.event.start+this.event.duration+150000+this.random()*300000;
+    }
+    const event=this.event;
+    return event&&now<event.start+event.duration?{...event,progress:clamp((now-event.start)/event.duration)}:null;
+  }
+}
+const skyWidths={birds:44,kite:15,drone:25,ufo:25};
+export function drawSkySighting(svg,now,schedule) {
+  const event=schedule.sample(now,svg.dataset.time==='night');
+  for(const node of svg.querySelectorAll('.sky-visitor')) {
+    const visible=event?.kind===node.dataset.skyKind;
+    node.style.opacity=visible?String(Math.min(.78,event.progress*12,(1-event.progress)*12)):0;
+    if(!visible)continue;
+    // Departure geometry stays stable through responsive layout changes.
+    event.extent=schedule.event.extent??=(Number(svg.dataset.sceneEnd)||655)+245;
+    const p=event.direction===1?event.progress:1-event.progress;
+    const x=-40+(event.extent+80)*p,y=event.y+Math.sin(Math.PI*event.progress)*event.bend;
+    node.setAttribute('transform','translate('+x.toFixed(3)+' '+y.toFixed(3)+')');
+    node.querySelector('.sky-facing').setAttribute('transform','scale('+event.direction+' 1)');
+  }
+}
+export function worldSky(stage,end=655,key='catalog') {
+  const extent=end+245,random=skyRandom(key);
+  const visitors=Object.keys(skyWidths).map(kind=>'<g class="sky-visitor world-'+kind+'" data-render-key="sky-'+kind+'" data-sky-kind="'+kind+'"><g class="sky-bob"><g class="sky-facing">'+skySprite(kind,-skyWidths[kind]/2,-skyWidths[kind]*SKY_ART[kind].size.height/SKY_ART[kind].size.width/2,skyWidths[kind])+'</g></g></g>').join('');
+  return '<rect class="world-time-wash" x="0" y="-20" width="'+extent+'" height="280" fill="#18325c"/><g class="world-sky" aria-hidden="true"><g transform="translate('+extent*.26+' -5)"><g class="world-cloud" style="--cloud-delay:-'+(random()*65).toFixed(2)+'s">'+skySprite('cloud',-40,-7,80)+'</g></g>'+visitors+
+    '<g class="world-sun" transform="translate('+extent*.75+' 12)">'+skySprite('sun',-9,-9,18)+'</g><g class="world-moon" transform="translate('+extent*.75+' 12)">'+skySprite('moon',-8,-9,16)+'</g>'+
+    '<g class="world-stars">'+Array.from({length:40},(_,i)=>skySprite('star',(15+random()*(extent-30)).toFixed(2),(-16+random()*48).toFixed(2),i%5===0?2.6:1.7,'class="sky-star" data-render-key="star-'+i+'" style="--star-delay:-'+(random()*7).toFixed(2)+'s"')).join('')+'</g></g>'+cityStreetLights(stage,extent);
 }
 export function worldBackdrop(stage=0) {
-  return `<image class="world-terrain" href="${worldBackground(stage)}" data-background-stage="${Math.max(0,Math.min(19,Math.floor(stage)||0))}" x="0" y="-20" width="900" height="280" preserveAspectRatio="xMidYMid slice"/>`;
+  return `<image class="world-terrain" href="${worldBackground(stage)}" data-background-stage="${Math.max(0,Math.min(19,Math.floor(stage)||0))}" x="0" y="-20" width="900" height="280" preserveAspectRatio="none"/>`;
 }
 export function updateWorldTime(svg,date=new Date()) {
   const time=worldTime(date);
   if(svg.dataset.time!==time.phase)svg.dataset.time=time.phase;
   const sun=svg.querySelector('.world-sun'),extent=(Number(svg.dataset.sceneEnd)||655)+245;
-  if(sun) {const daylight=clamp((time.hour-5)/15);sun.setAttribute('cx',extent*(.17+.65*daylight));sun.setAttribute('cy',45-50*Math.sin(Math.PI*daylight));}
+  if(sun) {const daylight=clamp((time.hour-5)/15);sun.setAttribute('transform','translate('+extent*(.17+.65*daylight)+' '+(45-50*Math.sin(Math.PI*daylight))+')');}
   const label=svg.closest('.city-detail-card')?.querySelector('.city-world-clock');
   if(label) {label.textContent=`${time.phase==='sunrise'?'Sunrise':time.phase==='sunset'?'Sunset':time.phase==='night'?'Night':'Day'} · ${time.label}`;label.title='Scenery follows your local clock · sunrise 05–08, day 08–17, sunset 17–20, night 20–05';}
 }
@@ -216,9 +269,9 @@ export function layoutWorld(svg,end,patch=(node,markup)=>{node.innerHTML=markup;
   const replace=(selector,markup)=>{const target=svg.querySelector(selector);if(target)patch(target,markup);};
   replace('.world-infrastructure',worldRoads(stage,end,modes));
   replace('.world-decoration',worldNature(stage,end,modes));
-  replace('.world-atmosphere',worldSky(stage,end));
+  replace('.world-atmosphere',worldSky(stage,end,svg.dataset.cityKey));
   svg.querySelector('.world-city')?.setAttribute('transform',`translate(${end-80} 28)`);
-  svg.querySelector('.world-city .city-buildings')?.setAttribute('transform',settlementTransform(end));
+  svg.querySelector('.world-city .city-buildings')?.setAttribute('transform',settlementTransform(end,stage));
   layoutSettlementActivity(svg,end);
   for(const direction of ['download','upload']) {
     const label=svg.parentElement.querySelector('.route-speeds .'+direction+'-rate');
