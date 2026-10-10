@@ -243,6 +243,112 @@
       ],
       "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a117e8-ee97-74f3-8ac5-6c98b0ee7195\\exec-371837f1-40cd-4afe-8e60-633a2f22ac0b.png",
       "file": "public/artwork/brands/cloudflare.png"
+    },
+    {
+      "id": "nodejs",
+      "kind": "brands",
+      "prompt": "Use case: stylized-concept. Asset type: transparent application badge for netKonnect at 18–32px. Repaint the FIRST image's exact emblem in the established detailed watercolor style shown by the SECOND image. Preserve the first emblem's geometry, proportions, brand colors, negative spaces and recognizable silhouette. Delicate hand-painted pigment washes with organic tonal variation and subtle paper grain INSIDE the paint, restrained fine navy ink edges, meticulous crafted detail. Single centered isolated emblem occupying about 85% of a square canvas with even transparent padding. Genuine transparent background. No background paper, tile, shadow, scenery, stray splashes or added objects. Crisp silhouette and clear interior details readable when tiny. Preserve Node.js's green faceted hexagon, with its light and dark green triangular planes. No text.",
+      "referenceImages": [
+        "C:/Users/Kris/dev/netKonnect/public/artwork/brands/references/node.png",
+        "C:/Users/Kris/dev/netKonnect/public/artwork/reference-poster.png"
+      ],
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a12455-a2b1-7c11-a09f-a2732cd2862b\\exec-e3c5c8cd-21f8-44fc-983e-b55781932d6f.png",
+      "file": "public/artwork/brands/nodejs.png",
+      "tool": "built-in imagegen",
+      "referenceRoles": [
+        "installed application icon: shape and palette",
+        "original poster: watercolor style only"
+      ]
+    },
+    {
+      "id": "electron",
+      "kind": "brands",
+      "prompt": "Use case: stylized-concept. Asset type: transparent application badge for netKonnect at 18–32px. Repaint the FIRST image's exact emblem in the established detailed watercolor style shown by the SECOND image. Preserve the first emblem's geometry, proportions, brand colors, negative spaces and recognizable silhouette. Delicate hand-painted pigment washes with organic tonal variation and subtle paper grain INSIDE the paint, restrained fine navy ink edges, meticulous crafted detail. Single centered isolated emblem occupying about 85% of a square canvas with even transparent padding. Genuine transparent background. No background paper, tile, shadow, scenery, stray splashes or added objects. Crisp silhouette and clear interior details readable when tiny. Preserve Electron's dark navy circular field, pale cyan atom orbital loops and three electron dots. Paint the existing circular emblem itself, no additional surrounding tile. No text.",
+      "referenceImages": [
+        "C:/Users/Kris/dev/netKonnect/public/artwork/brands/references/electron.png",
+        "C:/Users/Kris/dev/netKonnect/public/artwork/reference-poster.png"
+      ],
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a12455-a2b1-7c11-a09f-a2732cd2862b\\exec-15c23255-4871-4f94-8384-1b721d1c84b4.png",
+      "file": "public/artwork/brands/electron.png",
+      "tool": "built-in imagegen",
+      "referenceRoles": [
+        "installed application icon: shape and palette",
+        "original poster: watercolor style only"
+      ]
+    },
+    {
+      "id": "git",
+      "kind": "brands",
+      "prompt": "Use case: stylized-concept. Asset type: transparent application badge for netKonnect at 18–32px. Repaint the FIRST image's exact emblem in the established detailed watercolor style shown by the SECOND image. Preserve the first emblem's geometry, proportions, brand colors, negative spaces and recognizable silhouette. Delicate hand-painted pigment washes with organic tonal variation and subtle paper grain INSIDE the paint, restrained fine navy ink edges, meticulous crafted detail. Single centered isolated emblem occupying about 85% of a square canvas with even transparent padding. Genuine transparent background. No background paper, tile, shadow, scenery, stray splashes or added objects. Crisp silhouette and clear interior details readable when tiny. Preserve the Git orange-red tilted square/diamond with the white branching path and three round nodes. White nodes and branches should remain solid visible painted ivory, not transparent. No text.",
+      "referenceImages": [
+        "C:/Users/Kris/dev/netKonnect/public/artwork/brands/references/git-lfs.png",
+        "C:/Users/Kris/dev/netKonnect/public/artwork/reference-poster.png"
+      ],
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a12455-a2b1-7c11-a09f-a2732cd2862b\\exec-3aa48076-575f-456c-9541-68a8491ee13c.png",
+      "file": "public/artwork/brands/git.png",
+      "tool": "built-in imagegen",
+      "referenceRoles": [
+        "installed application icon: shape and palette",
+        "original poster: watercolor style only"
+      ]
+    },
+    {
+      "id": "epic-games",
+      "kind": "brands",
+      "prompt": "Use case: stylized-concept. Asset type: transparent application badge for netKonnect at 18–32px. Repaint the FIRST image's exact emblem in the established detailed watercolor style shown by the SECOND image. Preserve the first emblem's geometry, proportions, brand colors, negative spaces and recognizable silhouette. Delicate hand-painted pigment washes with organic tonal variation and subtle paper grain INSIDE the paint, restrained fine navy ink edges, meticulous crafted detail. Single centered isolated emblem occupying about 85% of a square canvas with even transparent padding. Genuine transparent background. No background paper, tile, shadow, scenery, stray splashes or added objects. Crisp silhouette and clear interior details readable when tiny. Preserve the Epic Games dark charcoal shield with its downward tip, white bold stacked words. Text (verbatim): \"EPIC\" and \"GAMES\". Keep lettering simple, solid and legible.",
+      "referenceImages": [
+        "C:/Users/Kris/dev/netKonnect/public/artwork/brands/references/epic-games.png",
+        "C:/Users/Kris/dev/netKonnect/public/artwork/reference-poster.png"
+      ],
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a12455-a2b1-7c11-a09f-a2732cd2862b\\exec-2763f7e9-d5b6-49fe-9075-35269e18b118.png",
+      "file": "public/artwork/brands/epic-games.png",
+      "tool": "built-in imagegen",
+      "referenceRoles": [
+        "installed application icon: shape and palette",
+        "original poster: watercolor style only"
+      ]
+    },
+    {
+      "id": "creality-print",
+      "kind": "brands",
+      "prompt": "Use case: stylized-concept. Asset type: transparent application badge for netKonnect at 18–32px. Repaint the FIRST image's exact emblem in the established detailed watercolor style shown by the SECOND image. Preserve the first emblem's geometry, proportions, brand colors, negative spaces and recognizable silhouette. Delicate hand-painted pigment washes with organic tonal variation and subtle paper grain INSIDE the paint, restrained fine navy ink edges, meticulous crafted detail. Single centered isolated emblem occupying about 85% of a square canvas with even transparent padding. Genuine transparent background. No background paper, tile, shadow, scenery, stray splashes or added objects. Crisp silhouette and clear interior details readable when tiny. Preserve Creality Print's bright lime-green open triangular/A-shaped mark with the arched inner cutout. Retain exact triangle and curved bridge shape. No extra text.",
+      "referenceImages": [
+        "C:/Users/Kris/dev/netKonnect/public/artwork/brands/references/creality-print.png",
+        "C:/Users/Kris/dev/netKonnect/public/artwork/reference-poster.png"
+      ],
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a12455-a2b1-7c11-a09f-a2732cd2862b\\exec-8d5c17e0-91ad-46c2-9dfc-afd857064d21.png",
+      "file": "public/artwork/brands/creality-print.png",
+      "tool": "built-in imagegen",
+      "referenceRoles": [
+        "installed application icon: shape and palette",
+        "original poster: watercolor style only"
+      ]
+    },
+    {
+      "id": "pioneergame",
+      "kind": "brands",
+      "prompt": "Use case: stylized-concept. Asset type: transparent application badge for netKonnect at 18–32px. Repaint the FIRST image's exact emblem in the established detailed watercolor style shown by the SECOND image. Preserve the first emblem's geometry, proportions, brand colors, negative spaces and recognizable silhouette. Delicate hand-painted pigment washes with organic tonal variation and subtle paper grain INSIDE the paint, restrained fine navy ink edges, meticulous crafted detail. Single centered isolated emblem occupying about 85% of a square canvas with even transparent padding. Genuine transparent background. No background paper, tile, shadow, scenery, stray splashes or added objects. Crisp silhouette and clear interior details readable when tiny. Preserve this installed PioneerGame icon exactly: dark near-black disk with the distinctive four diagonal warm ivory, yellow, orange-red and teal stripes. Keep the stripe widths, slopes and circle clipping. No text.",
+      "referenceImages": [
+        "C:/Users/Kris/dev/netKonnect/public/artwork/brands/references/pioneergame.png",
+        "C:/Users/Kris/dev/netKonnect/public/artwork/reference-poster.png"
+      ],
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a12455-a2b1-7c11-a09f-a2732cd2862b\\exec-00583ac9-35de-4674-a10c-7abf96add372.png",
+      "file": "public/artwork/brands/pioneergame.png",
+      "tool": "built-in imagegen",
+      "referenceRoles": [
+        "installed application icon: shape and palette",
+        "original poster: watercolor style only"
+      ]
+    },
+    {
+      "id": "windows-services",
+      "kind": "brands",
+      "prompt": "Use case: stylized-concept. Asset type: original transparent Windows Service Host application icon for netKonnect, readable at 18–32 pixels. Paint one large slate-blue mechanical gear with a circular open center and a smaller sage-green gear meshing at its lower right. Detailed restrained watercolor workmanship, delicate organic pigment washes, subtle paper grain inside the paint, fine navy ink contours, soft tonal variation, crisp recognizable silhouette. Straight-on view, flat emblem with very slight painted material shading. One centered isolated gear pair occupying about 85% of a square canvas with even transparent padding. Fully transparent background and open center holes. No text, no logo tiles, no drop shadows, no scenery, no stray paint splashes, no paper backdrop. Use the same refined navy-ink watercolor language as the application's illustrated city.",
+      "referenceImages": [],
+      "generatedImage": "C:\\Users\\Kris\\.codex\\generated_images\\01a12455-a2b1-7c11-a09f-a2732cd2862b\\exec-a140a4eb-490c-4534-8f90-51edd1edc925.png",
+      "file": "public/artwork/brands/windows-services.png",
+      "tool": "built-in imagegen",
+      "referenceRoles": []
     }
   ]
 }

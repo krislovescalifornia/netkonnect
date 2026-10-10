@@ -6,7 +6,7 @@ import { buildRoutes, serviceIdentity } from '../public/routes.js';
 import { createAppServer } from '../lib/http.mjs';
 import { BRAND_ART, ILLUSTRATION_ASSETS } from '../public/artwork/manifest.js';
 import { requiredAssets } from '../desktop/bundle.mjs';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 
 const connection = { app:'code', pid:42, scope:'Internet', protocol:'TCP', state:'Established', remoteAddress:'1.2.3.4', remotePort:443, domainCandidates:['github.com'] };
 
@@ -66,13 +66,16 @@ test('watercolor PNGs and original SVG references load locally while arbitrary p
   await once(server,'listening');
   t.after(()=>new Promise(resolve=>server.close(resolve)));
   const url = `http://127.0.0.1:${server.address().port}`;
-  for (const logo of new Set(Object.values(brands).map(([,logo])=>logo))) {
+  const originalLogos=(await readdir(new URL('../public/icons/',import.meta.url))).filter(name=>name.endsWith('.svg')).map(name=>name.slice(0,-4));
+  for (const logo of originalLogos) {
     const response = await fetch(`${url}/icons/${logo}.svg`);
     assert.equal(response.status,200,logo);
     assert.match(response.headers.get('content-type'),/^image\/svg\+xml/);
     const svg = await response.text();
     assert.match(svg,/<svg/);
     assert.doesNotMatch(svg,/<script|<foreignObject|(?:href|src)=["']https?:/i);
+  }
+  for (const logo of new Set(Object.values(brands).map(([,logo])=>logo))) {
     const watercolor = await fetch(`${url}/artwork/brands/${logo}.png`);
     assert.equal(watercolor.status,200,logo);
     assert.match(watercolor.headers.get('content-type'),/^image\/png/);

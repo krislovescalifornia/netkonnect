@@ -23,9 +23,11 @@ side profile, facing right, with three paint/material variants. Downloads mirror
 the artwork horizontally. The broadside view follows the horizontal route.
 `reference-poster.png` preserves the user's style reference.
 
-`brands/` contains 22 transparent watercolor app/service emblems made with the
-built-in imagegen tool. The locally bundled SVGs in `public/icons/` supply the
-shape references; the poster supplies the painting style. Brand colors and
+`brands/` contains 29 transparent watercolor app/service emblems made with the
+built-in imagegen tool. The initial 22 use locally bundled SVGs in `public/icons/`
+as shape references; six wishlist additions use installed application PNG icons
+preserved in `brands/references/`. Windows Service Host uses an original painted
+gear pair. The poster supplies the painting style. Brand colors and
 identifying shapes remain recognizable at 18–32px. Claude and Anthropic retain
 their shared sunburst; Codex, ChatGPT and OpenAI share the knot emblem.
 Exact prompts and generation provenance are in `brands/generation-prompts.json`.
@@ -34,8 +36,18 @@ to normalize transparent padding in the shared `brandBadge` renderer, so tables,
 routes, analytics and dossiers all use the same watercolor assets. They are
 included in the HTTP allowlist and required desktop bundle, with no remote loads.
 Unknown apps retain text monograms. Original SVG sources and their license remain
-in place. `electron scripts/qa-brand-artwork.mjs` reviews all 22 emblems enlarged
+in place. `electron scripts/qa-brand-artwork.mjs` reviews all 29 emblems enlarged
 and at badge sizes, genuine alpha, and desktop/phone dashboard layouts.
+
+The October 10 wishlist batch adds Node.js, Electron, Git, Windows Service Host,
+Epic Games Launcher, Creality Print and PioneerGame. Git LFS and its HTTPS helper
+share Git; GitHub CLI and Steam's web helper reuse their existing brand art.
+`brands/wishlist-2026-10-10.json` records the ten selected processes and measured
+traffic ranking. The companion's original wishlist contained null bytes and
+could not be read; the user selected the ten highest-traffic missing apps from
+recovered month analytics. This is a byte ranking, not a reconstructed network-time
+ranking. The damaged wishlist and original history remain untouched. The badge QA
+also saves `test-results/watercolor-icons/wishlist-icons.png` for this batch.
 
 `details/` finishes the illustrated world with four-phase house and tower
 construction sheets (including scaffold), timber and crate supplies, rigged

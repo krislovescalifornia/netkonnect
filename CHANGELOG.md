@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.15.0 — 2026-10-10
+
+- Add seven original imagegen watercolor icons for Node.js, Electron, Git, Windows Service Host, Epic Games Launcher, Creality Print and PioneerGame; share Git artwork with Git LFS and the HTTPS helper, and reuse GitHub and Steam artwork for their observed helpers.
+- Cover the ten highest-traffic missing apps selected from recovered monthly history. Preserve transparent source pixels, installed shape references, exact prompts and measured badge bounds; verify 18–32px badges and desktop/phone layouts.
+- Refine city traffic with smaller runtime textures, smooth braking and unloading, attached crane cargo, and continuous movement through refreshes and resizing.
+- Paint the sky and its rare visitors with watercolor assets, retain long randomly timed quiet gaps, and honor pause and reduced motion.
+- Expand city cards to the full scene width, with an overlaid app identity, measured growth footer and hourly graphs beneath App Info.
+- Show one decimal place in road speed readings so sub-megabit traffic stays visible, and update the settlement preview checks to verify the current number format and separate direction captions.
+
 ## 1.14.0 — 2026-10-09
 
 - Expand all twenty measured city stages into integrated watercolor settlements with residents, crews, cranes, machinery and construction spread throughout the scene.

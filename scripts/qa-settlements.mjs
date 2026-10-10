@@ -65,7 +65,8 @@ try {
         if(Math.abs(b.top+b.height/2-actual)>1.5)problems.push('Baseline mismatch: '+direction);
         if(Number(getComputedStyle(button).fontWeight)<800)problems.push('Number not bold');
         if(getComputedStyle(button).fontStyle!=='italic')problems.push('Number not italic');
-        if(!/^([0-9]+|—) Mbit[/]s$/.test(reading.textContent.trim()))problems.push('Not a plain Mbit/s reading');
+        if(!/^([0-9]+\.[0-9]|—) Mbit[/]s$/.test(button.textContent.trim()))problems.push('Not a plain one-decimal Mbit/s reading');
+        if(reading.querySelector(':scope > small')?.textContent!==(direction==='download'?'Down':'Up'))problems.push('Incorrect direction caption');
         if(getComputedStyle(reading).borderTopWidth!=='0px'||getComputedStyle(reading).backgroundColor!=='rgba(0, 0, 0, 0)')problems.push('Label still has badge styling');
         if(Math.abs(b.left-parent.getBoundingClientRect().left-12)>1)problems.push('Reading not on the left');
         const scene=parent.getBoundingClientRect();
@@ -98,7 +99,7 @@ try {
   }
   window.setSize(1280,1180);
   for(const [phase,hour] of [['sunrise',6],['day',12],['sunset',18],['night',21]]) {
-    const lighting=await window.webContents.executeJavaScript(`(()=>{for(const svg of document.querySelectorAll('.application-city'))window.settlementQA.updateWorldTime(svg,new Date(2026,9,9,${hour}));return [...document.querySelectorAll('.world-landscape')].map(n=>getComputedStyle(n).filter);})()`);
+    const lighting=await window.webContents.executeJavaScript(`(()=>{for(const svg of document.querySelectorAll('.application-city'))window.settlementQA.updateWorldTime(svg,new Date(2026,9,9,${hour}));return [...document.querySelectorAll('${phase==='night'?'.world-terrain':'.world-landscape'}')].map(n=>getComputedStyle(n).filter);})()`);
     if(phase!=='day')assert.ok(lighting.every(value=>value.includes('brightness')));
     await new Promise(r=>setTimeout(r,100));await writeFile(resolve(output,phase+'.png'),await capture());
   }

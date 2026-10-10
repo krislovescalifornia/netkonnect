@@ -1,0 +1,61 @@
+{
+  "generatedAt": "2026-10-10",
+  "selection": "Ten highest-traffic missing apps, explicitly selected by the user",
+  "metric": "received + sent bytes in companion month analytics",
+  "recovery": "Original watercolor-wishlist.json contains null bytes; companion reports unreadable. Original network-active-seconds ranking could not be recovered. Local history and original file remain untouched.",
+  "fulfilled": [
+    {
+      "rank": 1,
+      "process": "node"
+    },
+    {
+      "rank": 2,
+      "process": "electron"
+    },
+    {
+      "rank": 3,
+      "process": "git-lfs"
+    },
+    {
+      "rank": 4,
+      "process": "svchost"
+    },
+    {
+      "rank": 5,
+      "process": "gh"
+    },
+    {
+      "rank": 6,
+      "process": "git-remote-https"
+    },
+    {
+      "rank": 7,
+      "process": "steamwebhelper"
+    },
+    {
+      "rank": 8,
+      "process": "EpicGamesLauncher"
+    },
+    {
+      "rank": 9,
+      "process": "CrealityPrint"
+    },
+    {
+      "rank": 10,
+      "process": "PioneerGame"
+    }
+  ],
+  "newAssets": [
+    "nodejs",
+    "electron",
+    "git",
+    "epic-games",
+    "creality-print",
+    "pioneergame",
+    "windows-services"
+  ],
+  "existingArtworkReused": {
+    "gh": "github",
+    "steamwebhelper": "steam"
+  }
+}

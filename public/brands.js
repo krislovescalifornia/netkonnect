@@ -25,9 +25,18 @@ export const brands = {
   dropbox: ['Dropbox', 'dropbox'],
   microsoft: ['Microsoft', 'microsoft'],
   google: ['Google', 'google'],
-  cloudflare: ['Cloudflare', 'cloudflare']
+  cloudflare: ['Cloudflare', 'cloudflare'],
+  node: ['Node.js', 'nodejs'],
+  electron: ['Electron', 'electron'],
+  git: ['Git', 'git'],
+  'git-lfs': ['Git LFS', 'git'],
+  'git-remote-https': ['Git HTTPS helper', 'git'],
+  svchost: ['Windows Service Host', 'windows-services'],
+  epicgameslauncher: ['Epic Games Launcher', 'epic-games'],
+  crealityprint: ['Creality Print', 'creality-print'],
+  pioneergame: ['PioneerGame', 'pioneergame']
 };
-const aliases = { code:'vscode', 'code - insiders':'vscode', 'claude code':'claude', msedge:'edge', 'ms-teams':'teams', 'msedgewebview2':'edge' };
+const aliases = { code:'vscode', 'code - insiders':'vscode', 'claude code':'claude', msedge:'edge', 'ms-teams':'teams', 'msedgewebview2':'edge', gh:'github', steamwebhelper:'steam' };
 let operatingSystemIcons = Object.create(null);
 const failedIcons=new Map();
 export function appIconFailed(url) {

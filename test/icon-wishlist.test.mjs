@@ -12,6 +12,12 @@ async function store(t,at=start) {
 }
 const connection=(app,pid=42)=>({app,pid,state:'Established',protocol:'TCP'});
 const flow=(app,pid=42)=>({app,pid,receivedBytes:100,sentBytes:20});
+test('fulfilled highest-traffic wishlist apps and helpers no longer enter the missing-art list',async t=>{
+  const {wishlist:w}=await store(t);
+  for(const process of ['node.exe','electron','git-lfs','svchost','gh','git-remote-https','steamwebhelper','EpicGamesLauncher','CrealityPrint','PioneerGame'])w.add(process,42,start,start+10000,100);
+  w.add('still-missing',42,start,start+10000,100);
+  assert.deepEqual(w.report(start+10000).top10.map(a=>a.process),['still-missing']);
+});
 test('activity merges processes, endpoints and overlapping snapshot/ETW windows without double counting',async t=>{
   const {wishlist:w}=await store(t);const now=start+10000;
   w.observe({connections:[connection('worker'),connection('worker',43),connection('firefox'),connection('Unattributed',0)]},8,now);

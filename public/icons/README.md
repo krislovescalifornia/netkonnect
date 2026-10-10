@@ -5,9 +5,16 @@ SVG assets are bundled locally from [Homarr Labs Dashboard Icons](https://github
 Source filenames match the local names except `claude.svg` (`claude-ai.svg`) and `onedrive.svg` (`microsoft-onedrive.svg`).
 
 The app displays imagegen watercolor adaptations in `../artwork/brands/`.
-These SVGs remain unchanged as the original shape references. The adaptations
+These SVGs remain unchanged as the original shape references for the first 22
+emblems. The adaptations
 preserve brand identity and colors while adding watercolor pigment and ink;
 their exact prompts and provenance are recorded in
 `../artwork/brands/generation-prompts.json`. The upstream license and attribution
 apply to these source-derived adaptations as well. Brand marks remain the
 property of their respective owners.
+
+The October 10 wishlist additions use installed application icon PNGs preserved
+in `../artwork/brands/references/`, with source roles and exact prompts recorded
+in the same generation manifest. Their brand marks belong to the respective
+application owners; they are separate from this upstream SVG collection. The
+Windows Service Host gear pair is original imagegen artwork.
