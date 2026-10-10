@@ -2,6 +2,7 @@ import {SETTLEMENT_ASSETS,settlementTransform,layoutSettlementActivity} from './
 import {transportSpec} from './vehicles.js';
 import {TRANSPORT_FRAMES} from './artwork/world/transport/frames.js';
 import {SKY_ART} from './artwork/world/sky/frames.js';
+import {logisticsArtwork} from './construction-art.js';
 // Infrastructure uses measured growth. The sky follows the computer's local clock.
 export const WORLD_BACKGROUNDS=Object.freeze([
   {
@@ -182,7 +183,9 @@ export function worldNature(stage,end=655,modes=[]) {
   const trees=Array.from({length:growth.trees},(_,i)=>`<g data-render-key="world-tree-${i}">${worldSprite('trees',42+i*(extent-150)/growth.trees,83+(i%2)*7,23+(i%3)*6,30)}</g>`).join('');
   const parks=Array.from({length:growth.parks},(_,i)=>`<g data-render-key="world-park-${i}">${worldSprite('park',end+36+i*46,176,36,24)}</g>`).join('');
   const lamps=Array.from({length:growth.lamps},(_,i)=>`<g class="world-lamp" data-render-key="world-lamp-${i}">${worldSprite('lamps',end*.33+i*65,91,18,33)}</g>`).join('');
-  return `<g class="world-nature">${trees}${parks}${lamps}<g class="world-air-terminal" opacity="${air?1:0}" data-airport="${growth.spaceport?'spaceport':'airport'}">${transportScenery(growth.spaceport?'spaceport':'airport',end+52,49,115,55)}</g><g class="world-port" opacity="${port?1:0}">${worldSprite('port',extent-123,203,104,49)}</g></g>`;
+  const rail=growth.rail||modes.includes('rail');
+  const terminal=(mode,x,y,id,visible,width)=>`<g class="freight-terminal ${mode==='water'?'world-port':'world-rail-terminal'}" data-terminal-mode="${mode}" data-render-key="${mode}-terminal" opacity="${visible?1:0}" transform="translate(${x} ${y})"><g class="terminal-art">${logisticsArtwork(id,width,mode==='water'?94:68)}</g>${[0,1,2].map(i=>`<g transform="translate(${-36+i*22} ${mode==='water'?-13:-3})"><g class="terminal-worker" style="--work-delay:-${i*.7}s">${logisticsArtwork('dock-worker',9,16)}</g></g>`).join('')}<g transform="translate(-51 -5)">${logisticsArtwork('forklift',30,22)}</g></g>`;
+  return `<g class="world-nature">${trees}${parks}${lamps}<g class="world-air-terminal" opacity="${air?1:0}" data-airport="${growth.spaceport?'spaceport':'airport'}">${transportScenery(growth.spaceport?'spaceport':'airport',end+52,49,115,55)}</g>${terminal('rail',end-20,176,'rail-gantry',rail,110)}${terminal('water',end+144,203,'dock-pier',port,124)}</g>`;
 }
 function cityStreetLights(stage,extent) {
   const count=2+Math.floor(stage/2);

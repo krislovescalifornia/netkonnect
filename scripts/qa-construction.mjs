@@ -33,7 +33,7 @@ app.whenReady().then(async()=>{
       for(const path of paths){const image=new Image();image.src=path;await image.decode();}
       const machines=[...document.querySelectorAll('.application-city .site-vehicle')];
       const transparentMachines=[];
-      for(const path of paths.filter(path=>path.includes('/construction/'))){
+      for(const path of paths.filter(path=>path.includes('/construction/activity/'))){
         const image=new Image();image.src=path;await image.decode();
         const canvas=document.createElement('canvas');canvas.width=image.width;canvas.height=image.height;
         const ctx=canvas.getContext('2d');ctx.drawImage(image,0,0);
@@ -46,7 +46,7 @@ app.whenReady().then(async()=>{
       return {cities:document.querySelectorAll('.application-city').length,cranes:document.querySelectorAll('.site-crane').length,
         projects:projects.length,illustratedProjects:projects.filter(el=>el.querySelectorAll('.construction-phase image').length===4).length,
         geometricProjects:projects.filter(el=>el.querySelector('path,circle,ellipse')).length,
-        props:props.length,illustratedProps:props.filter(el=>el.querySelector('image[href^="artwork/details/"]')).length,
+        props:props.length,illustratedProps:props.filter(el=>el.querySelector('image[href^="artwork/construction/projects/"]')||el.classList.contains('site-supplies')).length,
         geometricProps:props.filter(el=>el.querySelector('path,circle,ellipse')).length,
         machines:machines.length,illustratedMachines:machines.filter(el=>el.querySelector('image[href^="artwork/construction/"]')).length,
         geometricMachines:machines.filter(el=>el.querySelector('.illustrated-site-machine path,.illustrated-site-machine circle,.illustrated-site-machine ellipse')).length,transparentMachines,

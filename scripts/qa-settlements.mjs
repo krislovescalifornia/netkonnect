@@ -140,7 +140,7 @@ try {
     const frame=await window.webContents.executeJavaScript(`(()=>{
       const {svg,journey}=window.deliveryProbe,animator=window.settlementQA.animator;
       animator.queue.now=journey.started+12000*${progress};animator.draw();
-      const node=svg.querySelector('[data-journey-id="100000"]'),parcel=node.querySelector('.delivery-parcel'),bounds=svg.getBoundingClientRect();
+      const node=svg.querySelector('.transport-vehicle[data-journey-id="100000"]'),parcel=svg.querySelector('.material-transfer[data-journey-id="100000"]'),bounds=svg.getBoundingClientRect();
       const cargo=node.querySelector('.vehicle-cargo'),position=node.transform.baseVal.consolidate().matrix;
       return {x:position.e,y:position.f,opacity:Number(node.style.opacity),cargoOpacity:Number(cargo.style.opacity),parcelX:parcel.getScreenCTM().e,
         rect:{x:Math.ceil(bounds.x),y:Math.ceil(bounds.y),width:Math.floor(bounds.width),height:Math.floor(bounds.height)}};
@@ -154,7 +154,8 @@ try {
   assert.equal(delivery[3].cargoOpacity,0,'departure is empty');
   assert.ok(delivery[4].x>delivery[3].x,'empty vehicle continues right');
   assert.ok(delivery[5].opacity<delivery[4].opacity,'vehicle fades as it drives out');
-  assert.ok(Math.abs(delivery[4].parcelX-delivery[3].parcelX)<1,'goods remain at the city dock');
+  assert.ok(Math.abs(delivery[4].parcelX-delivery[3].parcelX)>1,'crew carries delivered goods from the vehicle into the worksite');
+  assert.ok(await window.webContents.executeJavaScript(`window.deliveryProbe.svg.querySelectorAll('.site-stock [data-stock-material]').length>0`),'delivered material remains in the worksite inventory');
   for(const [name,progress] of [['early',.2],['late',.65]]) {
     await window.webContents.executeJavaScript(`(()=>{window.settlementQA.render([9,9,9,9],${progress});for(const svg of document.querySelectorAll('.application-city'))window.settlementQA.updateWorldTime(svg,new Date(2026,9,9,12));})()`);
     await new Promise(r=>setTimeout(r,200));await writeFile(resolve(output,'construction-'+name+'.png'),await capture());

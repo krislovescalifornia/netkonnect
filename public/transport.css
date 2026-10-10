@@ -423,6 +423,13 @@
 @keyframes work-beacon { 0%,100% { opacity:.45; } 50% { opacity:1; } }
 .city-resting .city-worksites *,.city-resting .machine-beacon * { animation-play-state:paused; }
 .city-resting .worksite-dust,.city-resting .worksite-sparks { visibility:hidden; }
+.terminal-worker { transform-origin:0 0; animation:illustrated-receive 2s ease-in-out infinite; animation-delay:var(--work-delay); animation-play-state:paused; }
+.crew-builder>svg { animation:illustrated-build 1.7s ease-in-out infinite; animation-delay:var(--work-delay); transform-origin:0 0; }
+.terminal-unloading .terminal-worker { animation-play-state:running; }
+.transfer-carrier { animation:material-cart-step .65s ease-in-out infinite alternate; }
+.transfer-installer { animation:illustrated-build 1.7s ease-in-out infinite; }
+.material-transfer,.vehicle-material,.site-stock { pointer-events:none; }
+@keyframes material-cart-step { to { transform:translateY(-.7px) rotate(-1deg); } }
 @media(prefers-reduced-motion:reduce) { .worksite-dust,.worksite-sparks { display:none; } }
 
 

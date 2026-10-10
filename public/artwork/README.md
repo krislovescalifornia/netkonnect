@@ -270,6 +270,45 @@ App Info stays at the left edge with a dropdown caret. Its expanded panel holds 
 application facts and the associated service/destination rows. On narrow cards,
 growth fits beneath the level while keeping App Info reachable.
 
+Distinct construction and staffed freight handoffs
+-------------------------------------------------
+
+`construction/projects/` contains five original built-in imagegen watercolor
+atlases: rural, residential, civic, metropolitan and future. Each contains four
+different architectural projects with four registered construction phases,
+covering twenty designs and eighty phase textures. Foundations reveal in pieces
+as lifetime measured downloads arrive, then timber/steel frames, exposed floors,
+scaffolds and facade finishing replace them. Neighboring yards build different
+projects at staggered measured progress. The completed settlement remains the
+destination of that growth. No animation advances the byte milestones.
+
+`materials-v1.png` adds bricks, wood, steel, glass, pipes, wire spools, concrete
+and modular panels. `logistics-v2.png` supplies the railway gantry, waterfront
+pier/crane, forklift, dock workers, bricklayer and material trolley. These are
+imagegen watercolor assets with preserved transparent alpha; original prompts
+and source provenance are in `construction/projects/generation-prompts.json`.
+The v1 logistics source is retained as provenance; v3 was discarded. Runtime
+textures are isolated crops of selected source pixels, registered by
+`electron scripts/build-project-sprites.mjs` and bundled for offline use.
+
+Each incoming journey selects a stable material suitable for the city tier.
+That same load appears on the vehicle, lifts from its rail/water crane or moves
+through a road handoff, rides with a material trolley to a chosen work yard,
+and remains as delivered stock. Rail and water have independent staffed
+terminals at their own contact lines. Crane cables attach to measured trolley
+coordinates in the original artwork. Construction crane loads appear only
+after a delivery supplies them; blank rendering never invents a supply pile.
+Stocks survive polling, and transfer paths retain journey geometry on resize.
+The journey clock freezes transfers with pause/motion settings, while the
+shared reduced-motion rules stop workers and machinery.
+
+`electron scripts/qa-project-logistics.mjs` renders all eighty phase textures
+and reviews real road, rail and waterfront handoffs at desktop, compact and
+phone widths. It compares painted frames, verifies retained stock, measured
+architectural progression, animation identity, pause and reduced motion. The
+existing city-vibrancy checks still cover distributed street/construction
+motion, polling, sorting, resizing and idle behavior.
+
 All sky artwork uses built-in imagegen watercolor pixels from `world/sky/`:
 kites, swallows, drones, UFOs, clouds, sun, moon and distant starlight. Original
 transparent sources and exact prompts are retained in that folder. Regenerate

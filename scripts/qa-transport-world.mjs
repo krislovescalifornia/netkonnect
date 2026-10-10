@@ -55,7 +55,9 @@ app.whenReady().then(async()=>{
         updateMarkup(probe,card(0,'pickup','pickup','probe'));runner.mount(probe,{source:mode,active:true});
         if(vehicle.getAttribute('transform')!==position)throw new Error('Existing journey jumped on fleet change');
         if(svg.querySelector(selector).getAttribute('opacity')!=='1')throw new Error('Active corridor disappeared');
-        probeNow+=60000;runner.tick();runner.draw();
+        // Advance through real frame intervals: the animator bounds each step
+        // so a suspended tab cannot teleport a delivery across the city.
+        for(let elapsed=0;elapsed<13000;elapsed+=50){probeNow+=50;runner.tick();runner.draw();}
         if(svg.querySelector(selector).getAttribute('opacity')!=='0')throw new Error('Unused corridor did not retire');
       }
       runner.mount(document.createElement('div'),{source:'done',active:false});runner.resizeObserver?.disconnect();probe.remove();

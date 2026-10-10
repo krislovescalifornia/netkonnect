@@ -1,11 +1,12 @@
 import {CITY_ART,FLEET_ART,PROP_ART,CONSTRUCTION_ART,DETAIL_ART,ILLUSTRATION_ASSETS as SOURCE_ASSETS} from './artwork/manifest.js';
+import {CONSTRUCTION_ASSETS} from './construction-art.js';
 export {CITY_ART,FLEET_ART,PROP_ART,CONSTRUCTION_ART,DETAIL_ART} from './artwork/manifest.js';
 export const CITY_ART_IDS=['shack','cabin','house','homestead','mansion','estate','neighborhood','suburb','village','town','city','regional-city','metropolis','capital','megacity','green-megacity','smart-metropolis','arcology','orbital-gateway','space-age-metropolis'];
 
 
 export const ACTIVITY_ASSETS=[...PROP_ART.crew.frames.map((_,i)=>'artwork/fleet/activity/crew-'+i+'.png'),...Object.entries(CONSTRUCTION_ART).flatMap(([id,art])=>art.frames.map((_,i)=>'artwork/construction/activity/'+id+'-'+i+'.png'))];
 export const FLEET_TEXTURE_ASSETS=Object.entries(FLEET_ART).flatMap(([id,art])=>art.frames.flatMap((_,i)=>[`artwork/fleet/traffic/${id}-${i}.png`,...(art.empty?[`artwork/fleet/traffic/${id}-empty-${i}.png`]:[])]));
-export const ILLUSTRATION_ASSETS=[...SOURCE_ASSETS,...ACTIVITY_ASSETS,...FLEET_TEXTURE_ASSETS];
+export const ILLUSTRATION_ASSETS=[...SOURCE_ASSETS,...ACTIVITY_ASSETS,...FLEET_TEXTURE_ASSETS,...CONSTRUCTION_ASSETS];
 // Match atlas padding and proportions; isolate textures for frequent work poses.
 function activitySprite(folder,id,art,variant,width,baseline,maxHeight) {
   const [,,w,h]=art.frames[variant],scale=Math.min(width/(w+4),maxHeight/(h+4));

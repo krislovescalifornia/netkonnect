@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.16.0 — 2026-10-10
+
+- Replace repeated house and tower work sites with twenty distinct imagegen watercolor architectural projects and eighty registered construction phases, from brick foundations and timber frames to scaffolded skyscrapers, green terraces and arcologies.
+- Give neighboring yards different buildings and stagger their construction using measured lifetime downloads. Keep crews, machinery and animation timelines active across polling, growth, sorting and resizing while honoring pause and reduced motion.
+- Deliver bricks, timber, steel, glass, pipes, electrical wire, concrete and facade panels from incoming vehicles into work yards with visible crew handoffs and material carts. Aggregate delivered stock without discarding earlier pallets.
+- Add staffed railway gantries and waterfront piers with crane lifts, attached unloading cables, dock workers and forklifts. Keep freight corridors available until their in-flight deliveries finish.
+- Bundle the original watercolor sources and isolated runtime textures for offline use. Verify all eighty phases, visible unloading and growth at desktop, compact and phone sizes, along with the full regression suite.
+
 ## 1.15.0 — 2026-10-10
 
 - Add seven original imagegen watercolor icons for Node.js, Electron, Git, Windows Service Host, Epic Games Launcher, Creality Print and PioneerGame; share Git artwork with Git LFS and the HTTPS helper, and reuse GitHub and Steam artwork for their observed helpers.

@@ -2,7 +2,7 @@ import {formatEndpoint} from './address.js';
 import { appIdentity, appName, brandBadge } from './brands.js';
 import { buildRoutes, groupApplicationRoutes, sortRoutes, transportForRate, JourneyQueue } from './routes.js';
 import { renderCity, cityStage, cityConstruction, CITY_STAGES, CITY_ROUTE_SCENE } from './cities.js';
-import {illustratedDetail} from './illustration-art.js';
+import {materialArtwork,logisticsArtwork,deliveryMaterial,materialTransferPose,terminalGeometry} from './construction-art.js';
 import {vehicle,VEHICLE_STAGES,transportSpec,cityVehicleScale} from './vehicles.js';
 import { serviceDisplayLabel, transportHint } from './service-evidence.js';
 import {evidenceDetails} from './enrichment.js';
@@ -114,7 +114,7 @@ export class TransportAnimator {
     if (source !== this.source) {
       this.resizeObserver?.disconnect();
       this.visibilityObserver?.disconnect();
-      for(const svg of this.svgs.values())for(const node of this.vehicleNodes.get(svg)?.values()||[])node.group.remove();
+      for(const svg of this.svgs.values())for(const node of this.vehicleNodes.get(svg)?.values()||[]){node.group.remove();node.parcel?.remove();}
       this.queue = new JourneyQueue(); this.svgs.clear(); this.vehicleNodes=new WeakMap(); this.source = source;
       this.skyScenes=new WeakMap();
     }
@@ -179,12 +179,29 @@ export class TransportAnimator {
             ?`<path class="vehicle-wake" d="M${(journey.incoming?-1:1)*spec.width*scale*.45} 6h${(journey.incoming?-1:1)*12}m${(journey.incoming?1:-1)*5} 3h${(journey.incoming?-1:1)*9}" />`
             :`<ellipse class="vehicle-contact" cx="0" cy="${11*scale}" rx="${spec.width*scale*.43}" ry="1.1"/>`:'';
           const headlights=cityScene&&spec.mode==='road'?`<g class="vehicle-lights night-light" transform="translate(${(journey.incoming?1:-1)*spec.width*scale*.43} -4) scale(${journey.incoming?1:-1} 1)"><path d="M0 0L36 -3v10L0 2z" fill="#ffe8a2" stroke="none" opacity=".18"/><ellipse cx="0" cy="1" rx="2.3" ry="1.4" fill="#fff1c3" stroke="none"/></g>`:'';
-          group.innerHTML = `${headlights}${contact}<g transform="scale(${facing} ${scale})">${vehicle(journey.type,journey.incoming,journey.id)}</g>${svg.classList.contains('city-route-scene')&&journey.incoming?`<g class="delivery-parcel">${illustratedDetail('delivery-parcel',12,0,11)}</g>`:''}`;
+          const material=deliveryMaterial(Number(svg.dataset.stage)||0,journey.id);
+          group.innerHTML = `${headlights}${contact}<g transform="scale(${facing} ${scale})">${vehicle(journey.type,journey.incoming,journey.id)}</g>${cityScene&&journey.incoming?`<g class="vehicle-material" transform="translate(-8 -10)">${materialArtwork(material,19)}</g>`:''}`;
           svg.append(group);
           // Speed labels can resize the road on every sample. A journey keeps
           // its departure geometry so a resize cannot teleport its vehicle.
-          record={group,cargo:group.querySelector('.vehicle-cargo'),parcel:group.querySelector('.delivery-parcel'),sceneEnd:Number(svg.dataset.sceneEnd)||655};
+          const parcel=cityScene&&journey.incoming?svg.ownerDocument.createElementNS(SVG_NS,'g'):null;
+          if(parcel){
+            parcel.setAttribute('class','delivery-parcel material-transfer');parcel.dataset.material=material;parcel.dataset.journeyId=journey.id;
+            parcel.innerHTML=`<title>${material} delivered to construction yard</title><path class="unloading-cable" fill="none" stroke="#526a79" stroke-width="1"/><g class="transfer-carrier">${logisticsArtwork('material-trolley',34,19)}</g><g class="transfer-load">${materialArtwork(material,19,-6)}</g><g class="transfer-installer">${logisticsArtwork('bricklayer',11,18)}</g>`;
+            svg.append(parcel);
+          }
+          record={group,cargo:group.querySelector('.vehicle-cargo'),materialCargo:group.querySelector('.vehicle-material'),parcel,material,mode:spec.mode,sceneEnd:Number(svg.dataset.sceneEnd)||655};
+          if(parcel){record.carrier=parcel.querySelector('.transfer-carrier');record.installer=parcel.querySelector('.transfer-installer');record.cable=parcel.querySelector('.unloading-cable');}
           if(cityScene)record.route=journeyRoute(journey,record.sceneEnd);
+          if(parcel){
+            const sites=[...svg.querySelectorAll('.construction-yard')];
+            record.siteIndex=journey.id%Math.max(1,sites.length);
+            const site=sites[record.siteIndex];
+            // Authored anchor -> scene coordinates without per-frame layout reads.
+            const extent=record.sceneEnd+245;
+            record.destination={x:extent*.16+(Number(site?.dataset.cityX)||220)/330*extent*.78-30,y:28+(Number(site?.dataset.cityY)||90)-12};
+            if(['rail','water'].includes(spec.mode))record.hoist=terminalGeometry(spec.mode,record.sceneEnd).rig;
+          }
           nodes.set(journey.id,record);
         }
         existing.delete(journey.id);
@@ -194,25 +211,54 @@ export class TransportAnimator {
         group.setAttribute('transform',`translate(${pose.x.toFixed(3)} ${pose.y.toFixed(3)}) rotate(${pose.angle||0})`);
         group.style.opacity=pose.opacity;
         const {cargo,parcel}=record;if(cargo)cargo.style.opacity=1-pose.unloaded;
+        if(record.materialCargo)record.materialCargo.style.opacity=1-pose.unloaded;
         if(parcel) {
-          parcel.style.opacity=pose.unloaded;
-          parcel.setAttribute('transform',`translate(${8+pose.deliveryX-pose.x} ${pose.deliveryY-pose.y+pose.unloaded*12})`);
+          const from={x:pose.deliveryX-8,y:pose.deliveryY-10};
+          const transfer=materialTransferPose(progress,{mode:record.mode,from,to:record.destination,hoist:record.hoist});
+          parcel.style.opacity=transfer.opacity;
+          parcel.dataset.transferProgress=transfer.t.toFixed(4);
+          parcel.setAttribute('transform',`translate(${transfer.x.toFixed(3)} ${transfer.y.toFixed(3)})`);
+          record.carrier.style.opacity=transfer.carrying?1:0;
+          record.installer.style.opacity=transfer.t>=.94?1:0;
+          const cable=record.cable;
+          cable.style.opacity=transfer.lift?1:0;
+          cable.setAttribute('d',`M${(record.hoist?.x||from.x)-transfer.x} ${(record.hoist?.y||from.y)-transfer.y}L0 -8`);
+          if(transfer.t>=.94&&!record.stocked){
+            record.stocked=true;
+            const stock=svg.querySelector(`[data-render-key="stock-${record.siteIndex}"]`)||svg.querySelector('.delivery-stock');
+            if(stock){
+              let load=stock.querySelector(`[data-stock-material="${record.material}"]`);
+              if(!load){
+                const slot=stock.children.length;
+                load=svg.ownerDocument.createElementNS(SVG_NS,'g');
+                load.dataset.stockMaterial=record.material;load.dataset.deliveries=0;
+                load.setAttribute('transform',`translate(${slot%4*13-20} ${-Math.floor(slot/4)*8})`);
+                load.innerHTML=materialArtwork(record.material,17);stock.append(load);
+              }
+              // Aggregate repeat loads instead of discarding older pallets.
+              load.dataset.deliveries=Number(load.dataset.deliveries)+1;
+              load.dataset.deliveryId=journey.id;
+            }
+            const crane=svg.querySelectorAll('.crane-load')[record.siteIndex%Math.max(1,svg.querySelectorAll('.crane-load').length)];
+            if(crane){crane.innerHTML=materialArtwork(record.material,18,12);crane.setAttribute('opacity','1');}
+          }
           if(pose.unloaded>0 && !record.delivered) {
             record.delivered=true;
             this.deliveryTimes.set(svg,this.queue.now+1200);
           }
         }
       }
-      for (const id of existing) { nodes.get(id).group.remove(); nodes.delete(id); }
+      for (const id of existing) { const record=nodes.get(id);record.group.remove();record.parcel?.remove();nodes.delete(id); }
       if(svg.classList.contains('application-city')) {
         // Retain a transport corridor until its last in-flight journey finishes.
         const modes=journeys.map(j=>transportSpec(j.type).mode);
         const stage=Number(svg.dataset.stage)||0,growth=infrastructure(stage);
         const planned=[svg.dataset.downloadType,svg.dataset.uploadType].map(type=>transportSpec(type).mode);
-        for(const [selector,visible] of [['.world-river',growth.port||modes.includes('water')||planned.includes('water')],['.world-port',growth.port||modes.includes('water')||planned.includes('water')],['.world-rail',growth.rail||modes.includes('rail')||planned.includes('rail')],['.world-airport',growth.airport||modes.includes('air')||planned.includes('air')],['.world-air-terminal',growth.airport||modes.includes('air')||planned.includes('air')]]) {
+        for(const [selector,visible] of [['.world-river',growth.port||modes.includes('water')||planned.includes('water')],['.world-port',growth.port||modes.includes('water')||planned.includes('water')],['.world-rail',growth.rail||modes.includes('rail')||planned.includes('rail')],['.world-rail-terminal',growth.rail||modes.includes('rail')||planned.includes('rail')],['.world-airport',growth.airport||modes.includes('air')||planned.includes('air')],['.world-air-terminal',growth.airport||modes.includes('air')||planned.includes('air')]]) {
           const layer=svg.querySelector(selector),value=visible?'1':'0';
           if(layer&&layer.getAttribute('opacity')!==value)layer.setAttribute('opacity',value);
         }
+        for(const terminal of svg.querySelectorAll('.freight-terminal'))terminal.classList.toggle('terminal-unloading',journeys.some(j=>j.incoming&&transportSpec(j.type).mode===terminal.dataset.terminalMode&&this.queue.progress(j)>=.62&&this.queue.progress(j)<=.96));
         const working=Number(svg.dataset.downloadRate)>0||journeys.some(j=>j.incoming);
         svg.classList.toggle('city-working',working);svg.classList.toggle('city-resting',!working);
         svg.classList.toggle('city-delivering',this.queue.now<(this.deliveryTimes.get(svg)||0));

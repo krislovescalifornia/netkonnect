@@ -30,12 +30,14 @@ app.whenReady().then(async()=>{
         const semi=svg.querySelector('.transport-vehicle[data-transport="semi"] .supply-semi>image');
         const yards=[...svg.querySelectorAll('.construction-yard')],machines=[...svg.querySelectorAll('.construction-yard .site-vehicle')];
         const start=machines.map(el=>el.getBoundingClientRect());
+        const excursions=start.map(r=>({minX:r.x,maxX:r.x,minY:r.y,maxY:r.y}));
         const {WORLD_ROUTE_BASELINES}=await import('/world.js');
         const roadTop=new DOMPoint(0,WORLD_ROUTE_BASELINES.road.download-14).matrixTransform(svg.getScreenCTM()).y;
         let maxJump=0,frames=0,last=new Map(),violations=0;const frameTimes=[];
         const began=performance.now();let lastFrame=began;
         await new Promise(resolve=>{function sample(now){
           frames++;frameTimes.push(now-lastFrame);lastFrame=now;
+          machines.forEach((el,i)=>{const r=el.getBoundingClientRect(),e=excursions[i];e.minX=Math.min(e.minX,r.x);e.maxX=Math.max(e.maxX,r.x);e.minY=Math.min(e.minY,r.y);e.maxY=Math.max(e.maxY,r.y);});
           for(const scene of svgs)for(const vehicle of scene.querySelectorAll('.transport-vehicle')) {
             const m=vehicle.transform.baseVal.consolidate().matrix,p=new DOMPoint(m.e,m.f).matrixTransform(scene.getScreenCTM()),prior=last.get(vehicle);
             if(prior)maxJump=Math.max(maxJump,Math.hypot(p.x-prior.x,p.y-prior.y));last.set(vehicle,p);
@@ -46,7 +48,9 @@ app.whenReady().then(async()=>{
           }
           if(now-began<2300)requestAnimationFrame(sample);else resolve();
         }requestAnimationFrame(sample);});
-        const depthMoves=machines.map((el,i)=>{const r=el.getBoundingClientRect();return {x:Math.abs(r.x-start[i].x),y:Math.abs(r.y-start[i].y)};});
+        // A machine can return near its first pose during this observation.
+        // Its painted excursion establishes motion even on a return leg.
+        const depthMoves=excursions.map(e=>({x:e.maxX-e.minX,y:e.maxY-e.minY}));
         return {name:${JSON.stringify(name)},person,semiHeight:h(semi),machineRatios:yards.map(yard=>h(yard.querySelector('.illustrated-site-machine image'))/h(yard.querySelector('.worksite-hauler .illustrated-person'))),depths:[...new Set(yards.map(el=>el.dataset.cityY))],depthMoves,roadViolations:violations,frames,maxFrameJumpPixels:maxJump,p95FrameMs:frameTimes.sort((a,b)=>a-b)[Math.floor(frameTimes.length*.95)],labels:[...svg.parentElement.querySelectorAll('.route-speeds>span')].map(el=>({text:el.textContent,color:getComputedStyle(el).color}))};
       })()`);
       console.log('TRAFFIC_SIZE '+JSON.stringify(report));
@@ -65,14 +69,14 @@ app.whenReady().then(async()=>{
     const delivery=await run(`(async()=>{
       // Pick a fresh departure and follow the same DOM node through six polls.
       let el;while(!el){el=[...document.querySelectorAll('.incoming-fleet[data-transport="handcart"]')].find(el=>+el.dataset.progress<.05);if(!el)await new Promise(r=>setTimeout(r,40));}
-      const id=el.dataset.journeyId,phases=[],start=performance.now();let previous=null,maxJump=0,bayFrames=0,cargoFaded=false;
+      const svg=el.closest('.application-city'),id=el.dataset.journeyId,phases=[],start=performance.now();let previous=null,maxJump=0,bayFrames=0,cargoFaded=false;
       await new Promise(resolve=>{function sample(){
         if(!el.isConnected){resolve();return;}
         const p=+el.dataset.progress,m=el.transform.baseVal.consolidate().matrix;
         if(previous)maxJump=Math.max(maxJump,Math.hypot(m.e-previous.x,m.f-previous.y));previous={x:m.e,y:m.f};
         if(p>.63&&p<.77)bayFrames++;
         if(p>.74&&+getComputedStyle(el.querySelector('.vehicle-cargo')).opacity===0)cargoFaded=true;
-        for(const [name,threshold] of [['approach',.45],['unload',.7],['depart',.86]])if(p>=threshold&&!phases.some(s=>s.name===name))phases.push({name,progress:p,x:m.e,y:m.f,parcel:+getComputedStyle(el.querySelector('.delivery-parcel')).opacity});
+        for(const [name,threshold] of [['approach',.45],['unload',.7],['depart',.86]])if(p>=threshold&&!phases.some(s=>s.name===name))phases.push({name,progress:p,x:m.e,y:m.f,parcel:+getComputedStyle(svg.querySelector('.delivery-parcel[data-journey-id="'+id+'"]')).opacity});
         if(performance.now()-start>20000){resolve();return;}requestAnimationFrame(sample);
       }requestAnimationFrame(sample);});
       return {id,phases,maxJump,bayFrames,cargoFaded,finished:!el.isConnected};

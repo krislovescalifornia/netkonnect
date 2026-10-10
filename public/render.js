@@ -34,6 +34,8 @@ function patch(current,next) {
   const scene=current.matches('.application-city, .convoy-svg');
   const growth=scene && (current.dataset.stage !== next.dataset.stage || current.dataset.progress !== next.dataset.progress);
   attributes(current,next,scene);
+  // Material stocks belong to completed deliveries, not polling templates.
+  if(current.matches('.site-stock,.delivery-stock'))return;
   if(scene) {
     if(growth && current.matches('.application-city')) {
       if(next.querySelector('.city-buildings')) {
