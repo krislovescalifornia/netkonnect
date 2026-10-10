@@ -482,6 +482,37 @@
 .city-detail-footer>.city-summary { display:flex; flex:1; align-items:center; justify-content:flex-start; gap:12px; min-width:0; white-space:nowrap; }
 .city-summary>* { flex-shrink:0; }
 .city-summary .city-world-clock { font-variant-numeric:tabular-nums; }
+
+/* Close, modular watercolor places. Architecture stays opaque and proportional;
+   the live actors and local measured parcels supply the movement. */
+.transport-table .application-city-card { --city-scene-height:240px; margin-bottom:14px; }
+.city-route-scene { background:linear-gradient(#d9eff8 0%,#f4f9ef 42%,var(--living-ground,#e4edcf) 65%); }
+.living-diorama .city-established { opacity:1; }
+.living-architecture-pixels { filter:none; }
+.living-pose { animation:living-poses 1.2s steps(4,end) infinite; animation-delay:var(--pose-delay,0s); }
+.living-gardener .living-pose { animation-duration:2s; }
+.living-transit .living-pose { animation-duration:1.8s; }
+.living-cycle-route,.living-transit { animation:city-patrol var(--walk-duration) linear infinite; animation-delay:var(--walk-delay); }
+.living-foliage { animation:living-breeze 5.3s ease-in-out infinite alternate; animation-delay:var(--nature-delay,0s); transform-box:fill-box; transform-origin:50% 100%; }
+@keyframes living-poses { to { transform:translateX(-1536px); } }
+@keyframes living-breeze { from { transform:skewX(-1.5deg) rotate(-1deg); } to { transform:skewX(1.5deg) rotate(1deg); } }
+.living-diorama .parcel-completed,.living-diorama .building-illustration,.living-diorama .site-window-lights { transition:opacity 1s ease; }
+.living-diorama .parcel-reveal { transition:y 1s ease,height 1s ease; }
+.city-route-scene .world-landscape { filter:none !important; }
+.city-route-scene[data-time="sunrise"] .world-time-wash { opacity:.06; }
+.city-route-scene[data-time="sunset"] .world-time-wash { opacity:.08; }
+.city-route-scene[data-time="night"] { background:linear-gradient(#192f54,#375477 52%,#3d5660); }
+.city-route-scene[data-time="night"] .living-architecture-pixels { filter:brightness(.72) saturate(1.08); }
+.city-route-scene[data-time="night"] .world-terrain { filter:brightness(.54) saturate(.95); }
+.city-resting .living-diorama .site-vehicle *,.city-resting .living-diorama .site-scaffolding * { animation-play-state:paused; }
+.city-route-scene .air-guide { opacity:0; }
+.city-app-heading .route-origin strong { text-shadow:0 1px 3px #fffdf3,0 0 8px #fffdf3; }
+@media(max-width:900px) { .transport-table .application-city-card { --city-scene-height:224px; } }
+@media(max-width:520px) { .transport-table .application-city-card { --city-scene-height:218px; } }
+.still .living-diorama *,.no-motion .living-diorama * { animation-play-state:paused !important; transition:none !important; }
+@media(prefers-reduced-motion:reduce) {
+  .application-city * { animation-play-state:paused !important; transition:none !important; }
+}
 @media(max-width:900px) { .city-detail-footer>.city-summary { gap:7px; } }
 
 .application-city-card .route-expand .app-info-caret { display:block; font-size:12px; line-height:1; transform-origin:center; }

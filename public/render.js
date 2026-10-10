@@ -39,7 +39,7 @@ function patch(current,next) {
   if(scene) {
     if(growth && current.matches('.application-city')) {
       if(next.querySelector('.city-buildings')) {
-        for(const layer of ['.city-buildings','.construction-site','.city-districts','.city-projects','.city-site-vehicles','.city-helpers','.city-residents','.city-worksites']) {
+        for(const layer of ['.city-buildings','.construction-site','.city-districts','.city-projects','.city-site-vehicles','.city-helpers','.city-residents','.city-worksites','.city-life','.living-nature']) {
           const target=current.querySelector(layer),template=next.querySelector(layer);
           if(target&&template){attributes(target,template);updateChildren(target,template);}
         }

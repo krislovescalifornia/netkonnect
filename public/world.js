@@ -3,6 +3,7 @@ import {transportSpec} from './vehicles.js';
 import {TRANSPORT_FRAMES} from './artwork/world/transport/frames.js';
 import {SKY_ART} from './artwork/world/sky/frames.js';
 import {logisticsArtwork} from './construction-art.js';
+import {LIVING_ASSETS,livingBackdrop,layoutLivingCity} from './living-city.js';
 // Infrastructure uses measured growth. The sky follows the computer's local clock.
 export const WORLD_BACKGROUNDS=Object.freeze([
   {
@@ -106,13 +107,13 @@ export const WORLD_BACKGROUNDS=Object.freeze([
     "file": "artwork/world/backgrounds/level-20-space-age-metropolis-v1.png"
   }
 ]);
-export const WORLD_ASSETS=[...SETTLEMENT_ASSETS,'artwork/world/meadow-v1.png','artwork/world/environment-v1.png',...WORLD_BACKGROUNDS.map(background=>background.file),
+export const WORLD_ASSETS=[...SETTLEMENT_ASSETS,...LIVING_ASSETS,'artwork/world/meadow-v1.png','artwork/world/environment-v1.png',...WORLD_BACKGROUNDS.map(background=>background.file),
   'artwork/world/transport/frames.js',...new Set(Object.values(TRANSPORT_FRAMES).map(frame=>frame.file)),
   'artwork/world/sky/frames.js',...Object.values(SKY_ART).map(frame=>frame.file)];
 export const WORLD_ROUTE_BASELINES=Object.freeze({
-  road:Object.freeze({download:154,upload:213}),
-  rail:Object.freeze({download:176,upload:234}),
-  water:Object.freeze({download:194,upload:253}),
+  road:Object.freeze({download:216,upload:250}),
+  rail:Object.freeze({download:222,upload:256}),
+  water:Object.freeze({download:229,upload:260}),
   air:Object.freeze({download:32,upload:67})
 });
 export function worldBackground(stage=0) {
@@ -171,7 +172,7 @@ export function worldRoads(stage,end=655,modes=[]) {
     return `<g class="route-direction ${direction}-direction" fill="${color}" transform="translate(8 ${baseline})"><path d="${direction==='download'?'M0 -2H9L6 -5M9 -2L6 1':'M9 -2H0L3 -5M0 -2L3 1'}" stroke="${color}" fill="none" stroke-width="1.2"/></g>`;
   }).join('');
   return `<g class="city-supply-road world-roads" data-infrastructure="${growth.tier}">
-    <g class="world-airport" opacity="${air?1:0}">${guides}${transportScenery('runway',end+22,104,Math.max(80,extent-end-34),9)}</g>
+    <g class="world-airport" opacity="${air?1:0}">${guides}${transportScenery('runway',end+22,204,Math.max(80,extent-end-34),9)}</g>
     ${strips(growth.tier,depth,width)}${markers}
     <g class="world-rail" opacity="${rail?1:0}">${strips('rail',8,width)}</g>
     <g class="world-river" opacity="${port?1:0}">${strips('water',23,width)}</g>
@@ -180,17 +181,17 @@ export function worldRoads(stage,end=655,modes=[]) {
 export function worldNature(stage,end=655,modes=[]) {
   const growth=infrastructure(stage),extent=end+245,port=growth.port||modes.includes('water'),air=growth.airport||modes.includes('air');
   // Tall props sit behind the contact lines, leaving each moving silhouette clear.
-  const trees=Array.from({length:growth.trees},(_,i)=>`<g data-render-key="world-tree-${i}">${worldSprite('trees',42+i*(extent-150)/growth.trees,83+(i%2)*7,23+(i%3)*6,30)}</g>`).join('');
+  const trees=Array.from({length:growth.trees},(_,i)=>`<g data-render-key="world-tree-${i}"><g class="living-foliage" style="--nature-delay:-${i*1.9}s">${worldSprite('trees',42+i*(extent-150)/growth.trees,169+(i%2)*7,23+(i%3)*6,30)}</g></g>`).join('');
   const parks=Array.from({length:growth.parks},(_,i)=>`<g data-render-key="world-park-${i}">${worldSprite('park',end+36+i*46,176,36,24)}</g>`).join('');
-  const lamps=Array.from({length:growth.lamps},(_,i)=>`<g class="world-lamp" data-render-key="world-lamp-${i}">${worldSprite('lamps',end*.33+i*65,91,18,33)}</g>`).join('');
+  const lamps=Array.from({length:growth.lamps},(_,i)=>`<g class="world-lamp" data-render-key="world-lamp-${i}">${worldSprite('lamps',end*.33+i*65,186,18,33)}</g>`).join('');
   const rail=growth.rail||modes.includes('rail');
   const terminal=(mode,x,y,id,visible,width)=>`<g class="freight-terminal ${mode==='water'?'world-port':'world-rail-terminal'}" data-terminal-mode="${mode}" data-render-key="${mode}-terminal" opacity="${visible?1:0}" transform="translate(${x} ${y})"><g class="terminal-art">${logisticsArtwork(id,width,mode==='water'?94:68)}</g>${[0,1,2].map(i=>`<g transform="translate(${-36+i*22} ${mode==='water'?-13:-3})"><g class="terminal-worker" style="--work-delay:-${i*.7}s">${logisticsArtwork('dock-worker',9,16)}</g></g>`).join('')}<g transform="translate(-51 -5)">${logisticsArtwork('forklift',30,22)}</g></g>`;
-  return `<g class="world-nature">${trees}${parks}${lamps}<g class="world-air-terminal" opacity="${air?1:0}" data-airport="${growth.spaceport?'spaceport':'airport'}">${transportScenery(growth.spaceport?'spaceport':'airport',end+52,49,115,55)}</g>${terminal('rail',end-20,176,'rail-gantry',rail,110)}${terminal('water',end+144,203,'dock-pier',port,124)}</g>`;
+  return `<g class="world-nature">${trees}${parks}${lamps}<g class="world-air-terminal" opacity="${air?1:0}" data-airport="${growth.spaceport?'spaceport':'airport'}">${transportScenery(growth.spaceport?'spaceport':'airport',end+52,163,88,42)}</g>${terminal('rail',end-20,246,'rail-gantry',rail,85)}${terminal('water',end+144,256,'dock-pier',port,98)}</g>`;
 }
 function cityStreetLights(stage,extent) {
   const count=2+Math.floor(stage/2);
   return '<g class="world-night-lights night-light" aria-hidden="true">'+Array.from({length:count},(_,i)=>{
-    const x=extent*(.12+i*.78/Math.max(1,count-1)),y=i%3===0?202:121;
+    const x=extent*(.12+i*.78/Math.max(1,count-1)),y=i%3===0?202:182;
     return `<g data-render-key="street-light-${i}" transform="translate(${x} ${y})"><path d="M0 0v-30q0 -4 4 -4h4" fill="none" stroke="#8396a7" stroke-width="1.2"/><ellipse cx="9" cy="1" rx="24" ry="4" fill="#ffcd77" opacity=".22"/><path d="M7 -31L-9 0h36L11 -31z" fill="#ffdc91" opacity=".07"/><ellipse class="lamp-halo" cx="9" cy="-31" rx="9" ry="8" fill="#ffd88e" opacity=".15"/><rect class="lamp-bulb" x="5" y="-34" width="8" height="3" rx="1.5" fill="#ffeab6"/></g>`;
   }).join('')+'</g>';
 }
@@ -246,7 +247,7 @@ export function worldSky(stage,end=655,key='catalog') {
     '<g class="world-stars">'+Array.from({length:40},(_,i)=>skySprite('star',(15+random()*(extent-30)).toFixed(2),(-16+random()*48).toFixed(2),i%5===0?2.6:1.7,'class="sky-star" data-render-key="star-'+i+'" style="--star-delay:-'+(random()*7).toFixed(2)+'s"')).join('')+'</g></g>'+cityStreetLights(stage,extent);
 }
 export function worldBackdrop(stage=0) {
-  return `<image class="world-terrain" href="${worldBackground(stage)}" data-background-stage="${Math.max(0,Math.min(19,Math.floor(stage)||0))}" x="0" y="-20" width="900" height="280" preserveAspectRatio="none"/>`;
+  return livingBackdrop(Math.max(0,Math.min(19,Math.floor(stage)||0)));
 }
 export function updateWorldTime(svg,date=new Date()) {
   const time=worldTime(date);
@@ -264,7 +265,7 @@ export function laneLabelPosition(type,direction) {
 export function layoutWorld(svg,end,patch=(node,markup)=>{node.innerHTML=markup;}) {
   const stage=Number(svg.dataset.stage)||0;
   const terrain=svg.querySelector('.world-terrain');
-  if(terrain&&terrain.getAttribute('href')!==worldBackground(stage)) {
+  if(terrain&&!terrain.classList.contains('living-ground')&&terrain.getAttribute('href')!==worldBackground(stage)) {
     terrain.setAttribute('href',worldBackground(stage));
     terrain.dataset.backgroundStage=stage;
   }
@@ -273,9 +274,12 @@ export function layoutWorld(svg,end,patch=(node,markup)=>{node.innerHTML=markup;
   replace('.world-infrastructure',worldRoads(stage,end,modes));
   replace('.world-decoration',worldNature(stage,end,modes));
   replace('.world-atmosphere',worldSky(stage,end,svg.dataset.cityKey));
-  svg.querySelector('.world-city')?.setAttribute('transform',`translate(${end-80} 28)`);
-  svg.querySelector('.world-city .city-buildings')?.setAttribute('transform',settlementTransform(end,stage));
-  layoutSettlementActivity(svg,end);
+  if(svg.querySelector('.living-diorama'))layoutLivingCity(svg,end);
+  else {
+    svg.querySelector('.world-city')?.setAttribute('transform',`translate(${end-80} 28)`);
+    svg.querySelector('.world-city .city-buildings')?.setAttribute('transform',settlementTransform(end,stage));
+    layoutSettlementActivity(svg,end);
+  }
   for(const direction of ['download','upload']) {
     const label=svg.parentElement.querySelector('.route-speeds .'+direction+'-rate');
     if(label)label.style.setProperty('--lane-y',laneLabelPosition(svg.dataset[direction+'Type'],direction)+'%');

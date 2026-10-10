@@ -1,0 +1,232 @@
+{
+  "title": "Living watercolor dioramas",
+  "status": "Art-direction proposal; no runtime assets replaced",
+  "priorityLevels": [
+    6,
+    7,
+    11
+  ],
+  "diagnosis": [
+    "Each level currently receives a similarly stretched horizon.",
+    "settlementTransform scales horizontal and vertical dimensions independently, flattening silhouettes.",
+    "city-established opacity declines to 0.05 while city-rising overlays the next level, reducing the established scene's clarity during growth.",
+    "Sunset filters reduce brightness and saturation and add a full-card wash.",
+    "Near-scale activity has insufficient visual prominence relative to empty foreground road bands."
+  ],
+  "visualRules": [
+    "Levels must differ in silhouette, spatial organization, palette and signature activity; use the same daylight for comparison.",
+    "Keep architecture at natural proportions. Fit authored compositions rather than stretching settlement strips.",
+    "Use close, shallow-depth compositions with inhabited foregrounds; keep sky and data lanes subordinate.",
+    "Maintain crisp watercolor pigment, clear light-dark separation and local warm/cool contrast across all clock states.",
+    "Foreground residents should read at roughly 12-18 CSS pixels high in a 160-200 pixel compact scene; tune through rendered inspection.",
+    "Keep recognizable established buildings opaque. Grow authored local construction parcels from measured downloads, then retain completed parcels.",
+    "Use colored accents appropriate to each district; no global saturation filter as a substitute for art direction.",
+    "Show ordinary daily life across multiple parts of each level and readable work activity wherever construction is ongoing."
+  ],
+  "runtimeRules": [
+    "Lifetime measured downloads remain the sole growth and construction progress input; preserve current 20 thresholds.",
+    "Current traffic controls data deliveries; ambient residents can remain active without incoming traffic.",
+    "Concept-board residents and construction are references for separate imagegen-generated layered assets, not a baked static replacement for runtime motion.",
+    "Keep stable actor, parcel and scene identities across polling, sorting, resizing and level changes; retain elapsed animation time.",
+    "Honor pause, motion settings and prefers-reduced-motion.",
+    "Sky visitors remain rare randomly timed easter eggs with long quiet gaps.",
+    "At the final stage, show an inhabited completed world and maintenance rather than manufacturing further growth."
+  ],
+  "assetPlan": [
+    "First author near-scale estate, neighborhood and city compositions to establish the visual language.",
+    "Generate separate watercolor architecture, nature, residents, crews, machinery and material assets with imagegen.",
+    "Define level-specific anchor maps for buildings, construction parcels, paths and delivery arrival points.",
+    "Carry recognizable neighborhood fragments into later stages without dissolving whole scenes.",
+    "Finish each remaining level with its own composition and visual identity; do not derive 20 variants from one panorama."
+  ],
+  "acceptance": [
+    "Compare level 6, 7 and 11 at the same daylight in desktop and compact cards with labels hidden; they should be immediately distinguishable.",
+    "Inspect several seconds of actual rendered walking, working, crane and delivery motion across left, middle and right parts of each scene.",
+    "Inspect low, middle and near-complete measured growth; localized construction visibly changes while established buildings stay crisp.",
+    "Stop incoming traffic and verify construction stops advancing while ambient life continues.",
+    "Inspect pause, reduced motion, polling, sort reversal, resize and stage transition for stable actor timelines.",
+    "Inspect all 20 levels without labels and compare adjacent silhouettes, landmarks, spatial patterns and local palettes."
+  ],
+  "levels": [
+    {
+      "level": 1,
+      "name": "Shack",
+      "identity": "Clearing",
+      "silhouette": "One rough timber shelter under a spreading oak",
+      "palette": "Fern green, ochre, weathered cedar",
+      "layout": "A small footpath, woodpile and nearby stream",
+      "activity": "A resident tends the clearing; two builders assemble a porch"
+    },
+    {
+      "level": 2,
+      "name": "Cabin",
+      "identity": "Woodland retreat",
+      "silhouette": "A steep-roof log cabin, chimney and timber deck",
+      "palette": "Pine green, honey amber, lake blue",
+      "layout": "Pine trunks frame a short waterside boardwalk",
+      "activity": "Wood deliveries and carpenters extend the cabin"
+    },
+    {
+      "level": 3,
+      "name": "House",
+      "identity": "First garden",
+      "silhouette": "One colorful gabled family home with a picket gate",
+      "palette": "Sky blue, brick red, daffodil yellow",
+      "layout": "Flower garden, driveway and sidewalk",
+      "activity": "Family activity, garden work and garage construction"
+    },
+    {
+      "level": 4,
+      "name": "Homestead",
+      "identity": "Working land",
+      "silhouette": "Farmhouse, red barn, windmill and greenhouse",
+      "palette": "Russet red, wheat gold, leaf green",
+      "layout": "Productive orchard rows and farmyard",
+      "activity": "Farmhands, produce carts and barn framing"
+    },
+    {
+      "level": 5,
+      "name": "Mansion",
+      "identity": "Grand house",
+      "silhouette": "One tall ornate residence with towers and a sweeping entry stair",
+      "palette": "Burgundy, sandstone, indigo",
+      "layout": "Terraced front garden and arrival court",
+      "activity": "Guests, gardeners and a wing under scaffolding"
+    },
+    {
+      "level": 6,
+      "name": "Estate",
+      "identity": "Garden domain",
+      "silhouette": "Manor, formal hedge axes, fountain and glass conservatory",
+      "palette": "Emerald, warm ivory, rose, copper",
+      "layout": "One managed property with orchard and walled gardens",
+      "activity": "Gardeners and visitors; conservatory framing and deliveries"
+    },
+    {
+      "level": 7,
+      "name": "Neighborhood",
+      "identity": "Shared courtyard",
+      "silhouette": "Colorful two-story row houses wrapped around a community court",
+      "palette": "Coral, turquoise, butter yellow, cobalt",
+      "layout": "Playground, doorstep gardens, cafe and connecting sidewalks",
+      "activity": "Families, cyclists and shoppers; a new row house being built"
+    },
+    {
+      "level": 8,
+      "name": "Suburb",
+      "identity": "Connected blocks",
+      "silhouette": "Detached houses and curved residential streets around a school",
+      "palette": "Lawn green, terracotta, pool blue",
+      "layout": "Bus stop, sports field and local shopping strip",
+      "activity": "School arrival, dog walkers and a subdivision worksite"
+    },
+    {
+      "level": 9,
+      "name": "Village",
+      "identity": "Market green",
+      "silhouette": "Low cottages around a green, small stone bridge and market hall",
+      "palette": "Ochre, lavender, moss green",
+      "layout": "Compact village lanes and stream crossing",
+      "activity": "Market stalls, carts and bridge masonry"
+    },
+    {
+      "level": 10,
+      "name": "Town",
+      "identity": "Main street",
+      "silhouette": "Continuous shopfronts, civic clock tower and brick square",
+      "palette": "Brick red, awning blue, brass",
+      "layout": "Market square and short interlocking commercial streets",
+      "activity": "Cafes, commuters, municipal works and shop expansion"
+    },
+    {
+      "level": 11,
+      "name": "City",
+      "identity": "Tram downtown",
+      "silhouette": "Close mid-rise blocks, distinct towers and tall construction cranes",
+      "palette": "Navy, teal, brick red, amber",
+      "layout": "Tram boulevard, crowded plaza, crossings and rooftop terraces",
+      "activity": "Pedestrians, cyclists, tram passengers and multi-story construction"
+    },
+    {
+      "level": 12,
+      "name": "Regional city",
+      "identity": "River interchange",
+      "silhouette": "Two urban districts across a wide river linked by a substantial bridge",
+      "palette": "River blue, limestone, rust orange",
+      "layout": "Promenade, station and freight quays",
+      "activity": "Ferries, commuters, cargo handling and bridge deck construction"
+    },
+    {
+      "level": 13,
+      "name": "Metropolis",
+      "identity": "Vertical density",
+      "silhouette": "Tall clustered towers with elevated rail threading between them",
+      "palette": "Cobalt, steel blue, magenta accents",
+      "layout": "Dense street canyons and multi-level transit",
+      "activity": "Busy platforms, skywalk pedestrians and high-rise floor assembly"
+    },
+    {
+      "level": 14,
+      "name": "Capital",
+      "identity": "Civic grandeur",
+      "silhouette": "A monumental dome, civic campus and axial boulevard",
+      "palette": "Ivory, royal blue, gold",
+      "layout": "Formal public plaza, museums and civic gardens",
+      "activity": "Public visitors, trams and monument or civic-wing construction"
+    },
+    {
+      "level": 15,
+      "name": "Megacity",
+      "identity": "Layered city",
+      "silhouette": "Several sharply distinct high-rise clusters joined by multi-level infrastructure",
+      "palette": "Indigo, copper, vivid cyan",
+      "layout": "Rail above street, markets below, dense rooftop districts",
+      "activity": "Transit at multiple depths and major tower construction"
+    },
+    {
+      "level": 16,
+      "name": "Green megacity",
+      "identity": "Urban forest",
+      "silhouette": "Terraced green towers, planted bridges and vertical gardens",
+      "palette": "Jade, lime, turquoise, cream",
+      "layout": "Green transit corridors and restored waterways",
+      "activity": "Cyclists, gardeners and planted tower assembly"
+    },
+    {
+      "level": 17,
+      "name": "Smart metropolis",
+      "identity": "Civic technology",
+      "silhouette": "Sleek sensor-linked towers, a solar canopy and visible mobility hub",
+      "palette": "White, electric blue, violet",
+      "layout": "Precise street grid, energy infrastructure and public terraces",
+      "activity": "Autonomous ground transit, maintenance crews and modular construction"
+    },
+    {
+      "level": 18,
+      "name": "Arcology",
+      "identity": "One integrated habitat",
+      "silhouette": "A single giant stepped habitat with inhabited inner terraces",
+      "palette": "Warm stone, forest green, lagoon teal",
+      "layout": "Cutaway courtyards, indoor garden levels and integrated transit",
+      "activity": "Residents on many terraces; cranes add habitable modules"
+    },
+    {
+      "level": 19,
+      "name": "Orbital gateway",
+      "identity": "Launch harbor",
+      "silhouette": "A launch gantry and vertical vehicle beside an inhabited spaceport city",
+      "palette": "Midnight blue, white, safety orange",
+      "layout": "Passenger terminal, loading yards and launch infrastructure",
+      "activity": "Passengers, cargo ground crews and gantry construction; launches only occasional"
+    },
+    {
+      "level": 20,
+      "name": "Space-age metropolis",
+      "identity": "Future civilization",
+      "silhouette": "Sweeping inhabited megastructures and luminous elevated transit",
+      "palette": "Pearl, deep violet, luminous turquoise, gold",
+      "layout": "Layered plazas, gardens and connected aerial architecture",
+      "activity": "Visible residents and maintenance activity; completed final growth stage"
+    }
+  ]
+}

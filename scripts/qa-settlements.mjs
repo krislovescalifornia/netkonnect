@@ -99,8 +99,10 @@ try {
   }
   window.setSize(1280,1180);
   for(const [phase,hour] of [['sunrise',6],['day',12],['sunset',18],['night',21]]) {
-    const lighting=await window.webContents.executeJavaScript(`(()=>{for(const svg of document.querySelectorAll('.application-city'))window.settlementQA.updateWorldTime(svg,new Date(2026,9,9,${hour}));return [...document.querySelectorAll('${phase==='night'?'.world-terrain':'.world-landscape'}')].map(n=>getComputedStyle(n).filter);})()`);
-    if(phase!=='day')assert.ok(lighting.every(value=>value.includes('brightness')));
+    const lighting=await window.webContents.executeJavaScript(`(()=>{for(const svg of document.querySelectorAll('.application-city'))window.settlementQA.updateWorldTime(svg,new Date(2026,9,9,${hour}));return [...document.querySelectorAll('.application-city')].map(svg=>({phase:svg.dataset.time,wash:Number(getComputedStyle(svg.querySelector('.world-time-wash')).opacity),architecture:getComputedStyle(svg.querySelector('.living-architecture-pixels')).filter,terrain:getComputedStyle(svg.querySelector('.world-terrain')).filter}));})()`);
+    assert.ok(lighting.every(value=>value.phase===phase),'local time selects the lighting phase');
+    if(phase==='night')assert.ok(lighting.every(value=>value.architecture.includes('brightness')&&value.terrain.includes('brightness')),'night lights architecture and ground');
+    if(phase==='sunrise'||phase==='sunset')assert.ok(lighting.every(value=>value.wash>0&&value.wash<.2),'gentle lighting retains vivid artwork');
     await new Promise(r=>setTimeout(r,100));await writeFile(resolve(output,phase+'.png'),await capture());
   }
   const motion=await window.webContents.executeJavaScript(`(()=>{
@@ -113,7 +115,7 @@ try {
     if(getComputedStyle(crane).animationPlayState!=='paused')throw new Error('Idle construction is not paused');
     if(getComputedStyle(resident).animationPlayState!=='running')throw new Error('Idle city lost its ambient street life');
     svg.classList.remove('city-resting');svg.classList.add('city-working');
-    const project=svg.querySelector('.city-project'),projectProgress=Number(project.dataset.buildProgress),clip=svg.querySelector('.city-buildings clipPath rect'),clipHeight=Number(clip.getAttribute('height'));
+    const project=svg.querySelector('.city-project'),projectProgress=Number(project.dataset.buildProgress),clip=project.querySelector('.parcel-reveal'),clipHeight=Number(clip.getAttribute('height'));
     window.settlementQA.render([9,9,9,9],.65);
     if(project!==svg.querySelector('.city-project')||resident!==svg.querySelector('.resident-walk')||animation!==resident.getAnimations()[0])throw new Error('Construction progress replaced live actors');
     if(Number(project.dataset.buildProgress)<=projectProgress||Number(clip.getAttribute('height'))<=clipHeight)throw new Error('Measured bytes did not build the city');
@@ -160,8 +162,9 @@ try {
     await window.webContents.executeJavaScript(`(()=>{window.settlementQA.render([9,9,9,9],${progress});for(const svg of document.querySelectorAll('.application-city'))window.settlementQA.updateWorldTime(svg,new Date(2026,9,9,12));})()`);
     await new Promise(r=>setTimeout(r,200));await writeFile(resolve(output,'construction-'+name+'.png'),await capture());
   }
-  const growth=await window.webContents.executeJavaScript(`(()=>{const cells=new Set();for(let stage=0;stage<20;stage++){window.settlementQA.render([stage,stage,stage,stage]);const svg=document.querySelector('.application-city');cells.add(svg.querySelector('.city-established .settlement-illustration').getAttribute('viewBox')+'|'+svg.querySelector('.city-established image').getAttribute('href'));}return {stages:cells.size};})()`);
+  const growth=await window.webContents.executeJavaScript(`(()=>{const cells=new Set(),architecture=new Set();for(let stage=0;stage<20;stage++){window.settlementQA.render([stage,stage,stage,stage]);const svg=document.querySelector('.application-city');cells.add(svg.querySelector('.living-diorama').dataset.place);for(const image of svg.querySelectorAll('.city-established image'))architecture.add(image.getAttribute('href'));if(svg.querySelector('.city-established').getAttribute('opacity')!=='1')throw new Error('Established buildings faded');}return {stages:cells.size,architecture:architecture.size};})()`);
   assert.equal(growth.stages,20);assert.deepEqual(errors,[]);
+  assert.equal(growth.architecture,80,'four distinct established modules at every level');
   await writeFile(resolve(output,'results.json'),JSON.stringify({initial,layouts,motion,delivery,growth,phases:4,errors},null,2));
   console.log('SETTLEMENTS_VERIFIED '+JSON.stringify({initial,layouts,motion,delivery,growth,phases:4,errors}));
 }finally{await window.webContents.executeJavaScript(`window.settlementQA?.animator.mount(document.createElement('div'),{source:'done',active:false});window.settlementQA?.animator.resizeObserver?.disconnect();`).catch(()=>{});window.destroy();await new Promise(r=>server.close(r));app.quit();}

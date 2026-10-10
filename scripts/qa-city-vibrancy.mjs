@@ -42,7 +42,7 @@ app.whenReady().then(async()=>{
       assert.ok(movement.every(group=>group.moved>0),`${name}: every activity type must visibly change pose`);
       assert.ok(movement.find(group=>group.selector==='.crane-load').maxPixels>3,`${name}: crane lifts must be perceptible`);
       assert.ok(movement.find(group=>group.selector==='.site-vehicle').maxPixels>3,`${name}: machines must visibly move`);
-      const pixels=await run(`(()=>{const svg=document.querySelector('.application-city'),r=svg.getBoundingClientRect();const scale=r.height/280;return {x:Math.round(r.x),y:Math.round(r.y+35*scale),width:Math.floor(r.width),height:Math.ceil(100*scale)};})()`);
+      const pixels=await run(`(()=>{const svg=document.querySelector('.application-city'),r=svg.getBoundingClientRect();const scale=r.height/280;return {x:Math.round(r.x),y:Math.round(r.y+140*scale),width:Math.floor(r.width),height:Math.ceil(85*scale)};})()`);
       // Hide traffic/clouds briefly so pixel changes establish street/construction
       // activity, rather than merely detecting passing vehicles or sky motion.
       await run(`window.pixelProbeStyle=document.createElement('style');pixelProbeStyle.textContent='.transport-vehicle,.world-cloud,.world-birds{visibility:hidden!important}';document.head.append(pixelProbeStyle);`);

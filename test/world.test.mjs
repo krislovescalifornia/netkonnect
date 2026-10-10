@@ -63,8 +63,8 @@ test('level corridors connect app and city without rotating side-profile sprites
 });
 test('city scene has full-bleed offline artwork, an independent return route and local time',()=>{
   const markup=renderCity({key:'world',bytes:128*1024**3,convoy:'data-route-key="world"',date:new Date(2026,9,8,21)});
-  assert.match(markup,/data-time="night"/);assert.match(markup,/world-city" transform="translate\(575 28\)"/);
-  assert.ok(markup.includes(worldBackground(12)));assert.match(markup,/world-birds/);assert.match(markup,/outgoing-road/);
+  assert.match(markup,/data-time="night"/);assert.match(markup,/world-city" transform="translate\(0 0\)"/);
+  assert.match(markup,/living-ground/);assert.match(markup,/world-birds/);assert.match(markup,/outgoing-road/);
 });
 test('watercolor world assets retain their source pixels and load through the local allowlist',async t=>{
   const server=createAppServer({getSnapshot:()=>({})});await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>new Promise(r=>server.close(r)));
@@ -73,7 +73,7 @@ test('watercolor world assets retain their source pixels and load through the lo
   assert.deepEqual([sprite.readUInt32BE(16),sprite.readUInt32BE(20)],[1536,1024]);
 });
 
-test('each city level uses a distinct generated panorama in matching stage order',async()=>{
+test('legacy panoramas remain available but live cards use modular watercolor places',async()=>{
   assert.equal(WORLD_BACKGROUNDS.length,20);
   assert.deepEqual(WORLD_BACKGROUNDS.map(b=>b.name),CITY_STAGES.map(s=>s.name));
   const hashes=new Set();
@@ -87,7 +87,8 @@ test('each city level uses a distinct generated panorama in matching stage order
     assert.ok(Math.abs(png.readUInt32BE(16)/png.readUInt32BE(20)-3)<.1);
     hashes.add(createHash('sha256').update(png).digest('hex'));
     const markup=renderCity({key:'stage-'+stage,bytes:CITY_STAGES[stage].at,convoy:'data-route-key="stage-'+stage+'"'});
-    assert.ok(markup.includes('href="'+background.file+'"'));
+    assert.ok(!markup.includes('href="'+background.file+'"'),'static panoramas do not replace the live city');
+    assert.match(markup,/living-diorama/);
   }
   assert.equal(hashes.size,20,'all twenty levels have different source artwork');
   assert.notEqual(worldBackground(1),worldBackground(14),'level 2 and level 15 have separate scenery');

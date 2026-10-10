@@ -21,8 +21,8 @@ export function logisticsArtwork(id,width,height=width) {
 }
 export function terminalGeometry(mode,end) {
   const water=mode==='water',id=water?'dock-pier':'rail-gantry',frame=LOGISTICS_FRAMES[id];
-  const [, ,w,h]=frame.box,scale=Math.min((water?124:110)/w,(water?94:68)/h);
-  const x=end+(water?144:-20),y=water?203:176;
+  const [, ,w,h]=frame.box,scale=Math.min((water?98:85)/w,(water?94:68)/h);
+  const x=end+(water?144:-20),y=water?256:246;
   return {x,y,rig:{x:x+(frame.rig.x-.5)*w*scale,y:y+(frame.rig.y-1)*h*scale}};
 }
 export function deliveryMaterial(stage,serial=0) {

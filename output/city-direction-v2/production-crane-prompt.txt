@@ -1,0 +1,4 @@
+Use case: precise-object-edit
+Asset type: standalone transparent production construction crane sprite for watercolor dioramas.
+Primary request: produce a bright yellow tower crane matching the attached reference, full mast grounded on base, upper lattice boom extending right. Detailed fine dark ink and saturated watercolor, preserve construction realism and natural proportions. Remove ALL hanging cables, hooks, crates and loads below the trolley; those are separate animated layers in the app. Keep the trolley at about 80% of the sprite width and 18% of height, with a clearly visible attachment for an animated cable. Leave the right side below the boom fully transparent. Transparent background, no people, no backdrop, no text. Whole crane visible and unclipped, mast high, clear boom silhouette, strong yellow safety paint.
+Input image: reference crane style and structure; this is a new cleaner animation-ready sprite.

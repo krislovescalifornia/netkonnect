@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.17.0 — 2026-10-10
+
+- Give all twenty growth levels distinct, vivid watercolor architecture and street layouts, including the estate's formal gardens, the neighborhood's shared courtyard and the city's dense blocks and tram traffic.
+- Assemble scenes from one hundred transparent architectural modules with proportional scaling. Complete individual measured work parcels while keeping established buildings opaque.
+- Add animated gardeners, builders, cyclists, passenger trams and swaying greenery alongside walking residents, machinery, cranes and visible material deliveries. Increase population and transit as cities grow.
+- Preserve live actors and animation timelines through polling, growth, sorting and resizing. Construction waits for measured incoming data while ambient life continues; pause, motion settings and reduced motion apply throughout.
+- Bundle the generated artwork offline and extend rendered visual checks for differentiated places, local construction progress, material handoffs and responsive layouts.
+
 ## 1.16.0 — 2026-10-10
 
 - Replace repeated house and tower work sites with twenty distinct imagegen watercolor architectural projects and eighty registered construction phases, from brick foundations and timber frames to scaffolded skyscrapers, green terraces and arcologies.

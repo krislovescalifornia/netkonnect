@@ -8,6 +8,7 @@ import { serviceDisplayLabel, transportHint } from './service-evidence.js';
 import {evidenceDetails} from './enrichment.js';
 import {worldRoute,routePoint,layoutWorld,updateWorldTime,infrastructure,laneLabelPosition,SkySchedule,drawSkySighting} from './world.js';
 import {updateSVGMarkup} from './render.js';
+import {livingDestination} from './living-city.js';
 export {vehicle} from './vehicles.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -52,7 +53,7 @@ export function journeyPose(journey,progress,cityScene=false,sceneEnd=655,route)
   const offset=mode==='air'?0:mode==='water'?6:11*cityVehicleScale(spec);
   const exit=sceneEnd+245+spec.width*cityVehicleScale(spec)/2;
   return {...point,x:journey.incoming?point.x+(exit-dock.x)*departure:point.x,y:point.y-offset-pullIn,angle:0,
-    deliveryX:dock.x,deliveryY:mode==='road'?118:dock.y-offset,
+    deliveryX:dock.x,deliveryY:mode==='road'?204:dock.y-offset,
     unloaded:journey.incoming?Math.max(0,Math.min(1,(progress-.65)/.09)):0,
     opacity:journey.incoming?Math.max(0,Math.min(1,(1-progress)/.12)):1};
 }
@@ -200,6 +201,7 @@ export class TransportAnimator {
             // Authored anchor -> scene coordinates without per-frame layout reads.
             const extent=record.sceneEnd+245;
             record.destination={x:extent*.16+(Number(site?.dataset.cityX)||220)/330*extent*.78-30,y:28+(Number(site?.dataset.cityY)||90)-12};
+            if(svg.querySelector('.living-diorama'))record.destination=livingDestination(site,record.sceneEnd);
             if(['rail','water'].includes(spec.mode))record.hoist=terminalGeometry(spec.mode,record.sceneEnd).rig;
           }
           nodes.set(journey.id,record);

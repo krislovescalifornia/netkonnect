@@ -2,6 +2,7 @@ import {illustratedCity,illustratedWorker,illustratedProp,illustratedConstructio
 import {illustratedSettlement,settlementTransform,illustratedResident,settlementHeight} from './settlement-art.js';
 import {worldBackdrop,worldRoads,worldNature,worldSky,worldTime,infrastructure} from './world.js';
 import {projectArtwork,PROJECT_NAMES,materialArtwork,deliveryMaterial,logisticsArtwork} from './construction-art.js';
+import {livingCityArtwork,updateLivingGrowth} from './living-city.js';
 // Illustrated architecture with independent live supply and crew layers.
 // These are measured-byte milestones; animation never manufactures usage.
 const MB=1024**2, GB=1024**3, TB=1024**4;
@@ -107,6 +108,7 @@ function cityDistricts(build,stage) {
 }
 
 export function cityArtwork(stage,progress=0,sceneKey='catalog',landscape=false,end=655) {
+  if(landscape)return livingCityArtwork(stage,cityConstruction(stage,progress),sceneKey,end);
   const cityImage=landscape?illustratedSettlement:illustratedCity;
   const person=options=>worker({...options,size:landscape?9:8});
   const anchor=(x,y)=>landscape?` class="city-activity-anchor" data-city-x="${x}" data-city-y="${y}"`:'';
@@ -147,6 +149,7 @@ export const CITY_ROUTE_SCENE=Object.freeze({height:280});
 // and animated crews in place instead of generating/parsing them every poll.
 export function updateCityGrowth(svg,stage,progress) {
   const build=cityConstruction(stage,progress),final=stage===CITY_STAGES.length-1;
+  if(svg.querySelector('.living-diorama')) {updateLivingGrowth(svg,build);return;}
   const growthHeight=svg.classList.contains('city-route-scene')?settlementHeight(Math.min(stage+1,CITY_STAGES.length-1)):145;
   const set=(node,name,value)=>{const text=String(value);if(node.getAttribute(name)!==text)node.setAttribute(name,text);};
   set(svg.querySelector('.city-established'),'opacity',final?1:1-build.progress*.95);
@@ -179,6 +182,6 @@ export function renderCity({key,bytes,busy=false,airdrop=false,convoy='',traffic
   // key is escaped by the caller; stage names and geometry are internal constants.
   const scene=CITY_ROUTE_SCENE;
   const end=655,growth=infrastructure(stage.index);
-  const world=convoy?`<g class="world-landscape">${worldBackdrop(stage.index)}<g class="world-infrastructure">${worldRoads(stage.index,end)}</g><g class="world-city" transform="translate(${end-80} 28)">${includeArtwork?cityArtwork(stage.index,stage.progress,key,true,end):''}</g><g class="world-decoration">${worldNature(stage.index,end)}</g></g><g class="world-atmosphere">${worldSky(stage.index,end,key)}</g>`:includeArtwork?cityArtwork(stage.index,stage.progress,key):'';
+  const world=convoy?`<g class="world-landscape">${worldBackdrop(stage.index)}<g class="world-infrastructure">${worldRoads(stage.index,end)}</g><g class="world-city" transform="translate(0 0)">${includeArtwork?cityArtwork(stage.index,stage.progress,key,true,end):''}</g><g class="world-decoration">${worldNature(stage.index,end)}</g></g><g class="world-atmosphere">${worldSky(stage.index,end,key)}</g>`:includeArtwork?cityArtwork(stage.index,stage.progress,key):'';
   return `<svg class="application-city ${convoy?'convoy-svg city-route-scene ':''}${busy?'city-working':'city-resting'} ${airdrop?'has-airdrop':''} ${stage.known?'':'city-unmeasured'}" data-city-key="${key}" data-stage="${stage.index}" data-progress="${stage.progress}" data-build-phase="${build.phase}" data-time="${worldTime(date).phase}" data-infrastructure="${growth.tier}" ${convoy} viewBox="${convoy?`0 -20 900 ${scene.height}`:'0 -20 330 178'}" role="img" aria-label="${stage.name}; ${stage.known?(stage.next?build.phase.toLowerCase()+' toward '+stage.next:'construction complete'):'awaiting measured supplies'}; ${growth.name.toLowerCase()}; ${busy?'construction crew working':'crew resting'}${trafficLabel?'; '+trafficLabel:''}">${world}</svg>`;
 }
