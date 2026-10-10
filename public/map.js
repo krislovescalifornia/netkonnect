@@ -6,11 +6,17 @@ import {illustratedDetail} from './illustration-art.js';
 import {vehicle,VEHICLE_STAGES,transportSpec} from './vehicles.js';
 import { serviceDisplayLabel, transportHint } from './service-evidence.js';
 import {evidenceDetails} from './enrichment.js';
-import {worldRoute,routePoint,layoutWorld,updateWorldTime,infrastructure} from './world.js';
+import {worldRoute,routePoint,layoutWorld,updateWorldTime,infrastructure,laneLabelPosition} from './world.js';
 import {updateSVGMarkup} from './render.js';
 export {vehicle} from './vehicles.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
+
+// Road overlays use a steady, whole-number Mbit/s reading.
+export function roadSpeed(bytesPerSecond) {
+  const value=bytesPerSecond==null||!Number.isFinite(bytesPerSecond)?'—':String(Math.round(Math.max(0,bytesPerSecond)*8/1e6));
+  return `<span class="speed-value">${value} <small>Mbit/s</small></span>`;
+}
 
 export function usageGraph(history,direction,known) {
   if(!known)return '<span class="usage-graph-empty" title="Awaiting measured hourly traffic">—</span>';
@@ -22,12 +28,19 @@ export function usageGraph(history,direction,known) {
 
 export function journeyPose(journey,progress,cityScene=false,sceneEnd=655,route) {
   if(!cityScene)return {x:journey.incoming?566-532*progress:34+532*progress,y:journey.incoming?19:51,unloaded:0,opacity:1,angle:0};
-  const mode=transportSpec(journey.type).mode;
-  const travel=journey.incoming?Math.min(1,progress/.82):1-progress;
-  const point=routePoint(route||worldRoute(journey.incoming?'download':'upload',mode,sceneEnd+(mode==='water'?155:0)),travel);
-  return {...point,y:point.y-(mode==='air'?0:mode==='water'?6:11*Math.min(.85,88/transportSpec(journey.type).width)),angle:0,
-    unloaded:journey.incoming?Math.max(0,Math.min(1,(progress-.84)/.08)):0,
-    opacity:journey.incoming?Math.min(1,(1-progress)/.04):1};
+  const spec=transportSpec(journey.type),mode=spec.mode;
+  const points=route||worldRoute(journey.incoming?'download':'upload',mode,sceneEnd+(mode==='water'?155:0));
+  const travel=journey.incoming?Math.min(1,progress/.62):1-progress;
+  const point=routePoint(points,travel),dock=routePoint(points,1);
+  const departure=Math.max(0,Math.min(1,(progress-.78)/.22));
+  // Pull into the delivery bay, hold while unloading, then merge and drive out.
+  const pullIn=journey.incoming&&mode==='road'?Math.min(1,Math.max(0,(progress-.50)/.12))*(1-Math.min(1,departure/.32))*8:0;
+  const offset=mode==='air'?0:mode==='water'?6:11*Math.min(.85,88/spec.width);
+  const exit=sceneEnd+245+spec.width*Math.min(.85,88/spec.width)/2;
+  return {...point,x:journey.incoming?point.x+(exit-dock.x)*departure:point.x,y:point.y-offset-pullIn,angle:0,
+    deliveryX:dock.x,deliveryY:dock.y-offset-(mode==='road'?8:0),
+    unloaded:journey.incoming?Math.max(0,Math.min(1,(progress-.65)/.09)):0,
+    opacity:journey.incoming?Math.max(0,Math.min(1,(1-progress)/.12)):1};
 }
 
 export class TransportAnimator {
@@ -153,7 +166,7 @@ export class TransportAnimator {
         const {cargo,parcel}=record;if(cargo)cargo.style.opacity=1-pose.unloaded;
         if(parcel) {
           parcel.style.opacity=pose.unloaded;
-          parcel.setAttribute('transform',`translate(8 ${pose.unloaded*12})`);
+          parcel.setAttribute('transform',`translate(${8+pose.deliveryX-pose.x} ${pose.deliveryY-pose.y+pose.unloaded*12})`);
           if(pose.unloaded>0 && !record.delivered) {
             record.delivered=true;
             this.deliveryTimes.set(svg,this.queue.now+1200);
@@ -230,7 +243,7 @@ export function renderNetworkMap({state,icon,rate,bytes,esc,scenes}) {
         <div class="city-app-card"><div class="city-app-heading" role="cell"><button class="route-origin" data-app="${esc(r.app)}">${brandBadge(appIdentity(r.app),'origin-mark')}<strong>${esc(appName(r.app))}</strong></button></div>
         ${usage('Total',r.totalBytes60m,'total','route-total')}${usage('Download',r.receivedBytes60m,'received','download-rate')}${usage('Upload',r.sentBytes60m,'sent','upload-rate')}</div>
         <div class="city-detail-card">
-        <div class="route-road route-city application-scene" role="cell"><div class="route-speeds" title="Smooth average · approximately 10 seconds"><span class="upload-rate"><small>← Upload</small>${rate(upload.rate)}</span><span class="download-rate"><small>Download →</small>${rate(download.rate)}</span></div>${renderCity({key:esc('application|'+r.key),bytes:cityBytes,busy:r.measured&&download.rate>0,airdrop:transportSpec(downloadType).mode==='air',convoy,includeArtwork,trafficLabel:esc('Downloads travel from the app into its city on the right; uploads return to the app on the left; '+fleetLabel)})}${!r.measured?'<span class="road-idle">Awaiting byte-level capture</span>':!download.rate&&!upload.rate?`<span class="road-idle">${r.connections.length?'Idle':'No active connections'}</span>`:''}</div>
+        <div class="route-road route-city application-scene" role="cell"><div class="route-speeds" title="Smooth average · approximately 10 seconds"><span class="upload-rate" style="--lane-y:${laneLabelPosition(uploadType,'upload')}%" title="Upload travels left toward the app · ${transportSpec(uploadType).mode}">${roadSpeed(upload.rate)}</span><span class="download-rate" style="--lane-y:${laneLabelPosition(downloadType,'download')}%" title="Download travels right into the city · ${transportSpec(downloadType).mode}">${roadSpeed(download.rate)}</span></div>${renderCity({key:esc('application|'+r.key),bytes:cityBytes,busy:r.measured&&download.rate>0,airdrop:transportSpec(downloadType).mode==='air',convoy,includeArtwork,trafficLabel:esc('Downloads travel from the app into its city on the right; uploads return to the app on the left; '+fleetLabel)})}${!r.measured?'<span class="road-idle">Awaiting byte-level capture</span>':!download.rate&&!upload.rate?`<span class="road-idle">${r.connections.length?'Idle':'No active connections'}</span>`:''}</div>
         <div class="city-world-meta"><span class="city-infrastructure">${infrastructure(stage.index).name}${infrastructure(stage.index).rail?' · Rail':''}${infrastructure(stage.index).port?' · River port':''}${infrastructure(stage.index).spaceport?' · Spaceport':infrastructure(stage.index).airport?' · Airport':''}</span><span class="city-world-clock"></span></div><div class="city-detail-footer"><div class="city-caption" role="cell" title="${esc(`${level}${stage.name} · ${bytes(cityBytes)} downloaded · ${milestone}`.replace(/<[^>]*>/g,''))}"><strong>${level}${stage.name}</strong><div class="city-download-progress"><span>${bytes(cityBytes)} downloaded</span>${stage.known?`<div class="city-progress" role="progressbar" aria-label="Growth toward ${stage.next || stage.name}" aria-valuetext="${esc(milestone.replace(/<[^>]*>/g,''))}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(stage.progress*100)}"><i style="width:${stage.progress*100}%"></i></div>`:''}</div></div>
         <div class="city-services" role="cell"><button class="route-terminal route-expand" data-map-expand="${esc(r.key)}" aria-expanded="${expanded?'true':'false'}" aria-controls="${esc(childrenId)}" aria-label="${expanded?'Hide':'Show'} ${count} for ${esc(appName(r.app))}" title="${expanded?'Hide':'Show'} ${state.mapDetail==='endpoint'?'endpoints':'services'}"><span><strong>${count}${state.mapDetail==='service'?' & destinations':''}</strong><small>${r.addresses.size} IP${r.addresses.size===1?'':'s'} · ${r.connections.length} active connection${r.connections.length===1?'':'s'}</small></span>${icon('chevron',14)}</button></div>
         </div>${expanded?`<div class="city-info" role="cell"><strong>Info</strong><span>PID ${esc([...r.pids].join(', '))}</span><span>${esc(protocols)}</span></div>`:''}</div></article>`;

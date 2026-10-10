@@ -1,4 +1,5 @@
 import {illustratedCity,illustratedWorker,illustratedProp,illustratedConstructionVehicle,illustratedBuilding,illustratedDetail} from './illustration-art.js';
+import {illustratedSettlement,settlementTransform,illustratedResident,settlementHeight} from './settlement-art.js';
 import {worldBackdrop,worldRoads,worldNature,worldSky,worldTime,infrastructure} from './world.js';
 // Illustrated architecture with independent live supply and crew layers.
 // These are measured-byte milestones; animation never manufactures usage.
@@ -22,8 +23,12 @@ export function cityStage(bytes) {
 export function worker(options={}) {
   return illustratedWorker(options);
 }
-export function cityHelpers(stage) {
-  return Array.from({length:Math.floor(stage/2)},(_,i)=>`<g data-helper="${i}" transform="translate(${48+(i*23)%165} ${i%2?138:134})"><g class="crew-walker" style="--walk-distance:${24+(i%3)*10}px;--walk-duration:${9+i%4}s;--walk-delay:-${i*1.7}s">${worker({woman:i%2===0,carry:i%3===0})}</g></g>`).join('');
+export function cityHelpers(stage,landscape=false) {
+  return Array.from({length:Math.floor(stage/2)},(_,i)=>`<g data-helper="${i}"${landscape?` class="city-activity-anchor" data-city-x="${48+(i*23)%165}" data-city-y="${i%2?98:94}"`:""} transform="translate(${48+(i*23)%165} ${i%2?138:134})"><g class="crew-walker" style="--walk-distance:${24+(i%3)*10}px;--walk-duration:${9+i%4}s;--walk-delay:-${i*1.7}s">${worker({woman:i%2===0,carry:i%3===0,size:landscape?12:8})}</g></g>`).join('');
+}
+export function cityResidents(stage) {
+  const count=Math.min(22,4+Math.max(0,stage));
+  return `<g class="city-residents">${Array.from({length:count},(_,i)=>`<g class="city-activity-anchor resident-home" data-render-key="resident-${i}" data-city-x="${20+i*290/(count-1)}" data-city-y="${i%2?93:89}" transform="translate(${20+i*290/(count-1)} ${i%2?93:89})"><g class="resident-walk" style="--walk-distance:${24+i%3*12}px;--walk-duration:${11+i%5}s;--walk-delay:-${i*1.3}s;--stride-delay:-${i*.17}s"><g class="resident-facing">${illustratedResident(i)}</g></g></g>`).join('')}</g>`;
 }
 const clamp=n=>Math.max(0,Math.min(1,n));
 const PHASES=['Foundations','Framing','Building floors','Finishing','Complete'];
@@ -43,52 +48,57 @@ export function cityConstruction(stage,progress=0) {
     phase:PHASES[progress===1?4:Math.min(3,Math.floor(progress*4))]};
 }
 
-function buildingSite(site,i) {
+function buildingSite(site,i,landscape=false) {
   const {built,x,height,house}=site,width=house?36:42;
   const platform=Math.min(height-4,height*(.18+.82*built));
-  return `<g class="city-project" data-render-key="project-${i}" data-build-progress="${built.toFixed(4)}" data-build-phase="${site.phase}" opacity="${1-clamp((built-.86)/.14)}" transform="translate(${x+12} 128)">
+  return `<g class="city-project${landscape?' city-activity-anchor':''}"${landscape?` data-city-x="${x+12}" data-city-y="88"`:""} data-render-key="project-${i}" data-build-progress="${built.toFixed(4)}" data-build-phase="${site.phase}" opacity="${1-clamp((built-.86)/.14)}" transform="translate(${x+12} 128)">
     <title>${house?'House':'Tower'} · ${site.phase.toLowerCase()}</title>
     <g class="building-illustration">${illustratedBuilding(house,built,width,height+12)}</g>
     <g class="site-scaffolding" opacity="${1-clamp((built-.84)/.16)}">
-      <g transform="translate(${width*.35} -${platform})"><g class="crew-builder" style="animation-delay:-${i*.7}s">${worker({woman:i%2===0})}</g></g>
+      <g transform="translate(${width*.35} -${platform})"><g class="crew-builder" style="animation-delay:-${i*.7}s">${worker({woman:i%2===0,size:landscape?12:8})}</g></g>
     </g>
   </g>`;
 }
 
-function siteVehicle(i,stage) {
+function siteVehicle(i,stage,landscape=false) {
   // Render original imagegen pixels; paint choices stay stable across updates.
   const id=i===1?'cement-mixer':'excavator';
-  return `<g data-render-key="site-vehicle-${i}" transform="translate(${i===0?59:i===1?172:242} ${i===1?145:142})">
+  return `<g data-render-key="site-vehicle-${i}"${landscape?` class="city-activity-anchor" data-city-x="${i===0?59:i===1?172:242}" data-city-y="${i===1?97:94}"`:""} transform="translate(${i===0?59:i===1?172:242} ${i===1?145:142})">
     <g class="site-vehicle" style="--machine-delay:-${i*3}s;--machine-direction:${i===2?-1:1}">
       <g transform="scale(${i===2?-1:1} 1)">${illustratedConstructionVehicle(id,stage+i)}</g>
     </g>
   </g>`;
 }
 
-export function cityArtwork(stage,progress=0,sceneKey='catalog') {
+export function cityArtwork(stage,progress=0,sceneKey='catalog',landscape=false,end=655) {
+  const cityImage=landscape?illustratedSettlement:illustratedCity;
+  const person=options=>worker({...options,size:landscape?12:8});
+  const anchor=(x,y)=>landscape?` class="city-activity-anchor" data-city-x="${x}" data-city-y="${y}"`:'';
   const build=cityConstruction(stage,progress),next=Math.min(stage+1,CITY_STAGES.length-1);
+  const growthHeight=landscape?settlementHeight(next):145;
   const clipId='city-rise-'+stage+'-'+encodeURIComponent(sceneKey).replace(/%/g,'_');
   const cranes=Array.from({length:build.cranes},(_,i)=>{
     const x=build.cranes===1?286:42+i*244/(build.cranes-1),height=61+(i%3)*21;
-    return `<g class="site-crane" data-render-key="crane-${i}" transform="translate(${x} 0)" style="--hoist-delay:-${i*2.3}s;--hoist-duration:${9+i%3*2}s">
+    return `<g class="site-crane${landscape?' city-activity-anchor':''}"${landscape?` data-city-x="${x}" data-city-y="-38"`:""} data-render-key="crane-${i}" transform="translate(${x} 0)" style="--hoist-delay:-${i*2.3}s;--hoist-duration:${9+i%3*2}s">
       ${illustratedProp('crane',height*.65,126,height)}
       <g transform="translate(12 ${119-height*.55})"><g class="crane-load">${illustratedDetail('crane-load',10,6,22)}</g></g>
     </g>`;
   }).join('');
   return `<g class="city-linework" fill="none" stroke="#385065" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round">
-    <g class="city-buildings">
-      <g class="city-established" opacity="${stage===next?1:1-build.progress*.95}">${illustratedCity(stage).replace('class="city-buildings"','class="city-illustration"')}</g>
-      <defs><clipPath id="${clipId}">${build.sites.map((site,i)=>`<rect x="${i*330/build.sites.length}" y="${129-145*site.built}" width="${330/build.sites.length+.5}" height="${145*site.built}"/>`).join('')}</clipPath></defs>
-      <g class="city-rising" clip-path="url(#${clipId})" opacity="${stage===next?0:clamp(build.progress*5)}">${illustratedCity(next).replace('class="city-buildings"','class="city-illustration"')}</g>
+    <g class="city-buildings"${landscape?` data-growth-height="${growthHeight}"`:""}${landscape?` transform="${settlementTransform(end)}"`:""}>
+      <g class="city-established" opacity="${stage===next?1:1-build.progress*.95}">${cityImage(stage).replace('class="city-buildings"','class="city-illustration"')}</g>
+      <defs><clipPath id="${clipId}">${build.sites.map((site,i)=>`<rect x="${i*330/build.sites.length}" y="${129-growthHeight*site.built}" width="${330/build.sites.length+.5}" height="${growthHeight*site.built}"/>`).join('')}</clipPath></defs>
+      <g class="city-rising" clip-path="url(#${clipId})" opacity="${stage===next?0:clamp(build.progress*5)}">${cityImage(next).replace('class="city-buildings"','class="city-illustration"')}</g>
     </g>
+    ${landscape?cityResidents(stage):''}
     <g class="construction-site">${cranes}</g>
-    <g class="city-projects">${build.sites.map(buildingSite).join('')}</g>
-    <g class="city-site-vehicles">${Array.from({length:build.vehicles},(_,i)=>siteVehicle(i,stage)).join('')}</g>
-    <g class="site-supplies" transform="translate(267 139)"><g transform="translate(5 0)">${illustratedDetail('site-supplies',34,0,15)}</g></g>
-    <g transform="translate(292 135)"><g class="crew-carrier">${worker({woman:true,carry:true})}</g></g>
-    <g transform="translate(258 135)"><g class="crew-builder">${worker()}</g></g>
-    <g transform="translate(85 135)"><g class="crew-receiver">${worker({woman:true})}</g></g>
-    <g class="city-helpers">${cityHelpers(stage)}</g>
+    <g class="city-projects">${build.sites.map((site,i)=>buildingSite(site,i,landscape)).join('')}</g>
+    <g class="city-site-vehicles">${Array.from({length:build.vehicles},(_,i)=>siteVehicle(i,stage,landscape)).join('')}</g>
+    <g class="site-supplies${landscape?' city-activity-anchor':''}"${landscape?' data-city-x="267" data-city-y="96"':''} transform="translate(267 139)"><g transform="translate(5 0)">${illustratedDetail('site-supplies',34,0,15)}</g></g>
+    <g${anchor(292,97)} transform="translate(292 135)"><g class="crew-carrier">${person({woman:true,carry:true})}</g></g>
+    <g${anchor(258,96)} transform="translate(258 135)"><g class="crew-builder">${person()}</g></g>
+    <g${anchor(85,95)} transform="translate(85 135)"><g class="crew-receiver">${person({woman:true})}</g></g>
+    <g class="city-helpers">${cityHelpers(stage,landscape)}</g>
     <g class="city-airdrop">${illustratedProp('airdrop',25,39,39)}</g>
   </g>`;
 }
@@ -99,12 +109,13 @@ export const CITY_ROUTE_SCENE=Object.freeze({height:280});
 // and animated crews in place instead of generating/parsing them every poll.
 export function updateCityGrowth(svg,stage,progress) {
   const build=cityConstruction(stage,progress),final=stage===CITY_STAGES.length-1;
+  const growthHeight=svg.classList.contains('city-route-scene')?settlementHeight(Math.min(stage+1,CITY_STAGES.length-1)):145;
   const set=(node,name,value)=>{const text=String(value);if(node.getAttribute(name)!==text)node.setAttribute(name,text);};
   set(svg.querySelector('.city-established'),'opacity',final?1:1-build.progress*.95);
   set(svg.querySelector('.city-rising'),'opacity',final?0:clamp(build.progress*5));
   const clips=svg.querySelectorAll('.city-buildings clipPath rect'),projects=svg.querySelectorAll('.city-project');
   build.sites.forEach((site,i)=>{
-    set(clips[i],'y',129-145*site.built);set(clips[i],'height',145*site.built);
+    set(clips[i],'y',129-growthHeight*site.built);set(clips[i],'height',growthHeight*site.built);
     const project=projects[i],platform=Math.min(site.height-4,site.height*(.18+.82*site.built));
     set(project,'data-build-progress',site.built.toFixed(4));set(project,'data-build-phase',site.phase);
     set(project,'opacity',1-clamp((site.built-.86)/.14));
@@ -124,6 +135,6 @@ export function renderCity({key,bytes,busy=false,airdrop=false,convoy='',traffic
   // key is escaped by the caller; stage names and geometry are internal constants.
   const scene=CITY_ROUTE_SCENE;
   const end=655,growth=infrastructure(stage.index);
-  const world=convoy?`${worldBackdrop(stage.index)}<g class="world-infrastructure">${worldRoads(stage.index,end)}</g><g class="world-city" transform="translate(${end-80} 28)">${includeArtwork?cityArtwork(stage.index,stage.progress,key):''}</g><g class="world-decoration">${worldNature(stage.index,end)}</g><g class="world-atmosphere">${worldSky(stage.index,end)}</g>`:includeArtwork?cityArtwork(stage.index,stage.progress,key):'';
+  const world=convoy?`<g class="world-landscape">${worldBackdrop(stage.index)}<g class="world-infrastructure">${worldRoads(stage.index,end)}</g><g class="world-city" transform="translate(${end-80} 28)">${includeArtwork?cityArtwork(stage.index,stage.progress,key,true,end):''}</g><g class="world-decoration">${worldNature(stage.index,end)}</g></g><g class="world-atmosphere">${worldSky(stage.index,end)}</g>`:includeArtwork?cityArtwork(stage.index,stage.progress,key):'';
   return `<svg class="application-city ${convoy?'convoy-svg city-route-scene ':''}${busy?'city-working':'city-resting'} ${airdrop?'has-airdrop':''} ${stage.known?'':'city-unmeasured'}" data-city-key="${key}" data-stage="${stage.index}" data-progress="${stage.progress}" data-build-phase="${build.phase}" data-time="${worldTime(date).phase}" data-infrastructure="${growth.tier}" ${convoy} viewBox="${convoy?`0 -20 900 ${scene.height}`:'0 -20 330 178'}" role="img" aria-label="${stage.name}; ${stage.known?(stage.next?build.phase.toLowerCase()+' toward '+stage.next:'construction complete'):'awaiting measured supplies'}; ${growth.name.toLowerCase()}; ${busy?'construction crew working':'crew resting'}${trafficLabel?'; '+trafficLabel:''}">${world}</svg>`;
 }

@@ -1,0 +1,76 @@
+{
+  "tool": "built-in image_gen",
+  "date": "2026-10-09",
+  "useCase": "stylized-concept",
+  "references": [
+    "artwork/world/backgrounds/level-10-town-v1.png",
+    "artwork/cities/town.png"
+  ],
+  "lighting": "Original daylight pixels and alpha preserved. One shared landscape grade and atmospheric wash apply to backgrounds, settlements, roads, props and construction at sunrise, day, sunset and night.",
+  "atlases": [
+    {
+      "id": "rural",
+      "stages": [
+        "Shack",
+        "Cabin",
+        "House",
+        "Homestead"
+      ],
+      "file": "rural-v2.png",
+      "prompt": "Use case: stylized-concept\nAsset type: ONE transparent city progression sprite atlas for a watercolor network observatory.\nInput images: Image 1 is the landscape style/perspective reference; Image 2 is an architectural detail reference ONLY. Replace its isometric diorama perspective with landscape perspective.\nPrimary request: Create one landscape PNG atlas with FOUR clearly separated panoramic settlement strips stacked vertically, with equal height cells and generous fully transparent gutters. Each strip has its own distinct growth stage, TOP TO BOTTOM: (1) Shack: one tiny rustic shack among wide woodland shrubs. (2) Cabin: modest timber cabin and garden shed in a clearing. (3) House: warm ivory country house, terracotta roof, orchard and garden. (4) Homestead: farmhouse, barns, vegetable plots, fences, windmill and orchard spanning a broad rural settlement.\nStyle: match the reference's fine navy ink outlines and watercolor, sage foliage, ivory walls, subdued terracotta, atmospheric landscape scale. Eye-level panoramic landscape perspective, no isometric tabletop, no floating island.\nComposition: 1536x1024 canvas with four horizontal bands, each band panoramic about 1400x190 pixels. Building bases aligned along a single horizontal line near bottom of each cell. Transparent sky above silhouettes; scattered natural shrubs create soft irregular lower edges. Green ground limited to a thin feathered band at the bases. Each strip spreads settlement and foliage nearly full width, architecture modest not giant. Occupied pixels confined to their own row; leave 20px empty gutter above and below each row and side padding. Pure alpha background, no baked sky, mountains, backdrop, roads, moving vehicles, labels, text, grid lines, shadows on a rectangle, or checkerboard. Daylight softly lit to match the panorama reference. The app applies one shared time-of-day grade to the entire scene.",
+      "source": "exec-0ed30008-3735-47b5-91a7-06dfc4d1c7fa.png"
+    },
+    {
+      "id": "residential",
+      "stages": [
+        "Mansion",
+        "Estate",
+        "Neighborhood",
+        "Suburb"
+      ],
+      "description": "(1) Mansion: stately ivory manor, terracotta roofs, elegant formal gardens, trees and guesthouse. (2) Estate: broad country estate with mansion, several cottages, conservatory, garden walls and orchards. (3) Neighborhood: varied family houses in a leafy residential street with community garden. (4) Suburb: denser low-rise houses, small shops, school and landscaped neighborhood blocks.",
+      "prompt": "Use case: stylized-concept\nAsset type: ONE transparent city progression sprite atlas for a watercolor network observatory.\nInput images: Image 1 is the landscape style/perspective reference; Image 2 is an architectural detail reference ONLY. Replace its isometric diorama perspective with landscape perspective.\nPrimary request: Create one landscape PNG atlas with FOUR clearly separated panoramic settlement strips stacked vertically, with equal height cells and generous fully transparent gutters. Each strip has its own distinct growth stage, TOP TO BOTTOM: (1) Mansion: stately ivory manor, terracotta roofs, elegant formal gardens, trees and guesthouse. (2) Estate: broad country estate with mansion, several cottages, conservatory, garden walls and orchards. (3) Neighborhood: varied family houses in a leafy residential street with community garden. (4) Suburb: denser low-rise houses, small shops, school and landscaped neighborhood blocks.\nStyle: match the reference's fine navy ink outlines and watercolor, sage foliage, ivory walls, subdued terracotta, atmospheric landscape scale. Eye-level panoramic landscape perspective, no isometric tabletop, no floating island.\nComposition: 1536x1024 canvas with four horizontal bands, each band panoramic about 1400x190 pixels. Building bases aligned along a single horizontal line near bottom of each cell. Transparent sky above silhouettes; scattered natural shrubs create soft irregular lower edges. Green ground limited to a thin feathered band at the bases. Each strip spreads settlement and foliage nearly full width, architecture fills a broad continuous skyline, no giant foreground building. Occupied pixels confined to their own row; leave 20px empty gutter above and below each row and side padding. Pure alpha background, no baked sky, mountains, backdrop, roads, moving vehicles, labels, text, grid lines, shadows on a rectangle, or checkerboard. Daylight softly lit to match the panorama reference. The app applies one shared time-of-day grade to the entire scene.",
+      "source": "exec-aa8a6d6f-c8b6-4da3-9b9c-061902896b1d.png",
+      "file": "residential-v2.png"
+    },
+    {
+      "id": "civic",
+      "stages": [
+        "Village",
+        "Town",
+        "City",
+        "Regional city"
+      ],
+      "description": "(1) Village: picturesque village street of cottages, bakery, small church and gardens. (2) Town: long lively town street, cafes, market hall, clock tower and terracotta townhouses. (3) City: lively mid-rise ivory urban blocks, civic buildings, blue-glass offices and urban trees. (4) Regional city: a broad varied skyline of mid-rise blocks, glass offices, railway terminal architecture and leafy plazas.",
+      "prompt": "Use case: stylized-concept\nAsset type: ONE transparent city progression sprite atlas for a watercolor network observatory.\nInput images: Image 1 is the landscape style/perspective reference; Image 2 is an architectural detail reference ONLY. Replace its isometric diorama perspective with landscape perspective.\nPrimary request: Create one landscape PNG atlas with FOUR clearly separated panoramic settlement strips stacked vertically, with equal height cells and generous fully transparent gutters. Each strip has its own distinct growth stage, TOP TO BOTTOM: (1) Village: picturesque village street of cottages, bakery, small church and gardens. (2) Town: long lively town street, cafes, market hall, clock tower and terracotta townhouses. (3) City: lively mid-rise ivory urban blocks, civic buildings, blue-glass offices and urban trees. (4) Regional city: a broad varied skyline of mid-rise blocks, glass offices, railway terminal architecture and leafy plazas.\nStyle: match the reference's fine navy ink outlines and watercolor, sage foliage, ivory walls, subdued terracotta, atmospheric landscape scale. Eye-level panoramic landscape perspective, no isometric tabletop, no floating island.\nComposition: 1536x1024 canvas with four horizontal bands, each band panoramic about 1400x190 pixels. Building bases aligned along a single horizontal line near bottom of each cell. Transparent sky above silhouettes; scattered natural shrubs create soft irregular lower edges. Green ground limited to a thin feathered band at the bases. Each strip spreads settlement and foliage nearly full width, architecture fills a broad continuous skyline, no giant foreground building. Occupied pixels confined to their own row; leave 20px empty gutter above and below each row and side padding. Pure alpha background, no baked sky, mountains, backdrop, roads, moving vehicles, labels, text, grid lines, shadows on a rectangle, or checkerboard. Daylight softly lit to match the panorama reference. The app applies one shared time-of-day grade to the entire scene.",
+      "source": "exec-f2a68c8a-a997-48ed-bb61-c192667d9b49.png",
+      "file": "civic-v2.png"
+    },
+    {
+      "id": "metropolitan",
+      "stages": [
+        "Metropolis",
+        "Capital",
+        "Megacity",
+        "Green megacity"
+      ],
+      "description": "(1) Metropolis: dense contemporary skyline with ivory masonry blocks and taller blue-glass office towers. (2) Capital: distinguished civic skyline with domed government hall and modern towers. (3) Megacity: broad dense skyline with many varied skyscrapers and connected urban blocks. (4) Green megacity: similarly dense towers integrated with abundant hanging gardens, rooftop forests, green terraces and botanical architecture.",
+      "prompt": "Use case: stylized-concept\nAsset type: ONE transparent city progression sprite atlas for a watercolor network observatory.\nInput images: Image 1 is the landscape style/perspective reference; Image 2 is an architectural detail reference ONLY. Replace its isometric diorama perspective with landscape perspective.\nPrimary request: Create one landscape PNG atlas with FOUR clearly separated panoramic settlement strips stacked vertically, with equal height cells and generous fully transparent gutters. Each strip has its own distinct growth stage, TOP TO BOTTOM: (1) Metropolis: dense contemporary skyline with ivory masonry blocks and taller blue-glass office towers. (2) Capital: distinguished civic skyline with domed government hall and modern towers. (3) Megacity: broad dense skyline with many varied skyscrapers and connected urban blocks. (4) Green megacity: similarly dense towers integrated with abundant hanging gardens, rooftop forests, green terraces and botanical architecture.\nStyle: match the reference's fine navy ink outlines and watercolor, sage foliage, ivory walls, subdued terracotta, atmospheric landscape scale. Eye-level panoramic landscape perspective, no isometric tabletop, no floating island.\nComposition: 1536x1024 canvas with four horizontal bands, each band panoramic about 1400x190 pixels. Building bases aligned along a single horizontal line near bottom of each cell. Transparent sky above silhouettes; scattered natural shrubs create soft irregular lower edges. Green ground limited to a thin feathered band at the bases. Each strip spreads settlement and foliage nearly full width, architecture forms a broad continuous skyline, silhouettes confined to each band, no giant foreground buildings. Occupied pixels confined to their own row; leave 20px empty gutter above and below each row and side padding. Pure alpha background, no baked sky, mountains, backdrop, roads, moving vehicles, labels, text, grid lines, shadows on a rectangle, or checkerboard. Daylight softly lit to match the panorama reference. The app applies one shared time-of-day grade to the entire scene.",
+      "source": "exec-60beee34-c1a8-4155-b069-9569234c72db.png",
+      "file": "metropolitan-v2.png"
+    },
+    {
+      "id": "future",
+      "stages": [
+        "Smart metropolis",
+        "Arcology",
+        "Orbital gateway",
+        "Space-age metropolis"
+      ],
+      "description": "(1) Smart metropolis: optimistic sophisticated city skyline, elegant smart towers, landscaped terraces and sleek transit terminals. (2) Arcology: large integrated sculptural ecological habitats, stepped towers and gardens. (3) Orbital gateway: futuristic skyline with elegant spaceport terminal architecture and grounded orbital elevator spires. (4) Space-age metropolis: advanced ivory-and-blue-glass space-age skyline, airy sculptural towers and floating garden structures incorporated into the architecture. Keep grounded architectural silhouettes; no moving aircraft or spacecraft.",
+      "prompt": "Use case: stylized-concept\nAsset type: ONE transparent city progression sprite atlas for a watercolor network observatory.\nInput images: Image 1 is the landscape style/perspective reference; Image 2 is an architectural detail reference ONLY. Replace its isometric diorama perspective with landscape perspective.\nPrimary request: Create one landscape PNG atlas with FOUR clearly separated panoramic settlement strips stacked vertically, with equal height cells and generous fully transparent gutters. Each strip has its own distinct growth stage, TOP TO BOTTOM: (1) Smart metropolis: optimistic sophisticated city skyline, elegant smart towers, landscaped terraces and sleek transit terminals. (2) Arcology: large integrated sculptural ecological habitats, stepped towers and gardens. (3) Orbital gateway: futuristic skyline with elegant spaceport terminal architecture and grounded orbital elevator spires. (4) Space-age metropolis: advanced ivory-and-blue-glass space-age skyline, airy sculptural towers and floating garden structures incorporated into the architecture. Keep grounded architectural silhouettes; no moving aircraft or spacecraft.\nStyle: match the reference's fine navy ink outlines and watercolor, sage foliage, ivory walls, subdued terracotta, atmospheric landscape scale. Eye-level panoramic landscape perspective, no isometric tabletop, no floating island.\nComposition: 1536x1024 canvas with four horizontal bands, each band panoramic about 1400x190 pixels. Building bases aligned along a single horizontal line near bottom of each cell. Transparent sky above silhouettes; scattered natural shrubs create soft irregular lower edges. Green ground limited to a thin feathered band at the bases. Each strip spreads settlement and foliage nearly full width, architecture forms a broad continuous skyline, silhouettes confined to each band, no giant foreground buildings. Occupied pixels confined to their own row; leave 20px empty gutter above and below each row and side padding. Pure alpha background, no baked sky, mountains, backdrop, roads, moving vehicles, labels, text, grid lines, shadows on a rectangle, or checkerboard. Daylight softly lit to match the panorama reference. The app applies one shared time-of-day grade to the entire scene.",
+      "source": "exec-aa6e0965-9f33-49a4-89ca-dd9959b045b4.png",
+      "file": "future-v2.png"
+    }
+  ]
+}

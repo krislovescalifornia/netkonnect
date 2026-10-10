@@ -27,6 +27,8 @@ await run('scripts/qa-app-icons.mjs', [], join(root,'node_modules','electron','d
 const iconQA=JSON.parse(await readFile(join(root,'test-results','app-icon-tiers','qa.json'),'utf8'));
 if(!(iconQA.verifiedAt>=iconQAStarted))throw new Error('Icon visual QA did not produce a fresh verified result.');
 await run('scripts/qa-transport-world.mjs', [], join(root,'node_modules','electron','dist','electron.exe'));
+await run('scripts/qa-settlements.mjs', [], join(root,'node_modules','electron','dist','electron.exe'));
+await run('scripts/qa-animation.mjs', ['--growing'], join(root,'node_modules','electron','dist','electron.exe'));
 await run('scripts/icon.mjs');
 await run('node_modules/electron-builder/out/cli/cli.js', ['--win', ...(process.argv.includes('--dir') ? ['--dir'] : ['nsis']), `--config.directories.output=${output}`, `--config.electronDist=${join(root,'node_modules','electron','dist')}`]);
 await verifyPackage(join(output, 'win-unpacked'));

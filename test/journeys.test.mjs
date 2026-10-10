@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {JourneyQueue} from '../public/routes.js';
-import {vehicle,journeyPose} from '../public/map.js';
+import {vehicle,journeyPose,roadSpeed} from '../public/map.js';
 import {VEHICLE_STAGES} from '../public/vehicles.js';
 
 const settings = (type='truck',rate=400000,key='route|download',incoming=true) => ({key,type,rate,incoming});
@@ -134,18 +134,22 @@ test('supply sprites carry wood, crates and walking helpers in both directions',
   }
 });
 
-test('downloads flow from the app into the city on the right and unload; uploads return left',()=>{
+test('downloads stop to unload then depart right and fade; uploads return left',()=>{
   for(const type of VEHICLE_STAGES.map(s=>s.id)) {
     const incoming={incoming:true,type},outgoing={incoming:false,type};
     assert.ok(journeyPose(incoming,.5,true).x>journeyPose(incoming,0,true).x);
-    const arrival=journeyPose(incoming,.82,true),delivery=journeyPose(incoming,.93,true);
+    const arrival=journeyPose(incoming,.62,true),delivery=journeyPose(incoming,.75,true),departure=journeyPose(incoming,.9,true);
     const mode=VEHICLE_STAGES.find(s=>s.id===type).mode,end=655+(mode==='water'?155:0);
     assert.equal(arrival.x,end);assert.equal(delivery.x,arrival.x);
     assert.equal(arrival.unloaded,0);assert.equal(delivery.unloaded,1);
+    assert.equal(delivery.opacity,1);assert.ok(departure.x>delivery.x);
+    assert.equal(departure.unloaded,1);assert.ok(departure.opacity<1);
+    assert.equal(departure.deliveryX,delivery.x);
+    assert.ok(journeyPose(incoming,1,true).x>900);assert.equal(journeyPose(incoming,1,true).opacity,0);
     assert.equal(journeyPose(outgoing,0,true).x,end);
     assert.equal(journeyPose(outgoing,1,true).x,28);
     assert.equal(journeyPose(outgoing,.93,true).unloaded,0);
-    const baseline={road:[132,164],rail:[184,200],water:[216,244],air:[32,67]}[mode];
+    const baseline={road:[124,204],rail:[150,226],water:[176,248],air:[32,67]}[mode];
     const offset=mode==='air'?0:mode==='water'?6:11*Math.min(.85,88/VEHICLE_STAGES.find(s=>s.id===type).width);
     assert.equal(journeyPose(incoming,0,true).y,baseline[0]-offset);
     assert.equal(journeyPose(outgoing,0,true).y,baseline[1]-offset);
@@ -154,4 +158,10 @@ test('downloads flow from the app into the city on the right and unload; uploads
       assert.equal(journeyPose(outgoing,t,true).angle,0);
     }
   }
+});
+
+
+test('road overlays show whole Mbit/s numbers for measured rates and an unknown reading',()=>{
+  for(const [rate,value] of [[0,'0'],[125000,'1'],[1250000,'10'],[12500000,'100'],[null,'—']])
+    assert.equal(roadSpeed(rate),`<span class="speed-value">${value} <small>Mbit/s</small></span>`);
 });

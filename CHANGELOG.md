@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.14.0 — 2026-10-09
+
+- Expand all twenty measured city stages into integrated watercolor settlements with residents, crews, cranes, machinery and construction spread throughout the scene.
+- Keep ambient residents walking while construction waits for measured downloads; preserve animation timelines across polling, growth, sorting and resizing, and honor pause and reduced motion.
+- Spread the download and upload roads farther apart. Overlay plain bold italic whole-number Mbit/s readings on the left of both routes, without colored badges or borders.
+- Let incoming vehicles pull into the city, unload their goods, then continue to the right and fade out. Keep dropped parcels at the delivery point during departure.
+- Verify responsive city layouts, visible delivery phases, measured construction progression, local lighting and animation continuity in the rendered UI.
+
 ## 1.13.0 — 2026-10-08
 
 - Add twenty distinct city backgrounds with local-clock lighting, clouds and birds; bundle the complete painted world with the evolving transport routes.

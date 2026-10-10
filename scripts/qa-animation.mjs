@@ -16,7 +16,7 @@ app.whenReady().then(async()=>{
     sample++;
     const s=demoSnapshot(),connection=s.connections.find(c=>c.scope==='Internet'&&c.pid!==0);
     s.connections=Array.from({length:10},(_,i)=>({...connection,id:`animation-${i}`,app:`animation-${i}`,pid:100+i,receiveRate:3*1024**2,sendRate:1024**2}));
-    s.traffic.cityUsage=s.connections.map(c=>({app:c.app,receivedBytesTotal:growing?512*1024**3+sample*2*1024**3:1024**4}));
+    s.traffic.cityUsage=s.connections.map(c=>({...c,receivedBytesTotal:growing?512*1024**3+sample*2*1024**3:1024**4,sentBytesTotal:0}));
     s.traffic.usageConnections=[];
     return {snapshot:s,interval:2000,collecting:false,error:null};
   };
@@ -33,12 +33,12 @@ app.whenReady().then(async()=>{
       const {updateMarkup}=await import('/render.js');
       // Direct growth updates must agree with a fresh render in every tier.
       const growthRoot=document.createElement('div');
-      for(let stage=0;stage<CITY_STAGES.length;stage++) {
+      for(const convoy of ['','data-route-key="growth-probe"'])for(let stage=0;stage<CITY_STAGES.length;stage++) {
         const bytes=progress=>CITY_STAGES[stage].at+(CITY_STAGES[stage+1]?.at-CITY_STAGES[stage].at||0)*progress;
-        growthRoot.innerHTML=renderCity({key:'growth-probe',bytes:bytes(0)});
+        growthRoot.innerHTML=renderCity({key:'growth-probe',bytes:bytes(0),convoy});
         for(const progress of [.1,.3,.6,.9]) {
-          updateMarkup(growthRoot,renderCity({key:'growth-probe',bytes:bytes(progress),includeArtwork:false}));
-          const expected=document.createElement('div');expected.innerHTML=renderCity({key:'growth-probe',bytes:bytes(progress)});
+          updateMarkup(growthRoot,renderCity({key:'growth-probe',bytes:bytes(progress),convoy,includeArtwork:false}));
+          const expected=document.createElement('div');expected.innerHTML=renderCity({key:'growth-probe',bytes:bytes(progress),convoy});
           for(const layer of ['.city-buildings','.city-projects']) {
             if(growthRoot.querySelector(layer).outerHTML!==expected.querySelector(layer).outerHTML)throw new Error('Growth mismatch at tier '+stage+', progress '+progress+', layer '+layer);
           }

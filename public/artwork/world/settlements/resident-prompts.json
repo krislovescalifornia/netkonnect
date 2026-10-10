@@ -1,0 +1,21 @@
+{
+  "tool": "built-in image_gen",
+  "date": "2026-10-09",
+  "source": "exec-ef61016b-c413-4d56-b3c2-236141984722.png",
+  "file": "residents-v1.png",
+  "reference": "artwork/world/backgrounds/level-10-town-v1.png",
+  "prompt": "Use case: stylized-concept\nAsset type: ONE genuinely transparent walking-pedestrian animation sprite atlas for a living watercolor city.\nInput image: architectural landscape is the watercolor/ink style reference.\nCreate a 1536x1024 RGBA atlas, EXACTLY 4 equal columns by 2 equal rows. Every cell is 384x512. TOP ROW: the same adult woman in casual sage jacket, warm ochre trousers, small shoulder bag, FOUR consecutive side-profile walking-right poses forming one walk cycle: left leg forward / legs passing / right leg forward / legs passing. BOTTOM ROW: the same adult man in muted blue casual shirt, terracotta scarf and navy trousers, FOUR corresponding walking-right poses. Full body, natural ordinary residents, no hard hats or construction gear. All eight sprites isolated on true transparent alpha. Fine navy ink linework and watercolor details, ivory highlights, colors matching the town landscape. Consistent character proportions, clothing, face, height and foot baseline across each row. Full body height about 410px in each 512px cell, foot contact at 470px, centered at x=192 of each cell. At least 30px transparent gutter on all sides of every cell. Broadside side profile, face looking right. Emphasize clear separate arm and leg silhouettes that read at small sizes. Absolutely no scenery, ground patch, shadows, labels, text, grid lines, matte, checkerboard, or background.",
+  "layout": {
+    "source": [
+      1536,
+      1024
+    ],
+    "columns": 4,
+    "rows": 2,
+    "cell": [
+      384,
+      512
+    ]
+  },
+  "use": "Four walk poses animate inside a clipped viewport. Residents stroll independently of traffic; app pause and reduced motion stop all street animation. Source pixels and alpha are unchanged."
+}

@@ -1,3 +1,5 @@
+import {SETTLEMENT_ASSETS,settlementTransform,layoutSettlementActivity} from './settlement-art.js';
+import {transportSpec} from './vehicles.js';
 import {TRANSPORT_FRAMES} from './artwork/world/transport/frames.js';
 // Infrastructure uses measured growth. The sky follows the computer's local clock.
 export const WORLD_BACKGROUNDS=Object.freeze([
@@ -102,12 +104,12 @@ export const WORLD_BACKGROUNDS=Object.freeze([
     "file": "artwork/world/backgrounds/level-20-space-age-metropolis-v1.png"
   }
 ]);
-export const WORLD_ASSETS=['artwork/world/meadow-v1.png','artwork/world/environment-v1.png',...WORLD_BACKGROUNDS.map(background=>background.file),
+export const WORLD_ASSETS=[...SETTLEMENT_ASSETS,'artwork/world/meadow-v1.png','artwork/world/environment-v1.png',...WORLD_BACKGROUNDS.map(background=>background.file),
   'artwork/world/transport/frames.js',...new Set(Object.values(TRANSPORT_FRAMES).map(frame=>frame.file))];
 export const WORLD_ROUTE_BASELINES=Object.freeze({
-  road:Object.freeze({download:132,upload:164}),
-  rail:Object.freeze({download:184,upload:200}),
-  water:Object.freeze({download:216,upload:244}),
+  road:Object.freeze({download:124,upload:204}),
+  rail:Object.freeze({download:150,upload:226}),
+  water:Object.freeze({download:176,upload:248}),
   air:Object.freeze({download:32,upload:67})
 });
 export function worldBackground(stage=0) {
@@ -155,7 +157,7 @@ export function transportScenery(id,x,y,width,height) {
 export function worldRoads(stage,end=655,modes=[]) {
   const growth=infrastructure(stage),extent=end+245;
   const port=growth.port||modes.includes('water'),rail=growth.rail||modes.includes('rail'),air=growth.airport||modes.includes('air');
-  const width=Math.max(80,end+24),depth={trail:20,gravel:21,road:22,boulevard:24,highway:26,superhighway:28}[growth.tier];
+  const width=Math.max(80,extent+24),depth={trail:20,gravel:21,road:22,boulevard:24,highway:26,superhighway:28}[growth.tier];
   const strips=(id,height,span)=>['download','upload'].map(direction=>{
     const baseline=WORLD_ROUTE_BASELINES[id==='water'?'water':id==='rail'?'rail':'road'][direction];
     return `<g data-render-key="${id}-${direction}" class="${direction==='download'?'incoming-road':'outgoing-road'}">${transportScenery(id,0,baseline-height/2,span,height)}</g>`;
@@ -169,7 +171,7 @@ export function worldRoads(stage,end=655,modes=[]) {
     <g class="world-airport" opacity="${air?1:0}">${guides}${transportScenery('runway',end+22,104,Math.max(80,extent-end-34),9)}</g>
     ${strips(growth.tier,depth,width)}${markers}
     <g class="world-rail" opacity="${rail?1:0}">${strips('rail',8,width)}</g>
-    <g class="world-river" opacity="${port?1:0}">${strips('water',23,Math.max(80,end+185))}</g>
+    <g class="world-river" opacity="${port?1:0}">${strips('water',23,width)}</g>
   </g>`;
 }
 export function worldNature(stage,end=655,modes=[]) {
@@ -182,13 +184,13 @@ export function worldNature(stage,end=655,modes=[]) {
 }
 export function worldSky(stage,end=655) {
   const extent=end+245,flocks=1+Math.floor(stage/7);
-  return `<g class="world-sky" aria-hidden="true"><g class="world-cloud" style="--cloud-delay:-12s">${worldSprite('cloud',extent*.18,-12,105,63)}</g><g class="world-cloud" style="--cloud-delay:-39s;--cloud-duration:83s">${worldSprite('cloud',extent*.61,-6,78,48)}</g>
+  return `<rect class="world-time-wash" x="0" y="-20" width="${extent}" height="280" fill="#18325c"/><g class="world-sky" aria-hidden="true"><g class="world-cloud" style="--cloud-delay:-12s">${worldSprite('cloud',extent*.18,-12,105,63)}</g><g class="world-cloud" style="--cloud-delay:-39s;--cloud-duration:83s">${worldSprite('cloud',extent*.61,-6,78,48)}</g>
     ${Array.from({length:flocks},(_,i)=>`<g class="world-birds" data-render-key="world-birds-${i}" style="--bird-delay:-${i*11}s;--bird-duration:${39+i*7}s">${worldSprite('birds',extent*.16+i*extent*.22,17+i%2*16,38,22)}</g>`).join('')}
     <circle class="world-sun" cx="${extent*.75}" cy="12" r="11"/><g class="world-moon"><circle cx="${extent*.75}" cy="12" r="10" fill="#fff1c5"/><circle cx="${extent*.75+5}" cy="8" r="9" fill="#283c68"/></g>
     <g class="world-stars" fill="#fff1c5">${Array.from({length:18},(_,i)=>`<circle cx="${25+(i*113)%(extent-50)}" cy="${-9+(i*17)%62}" r="${i%3===0?1.2:.7}"/>`).join('')}</g></g>`;
 }
 export function worldBackdrop(stage=0) {
-  return `<image class="world-terrain" href="${worldBackground(stage)}" data-background-stage="${Math.max(0,Math.min(19,Math.floor(stage)||0))}" x="0" y="-20" width="900" height="280" preserveAspectRatio="xMidYMid slice"/><rect class="world-time-wash" x="0" y="-20" width="900" height="280" fill="#18325c"/>`;
+  return `<image class="world-terrain" href="${worldBackground(stage)}" data-background-stage="${Math.max(0,Math.min(19,Math.floor(stage)||0))}" x="0" y="-20" width="900" height="280" preserveAspectRatio="xMidYMid slice"/>`;
 }
 export function updateWorldTime(svg,date=new Date()) {
   const time=worldTime(date);
@@ -198,6 +200,11 @@ export function updateWorldTime(svg,date=new Date()) {
   const label=svg.closest('.city-detail-card')?.querySelector('.city-world-clock');
   if(label) {label.textContent=`${time.phase==='sunrise'?'Sunrise':time.phase==='sunset'?'Sunset':time.phase==='night'?'Night':'Day'} · ${time.label}`;label.title='Scenery follows your local clock · sunrise 05–08, day 08–17, sunset 17–20, night 20–05';}
 }
+// Both the HTML readings and vehicles use this exact route baseline.
+export function laneLabelPosition(type,direction) {
+  const mode=transportSpec(type).mode;
+  return (WORLD_ROUTE_BASELINES[mode][direction]+20)/280*100;
+}
 export function layoutWorld(svg,end,patch=(node,markup)=>{node.innerHTML=markup;}) {
   const stage=Number(svg.dataset.stage)||0;
   const terrain=svg.querySelector('.world-terrain');
@@ -205,11 +212,17 @@ export function layoutWorld(svg,end,patch=(node,markup)=>{node.innerHTML=markup;
     terrain.setAttribute('href',worldBackground(stage));
     terrain.dataset.backgroundStage=stage;
   }
-  const modes=[svg.dataset.downloadType,svg.dataset.uploadType].map(type=>type==='freight-train'?'rail':['barge','freighter','mega-ship'].includes(type)?'water':['helicopter','tiltrotor','cargo-plane','cargo-jet'].includes(type)?'air':'road');
+  const modes=[svg.dataset.downloadType,svg.dataset.uploadType].map(type=>transportSpec(type).mode);
   const replace=(selector,markup)=>{const target=svg.querySelector(selector);if(target)patch(target,markup);};
   replace('.world-infrastructure',worldRoads(stage,end,modes));
   replace('.world-decoration',worldNature(stage,end,modes));
   replace('.world-atmosphere',worldSky(stage,end));
   svg.querySelector('.world-city')?.setAttribute('transform',`translate(${end-80} 28)`);
+  svg.querySelector('.world-city .city-buildings')?.setAttribute('transform',settlementTransform(end));
+  layoutSettlementActivity(svg,end);
+  for(const direction of ['download','upload']) {
+    const label=svg.parentElement.querySelector('.route-speeds .'+direction+'-rate');
+    if(label)label.style.setProperty('--lane-y',laneLabelPosition(svg.dataset[direction+'Type'],direction)+'%');
+  }
   for(const node of svg.querySelectorAll('.world-terrain,.world-time-wash'))node.setAttribute('width',end+245);
 }

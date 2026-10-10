@@ -164,3 +164,50 @@ The shared WORLD_ASSETS list supplies HTTP and desktop bundle verification.
 mixed sea/air traffic, flat sprites, retained departure geometry, loaded
 artwork, corridor draining and desktop/phone layouts. City and animation QA
 continue to verify live growth, delivery, pause/reduced motion and polling.
+
+Integrated city landscapes and lane readings
+------------------------------------------
+
+`world/settlements/` contains five transparent imagegen atlases, each with four
+panoramic growth stages, covering all twenty existing milestones. Eye-level
+architecture, watercolor vegetation and natural base edges replace the small
+isometric islands in route scenes. The settlement extends across 78% of each
+responsive landscape. The original catalog illustrations remain available.
+`frames.js` clips individually measured alpha bands without changing PNG pixels.
+Exact built-in tool prompts and source provenance are in `generation-prompts.json`.
+
+Terrain, settlement, construction, road surfaces and landscape props now share
+one `world-landscape` lighting grade. The time wash sits above that entire group,
+so sunrise, daytime, sunset and night affect every static scene element together.
+Growth still reveals the next skyline using measured downloads, and animation
+nodes survive growth, polling and resizing.
+
+Download and Upload readings sit on their actual road, rail, water or air
+baseline, using the same transport specifications as live vehicles. Both readings
+sit on the left in plain bold italic whole-number Mbit/s text, without borders
+or colored badges. The wider road spacing makes the two directions distinct.
+Downloads pull in and unload, then continue right while fading out; parcels stay
+at the delivery point during departure.
+
+Permanent living-city requirement
+--------------------------------
+
+The route city must remain visibly alive and bustling as measured data builds it.
+Landscape art supports the dynamic city, and must not replace it. `AGENTS.md`
+records this permanent requirement for future work.
+
+Construction projects, crane hoists, machines, delivery crews and helpers now
+occupy independent anchors throughout the expanded settlement. Position metadata
+moves the anchors during layout without scaling or resetting animation nodes.
+Workers are larger in landscape scenes. All twenty measured stages keep their
+construction phases and live delivery behavior.
+
+`world/settlements/residents-v1.png` is an original transparent built-in imagegen
+atlas of two residents with four walking poses each. `resident-prompts.json`
+records its exact prompt, source and layout. Clipped SVG viewports cycle poses
+with CSS while residents walk and turn around. Resident count increases with
+city tier (4 to 22), and ordinary street life continues while construction waits
+for incoming traffic. Pause and reduced motion stop both ambient and work motion.
+
+QA must verify actual pose changes, animation continuity, visible population and
+construction distributed across the scene, and measured building progression.

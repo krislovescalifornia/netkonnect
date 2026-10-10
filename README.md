@@ -6,7 +6,7 @@ Brand colors are white (`#ffffff`) and neon green (`#b6ff00`). The app, tray, an
 
 ## Run
 
-Launch the built **netKonnect-Setup-1.13.0.exe** installer. Installation uses its Windows Administrator approval to set up the background companion, privileged capture helper, sign-in startup and outbound app protection together. There are no customer scripts, terminals, dependency downloads or separate setup switches.
+Launch the built **netKonnect-Setup-1.14.0.exe** installer. Installation uses its Windows Administrator approval to set up the background companion, privileged capture helper, sign-in startup and outbound app protection together. There are no customer scripts, terminals, dependency downloads or separate setup switches.
 
 The dashboard's large **Easy Button · Set up everything** performs the same setup if installation could not finish, and repairs or checks it later. A six-stage progress trail follows the real work: companion, checkup, helper, sign-in, live data and local journal. The tiny network crew explains each step, shows elapsed time and calls out Windows approval or live-data waits. Ready/Pending checks update during setup, including in Preferences or with dashboard updates paused. Progress reaches 100% only after fresh observations, measured TCP/UDP capture and a successful local history checkpoint. Windows may ask for Administrator approval to install or repair privileged components. A healthy recheck does not need another approval. Completed steps survive canceled approval; click the same button to retry. Reduced-motion preferences disable the trail and mascot animations.
 
@@ -44,6 +44,8 @@ After startup, click **Restart Service** in the left navigation. The button show
 `package.json` is the release version source for Electron, companion identity and installer filenames. Run `npm version <version> --no-git-tag-version` to update it and the lockfile together; the version hook regenerates `public/version.js` for the dashboard. Builds also synchronize that file, and syntax checks reject inconsistent version metadata. Use patch versions for fixes, minor versions for features and major versions for breaking changes. Record release changes in [CHANGELOG.md](CHANGELOG.md), build and verify the installer, then commit and create the matching `v<version>` Git tag.
 
 ## Live transport
+
+Version 1.14.0 distributes walking residents, construction crews, cranes and machinery across integrated city landscapes. Roads have a wider gap, with plain bold italic whole-number Mbit/s readings on the left of both routes. Download vehicles pull in, unload, then continue right while fading; parcels stay at the city delivery point during departure. Ambient street life continues while measured-download construction waits. Pause, motion settings and reduced motion apply to the living city.
 
 The illustrated routes grow with the application's recorded downloads. Levels 1–2 use dirt roads, 3–4 gravel, 5–6 single-lane paving, 7–10 boulevards, 11–14 small highways, and 15–20 large highways. Rail unlocks at level 11, airports at level 12, river ports at level 13, and spaceports at level 19. These corridors accumulate alongside the roads. A selected train, ship or aircraft preview opens its matching corridor earlier and keeps it visible until the last in-flight journey finishes.
 

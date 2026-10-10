@@ -24,9 +24,9 @@ export function illustratedCity(stage) {
   const width=stage<3?123+stage*13:stage<6?170+(stage-3)*13:264;
   return `<g class="city-buildings" transform="translate(157 0)">${sprite('cities',id,art,0,width,129,145)}</g>`;
 }
-export function illustratedWorker({woman=false,carry=false}={}) {
+export function illustratedWorker({woman=false,carry=false,size=8}={}) {
   const variant=carry?0:woman?2:1;
-  return `<g class="helper-person illustrated-person">${sprite('fleet','crew',PROP_ART.crew,variant,8,0,14)}</g>`;
+  return `<g class="helper-person illustrated-person">${sprite('fleet','crew',PROP_ART.crew,variant,size,0,size*1.75)}</g>`;
 }
 export function illustratedProp(id,width,baseline=0,maxHeight=Infinity) {
   return sprite('fleet',id,PROP_ART[id],0,width,baseline,maxHeight);

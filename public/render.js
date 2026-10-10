@@ -7,10 +7,12 @@ const compatible = (a,b) => a.nodeType === b.nodeType && (a.nodeType !== 1 || (a
 function attributes(current,next,scene=false) {
   for(const attr of [...current.attributes]) {
     if(scene && ['viewBox','data-scene-end','data-time'].includes(attr.name))continue;
+    if(attr.name==='transform'&&current.matches('.city-activity-anchor,.city-route-scene .city-buildings'))continue;
     if(!next.hasAttribute(attr.name))current.removeAttribute(attr.name);
   }
   for(const attr of next.attributes) {
     if(scene && ['viewBox','data-time'].includes(attr.name))continue;
+    if(attr.name==='transform'&&current.matches('.city-activity-anchor,.city-route-scene .city-buildings'))continue;
     let value=attr.value;
     if(scene && attr.name==='class' && current.matches('.convoy-svg')) {
       // Working/resting and deliveries belong to the live journey animator.
@@ -33,8 +35,9 @@ function patch(current,next) {
   if(scene) {
     if(growth && current.matches('.application-city')) {
       if(next.querySelector('.city-buildings')) {
-        for(const layer of ['.city-buildings','.construction-site','.city-projects','.city-site-vehicles','.city-helpers']) {
-          updateChildren(current.querySelector(layer),next.querySelector(layer));
+        for(const layer of ['.city-buildings','.construction-site','.city-projects','.city-site-vehicles','.city-helpers','.city-residents']) {
+          const target=current.querySelector(layer),template=next.querySelector(layer);
+          if(target&&template){attributes(target,template);updateChildren(target,template);}
         }
       } else updateCityGrowth(current,Number(next.dataset.stage),Number(next.dataset.progress));
     }
