@@ -52,7 +52,8 @@ function repaintSetup() {
   document.querySelectorAll('[data-app-version]').forEach(label => { label.textContent = `v${setupVersion()}`; });
 }
 export async function refreshSetupStatus(force = false) {
-  if (!window.netKonnect || changing || (!force && Date.now() - checkedAt < 10000)) return;
+  const interval=settings?.complete&&!setupError?60000:10000;
+  if (!window.netKonnect || changing || (!force && Date.now() - checkedAt < interval)) return;
   if (checking) return checking;
   checking = window.netKonnect.setupStatus().then(result => {
     settings = result; setupProgress = result.progress || setupProgress;

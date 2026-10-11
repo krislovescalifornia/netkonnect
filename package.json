@@ -1,6 +1,6 @@
 {
   "name": "netkonnect",
-  "version": "1.17.0",
+  "version": "1.17.1",
   "private": true,
   "type": "module",
   "description": "An offline Windows desktop network observatory with an independent tray companion.",
@@ -18,6 +18,7 @@
     "dist": "node scripts/build.mjs",
     "verify:package": "node scripts/verify-package.mjs",
     "test:desktop": "electron . --smoke-test",
+    "test:performance": "electron scripts/qa-performance.mjs",
     "brand:icons": "node scripts/icon.mjs",
     "test:release": "node scripts/qa-release.mjs",
     "test:installed": "node scripts/qa-installed.mjs",

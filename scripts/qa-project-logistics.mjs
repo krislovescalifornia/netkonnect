@@ -22,7 +22,7 @@ app.whenReady().then(async()=>{
   const run=code=>window.webContents.executeJavaScript(code),errors=[];
   window.webContents.on('console-message',event=>{if(event.level==='error'||event.level===3)errors.push(event.message);});
   const capture=async name=>writeFile(resolve(out,name),(await window.webContents.capturePage()).toPNG());
-  const sample=p=>run(`qa.animator.queue.now=${p}*12000;qa.animator.draw();[...document.querySelectorAll('#live .material-transfer')].map(el=>({material:el.dataset.material,progress:el.dataset.transferProgress,transform:el.getAttribute('transform'),opacity:+el.style.opacity,carrier:+el.querySelector('.transfer-carrier').style.opacity,cable:+el.querySelector('.unloading-cable').style.opacity}))`);
+  const sample=p=>run(`qa.animator.queue.now=${p}*12000;qa.animator.draw();[...document.querySelectorAll('#live .material-transfer')].map(el=>({material:el.dataset.material,progress:el.dataset.transferProgress,transform:el.getAttribute('transform'),opacity:+getComputedStyle(el).opacity,carrier:+getComputedStyle(el.querySelector('.transfer-carrier')).opacity,cable:+getComputedStyle(el.querySelector('.unloading-cable')).opacity}))`);
   try{
     await window.loadURL(`http://127.0.0.1:${server.address().port}/review`);
     for(let i=0;i<50&&!await run('window.ready===true');i++)await wait(100);

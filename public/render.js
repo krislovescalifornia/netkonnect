@@ -8,7 +8,7 @@ function attributes(current,next,scene=false) {
   for(const attr of [...current.attributes]) {
     if(scene && ['viewBox','data-scene-end','data-time','data-offscreen'].includes(attr.name))continue;
     if(attr.name==='transform'&&current.matches('.city-activity-anchor,.city-route-scene .city-buildings'))continue;
-    if(current.matches('.sky-visitor')&&['style','transform'].includes(attr.name))continue;
+    if(current.matches('.sky-visitor')&&['style','transform','data-sky-active'].includes(attr.name))continue;
     if(!next.hasAttribute(attr.name))current.removeAttribute(attr.name);
   }
   for(const attr of next.attributes) {

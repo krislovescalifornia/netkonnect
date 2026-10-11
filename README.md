@@ -33,6 +33,10 @@ npm run start:collector # Tray companion only
 npm run dist            # Offline x64 Windows installer
 ```
 
+Cities use hardware acceleration by default. For a machine with a graphics driver that produces a blank window, launch with `--software-rendering`; a companion started with this flag forwards it to windows it launches. Minimized dashboards suspend display polling and visual motion while the independent companion continues collecting. Healthy OS setup checks run once a minute; opening Preferences and using the Easy Button still request immediate checks.
+
+Run `npm run test:performance` for the ten-city rendering stress audit. Add `-- --software --baseline --label=before` to compare the committed renderer with software compositing, or `-- --label=after` to measure the working renderer. The audit exercises desktop, compact, paused and minimized windows and saves per-process CPU seconds, frame timing, long tasks, markup parsing, style/layout time and screenshots under `test-results/performance`. Foreground measurements disable window-occlusion throttling for comparability; minimized checks restore normal throttling. `-- --trace` also captures a Chromium paint trace. The fixture uses illustrative traffic and excludes the real PowerShell collector, so its CPU figures describe rendering rather than total installed-app power usage.
+
 Development startup controls are disabled. Profiles/history live under `data/desktop/`; existing JSON analytics is imported once. See [desktop architecture and release gates](docs/desktop-architecture.md) for the process, database, security, collection, and visual design.
 
 The original browser server remains a developer compatibility path (`npm run start:web`, then http://127.0.0.1:4317). Persistent one-button setup belongs to the installed desktop app. Detailed capture observes network event metadata: owner PID, addresses, ports, direction, and byte counts. It does not collect packet payloads or write ETL traces.

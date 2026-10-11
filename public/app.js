@@ -86,7 +86,7 @@ function renderContent(){
   else main.innerHTML=markup;
   if(state.page==='activity'&&!state.paused)queueMicrotask(()=>analyticsView.load(state.mode,()=>{if(state.page==='activity'&&!analyticsView.editing)renderContent();}));
   state.reducedMotion=reducedMotion.matches;
-  transportAnimator.mount(main,{source,active:state.motion&&!state.paused&&!state.reducedMotion});
+  transportAnimator.mount(main,{source,active:state.motion&&!state.paused&&!state.reducedMotion&&!document.hidden});
   document.body.classList.toggle('no-motion',!state.motion||state.paused||state.reducedMotion);
 }
 function navigate(page){state.page=pages.some(p=>p[0]===page)?page:'overview';location.hash=state.page;shell();window.scrollTo({top:0});}
@@ -98,16 +98,22 @@ function csvCell(s){let v=String(s??'');if(/^[=+\-@\t\r]/.test(v))v="'"+v;return
 function exportCSV(){ const rows=[['Application','PID','Protocol','Local address','Local port','Remote address','Remote port','State','Scope','Destination','Identification','Network provider','Transport clue','DNS cache candidates','First observed','Snapshot','Source'],...filtered().map(c=>[c.app,c.pid,c.protocol,c.localAddress,c.localPort,c.remoteAddress,c.remotePort,c.state,c.scope,serviceDisplayLabel(serviceIdentity(c)),serviceIdentity(c).confidence,serviceIdentity(c).network?.name||'',transportHint(c),c.domainCandidates?.join('; '),c.firstSeen,state.snapshot.timestamp,state.mode])]; const blob=new Blob(['\uFEFF'+rows.map(r=>r.map(csvCell).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`netkonnect-${state.mode}-${new Date().toISOString().slice(0,10)}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast(`Exported ${rows.length-1} connection routes.`); }
 
 let liveSnapshot=null;
+let polling=false;
 async function poll(){
-  if(state.restarting)return;
-  await refreshSetupStatus();
+  if(state.restarting||polling||document.hidden)return;
+  polling=true;
+  try {
+  // OS setup checks may launch PowerShell. They must not delay fresh traffic.
+  void refreshSetupStatus();
   try { const response=await localRequest('/api/snapshot');if(!response.ok)throw new Error(`Local collector returned ${response.status}.`);const data=await response.json();state.service=data.service;liveSnapshot=data.snapshot;state.error=data.error||data.service?.storageError;state.collecting=data.collecting;if(!state.paused)state.snapshot=liveSnapshot;setAppIcons(state.mode==='live'?state.snapshot?.appIcons:{});const wishlist=$('#icon-wishlist');if(wishlist)updateMarkup(wishlist,watercolorWishlist(liveSnapshot?.iconWishlist)); }
   catch(error){ if(state.mode==='live')state.error=window.netKonnect?'Can’t reach the tray companion. Relaunch netKonnect to reconnect.':'Can’t reach the local collector. Start the app server to reconnect.'; }
+  if(document.hidden)return;
   refreshNetworkControls();
   if(!state.paused)state.trafficView.update(state.snapshot, trafficSource());
   if(state.page==='activity'){
     if(!state.paused&&!analyticsView.editing&&!document.querySelector('#analytics-form:focus-within, #global-search:focus'))analyticsView.load(state.mode,()=>{if(state.page==='activity'&&!analyticsView.editing)renderContent();});
   }else if(!state.paused && !document.querySelector('#global-search:focus, #table-search:focus, #map-search:focus, .transport-controls select:focus') && !$('.drawer'))renderContent();
+  }finally{polling=false;}
 }
 async function restartService(){
   if(state.restarting || state.mode!=='live' || !state.service?.instanceId)return;
@@ -226,4 +232,9 @@ document.addEventListener('input',e=>{if(e.target.closest('#analytics-form'))ana
 document.addEventListener('change',e=>{if(e.target.closest('#analytics-form'))analyticsView.editing=true;});
 document.addEventListener('toggle',e=>{if(e.target.matches('.analytics-filters'))analyticsView.filtersOpen=e.target.open;},true);
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='global-search'&&state.page==='activity'){e.preventDefault();$('#analytics-form').requestSubmit();}});
+document.addEventListener('visibilitychange',()=>{
+  document.body.classList.toggle('visual-suspended',document.hidden);
+  if(document.hidden)transportAnimator.mount($('#main'),{source:trafficSource(),active:false});
+  else {renderContent();void poll();}
+});
 shell();poll();setInterval(poll,2000);

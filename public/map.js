@@ -12,6 +12,8 @@ import {livingDestination} from './living-city.js';
 export {vehicle} from './vehicles.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
+const setAttribute=(node,name,value)=>{const text=String(value);if(node.getAttribute(name)!==text)node.setAttribute(name,text);};
+const setOpacity=(node,value)=>{if(node)setAttribute(node,'opacity',value);};
 
 // Road overlays keep sub-megabit measurements visible.
 export function roadSpeed(bytesPerSecond) {
@@ -63,6 +65,7 @@ export class TransportAnimator {
     this.clock = clock; this.requestFrame = requestFrame; this.cancelFrame = cancelFrame;
     this.queue = new JourneyQueue(); this.svgs = new Map(); this.source = null;
     this.vehicleNodes = new WeakMap(); this.sceneSizes = new WeakMap(); this.configurations=[];
+    this.sceneNodes = new WeakMap();
     this.deliveryTimes = new WeakMap();
     this.skyScenes = new WeakMap();
     this.wallClock=wallClock;this.worldTimer=null;
@@ -94,6 +97,14 @@ export class TransportAnimator {
     svg.setAttribute('viewBox',`0 -20 ${extent} ${CITY_ROUTE_SCENE.height}`);
     svg.dataset.sceneEnd=end;
     layoutWorld(svg,end,updateSVGMarkup);
+    this.cacheScene(svg);
+  }
+  cacheScene(svg) {
+    this.sceneNodes.set(svg,{
+      city:svg.classList.contains('application-city'),route:svg.classList.contains('city-route-scene'),
+      layers:['.world-river','.world-port','.world-rail','.world-rail-terminal','.world-airport','.world-air-terminal'].map(selector=>svg.querySelector(selector)),
+      terminals:[...svg.querySelectorAll('.freight-terminal')],idle:svg.parentElement?.querySelector('.road-idle')
+    });
   }
   sceneCapacity(svg) {
     if(!svg.classList.contains('city-route-scene'))return Infinity;
@@ -125,6 +136,7 @@ export class TransportAnimator {
       const key = svg.dataset.routeKey;
       const newScene=this.svgs.get(key)!==svg;
       this.resizeCityScene(svg,newScene);
+      this.cacheScene(svg);
       const capacity=this.sceneCapacity(svg);
       for (const [direction,incoming] of [['download',true],['upload',false]]) {
         configurations.push({key:`${key}|${direction}`,routeKey:key, incoming,
@@ -156,10 +168,12 @@ export class TransportAnimator {
   draw() {
     for (const [key,svg] of this.svgs) {
       if(svg.hasAttribute('data-offscreen'))continue;
-      if(svg.classList.contains('city-route-scene')) {
+      let scene=this.sceneNodes.get(svg);
+      if(!scene){this.cacheScene(svg);scene=this.sceneNodes.get(svg);}
+      if(scene.route) {
         let sky=this.skyScenes.get(svg);
         if(!sky){sky=new SkySchedule(key,this.queue.now);this.skyScenes.set(svg,sky);}
-        if(!svg.closest('.still,.no-motion'))drawSkySighting(svg,this.queue.now,sky);
+        if(this.active&&!svg.closest('.still,.no-motion,.visual-suspended'))drawSkySighting(svg,this.queue.now,sky);
       }
       const journeys = ['download','upload'].flatMap(direction=>this.queue.lanes.get(`${key}|${direction}`)?.vehicles || []);
       let nodes=this.vehicleNodes.get(svg);
@@ -173,8 +187,8 @@ export class TransportAnimator {
           group.dataset.journeyId = journey.id;
           group.dataset.transport = journey.type;
           const spec=transportSpec(journey.type);
-          const scale = svg.classList.contains('city-route-scene')?cityVehicleScale(spec):Math.min(.85,53/spec.width);
-          const cityScene=svg.classList.contains('city-route-scene');
+          const scale = scene.route?cityVehicleScale(spec):Math.min(.85,53/spec.width);
+          const cityScene=scene.route;
           const facing=cityScene?(journey.incoming?scale:-scale):(journey.incoming?-scale:scale);
           const contact=cityScene&&spec.mode!=='air'?spec.mode==='water'
             ?`<path class="vehicle-wake" d="M${(journey.incoming?-1:1)*spec.width*scale*.45} 6h${(journey.incoming?-1:1)*12}m${(journey.incoming?1:-1)*5} 3h${(journey.incoming?-1:1)*9}" />`
@@ -208,23 +222,23 @@ export class TransportAnimator {
         }
         existing.delete(journey.id);
         const progress = this.queue.progress(journey);
-        const pose=journeyPose(journey,progress,svg.classList.contains('city-route-scene'),record.sceneEnd,record.route);
+        const pose=journeyPose(journey,progress,scene.route,record.sceneEnd,record.route);
         group.dataset.progress = progress.toFixed(6);
-        group.setAttribute('transform',`translate(${pose.x.toFixed(3)} ${pose.y.toFixed(3)}) rotate(${pose.angle||0})`);
-        group.style.opacity=pose.opacity;
-        const {cargo,parcel}=record;if(cargo)cargo.style.opacity=1-pose.unloaded;
-        if(record.materialCargo)record.materialCargo.style.opacity=1-pose.unloaded;
+        setAttribute(group,'transform',`translate(${pose.x.toFixed(3)} ${pose.y.toFixed(3)}) rotate(${pose.angle||0})`);
+        setOpacity(group,pose.opacity);
+        const {cargo,parcel}=record;setOpacity(cargo,1-pose.unloaded);
+        setOpacity(record.materialCargo,1-pose.unloaded);
         if(parcel) {
           const from={x:pose.deliveryX-8,y:pose.deliveryY-10};
           const transfer=materialTransferPose(progress,{mode:record.mode,from,to:record.destination,hoist:record.hoist});
-          parcel.style.opacity=transfer.opacity;
-          parcel.dataset.transferProgress=transfer.t.toFixed(4);
-          parcel.setAttribute('transform',`translate(${transfer.x.toFixed(3)} ${transfer.y.toFixed(3)})`);
-          record.carrier.style.opacity=transfer.carrying?1:0;
-          record.installer.style.opacity=transfer.t>=.94?1:0;
+          setOpacity(parcel,transfer.opacity);
+          setAttribute(parcel,'data-transfer-progress',transfer.t.toFixed(4));
+          setAttribute(parcel,'transform',`translate(${transfer.x.toFixed(3)} ${transfer.y.toFixed(3)})`);
+          setOpacity(record.carrier,transfer.carrying?1:0);
+          setOpacity(record.installer,transfer.t>=.94?1:0);
           const cable=record.cable;
-          cable.style.opacity=transfer.lift?1:0;
-          cable.setAttribute('d',`M${(record.hoist?.x||from.x)-transfer.x} ${(record.hoist?.y||from.y)-transfer.y}L0 -8`);
+          setOpacity(cable,transfer.lift?1:0);
+          if(transfer.lift)setAttribute(cable,'d',`M${(record.hoist?.x||from.x)-transfer.x} ${(record.hoist?.y||from.y)-transfer.y}L0 -8`);
           if(transfer.t>=.94&&!record.stocked){
             record.stocked=true;
             const stock=svg.querySelector(`[data-render-key="stock-${record.siteIndex}"]`)||svg.querySelector('.delivery-stock');
@@ -251,22 +265,20 @@ export class TransportAnimator {
         }
       }
       for (const id of existing) { const record=nodes.get(id);record.group.remove();record.parcel?.remove();nodes.delete(id); }
-      if(svg.classList.contains('application-city')) {
+      if(scene.city) {
         // Retain a transport corridor until its last in-flight journey finishes.
         const modes=journeys.map(j=>transportSpec(j.type).mode);
         const stage=Number(svg.dataset.stage)||0,growth=infrastructure(stage);
         const planned=[svg.dataset.downloadType,svg.dataset.uploadType].map(type=>transportSpec(type).mode);
-        for(const [selector,visible] of [['.world-river',growth.port||modes.includes('water')||planned.includes('water')],['.world-port',growth.port||modes.includes('water')||planned.includes('water')],['.world-rail',growth.rail||modes.includes('rail')||planned.includes('rail')],['.world-rail-terminal',growth.rail||modes.includes('rail')||planned.includes('rail')],['.world-airport',growth.airport||modes.includes('air')||planned.includes('air')],['.world-air-terminal',growth.airport||modes.includes('air')||planned.includes('air')]]) {
-          const layer=svg.querySelector(selector),value=visible?'1':'0';
-          if(layer&&layer.getAttribute('opacity')!==value)layer.setAttribute('opacity',value);
-        }
-        for(const terminal of svg.querySelectorAll('.freight-terminal'))terminal.classList.toggle('terminal-unloading',journeys.some(j=>j.incoming&&transportSpec(j.type).mode===terminal.dataset.terminalMode&&this.queue.progress(j)>=.62&&this.queue.progress(j)<=.96));
+        const port=growth.port||modes.includes('water')||planned.includes('water'),rail=growth.rail||modes.includes('rail')||planned.includes('rail'),air=growth.airport||modes.includes('air')||planned.includes('air');
+        [port,port,rail,rail,air,air].forEach((visible,i)=>setOpacity(scene.layers[i],visible?1:0));
+        for(const terminal of scene.terminals)terminal.classList.toggle('terminal-unloading',journeys.some(j=>j.incoming&&transportSpec(j.type).mode===terminal.dataset.terminalMode&&this.queue.progress(j)>=.62&&this.queue.progress(j)<=.96));
         const working=Number(svg.dataset.downloadRate)>0||journeys.some(j=>j.incoming);
         svg.classList.toggle('city-working',working);svg.classList.toggle('city-resting',!working);
         svg.classList.toggle('city-delivering',this.queue.now<(this.deliveryTimes.get(svg)||0));
       }
-      const idle = svg.parentElement.querySelector('.road-idle');
-      if (idle) idle.hidden = journeys.length > 0;
+      const idle = scene.idle,hidden=journeys.length>0;
+      if (idle&&idle.hidden!==hidden) idle.hidden=hidden;
     }
   }
 }

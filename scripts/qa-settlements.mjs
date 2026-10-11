@@ -48,7 +48,7 @@ try {
     window.residentNode=gallery.querySelector('.resident-walk');window.residentAnimation=window.residentNode.getAnimations()[0];
     window.residentTime=window.residentAnimation.currentTime;
     const stride=gallery.querySelector('.resident-stride'),animation=stride.getAnimations()[0];
-    const saved=animation.currentTime;animation.currentTime=0;const first=getComputedStyle(stride).transform;animation.currentTime=420;const next=getComputedStyle(stride).transform;animation.currentTime=saved;
+    const saved=animation.currentTime;animation.currentTime=0;const first=getComputedStyle(stride).x;animation.currentTime=420;const next=getComputedStyle(stride).x;animation.currentTime=saved;
     if(first===next)throw new Error('Pedestrian walk poses must actually change');
     return {walkPosesChange:true,cards:gallery.querySelectorAll('.application-city-card').length,assetsLoaded:assets.size};
   })()`);
@@ -144,7 +144,7 @@ try {
       animator.queue.now=journey.started+12000*${progress};animator.draw();
       const node=svg.querySelector('.transport-vehicle[data-journey-id="100000"]'),parcel=svg.querySelector('.material-transfer[data-journey-id="100000"]'),bounds=svg.getBoundingClientRect();
       const cargo=node.querySelector('.vehicle-cargo'),position=node.transform.baseVal.consolidate().matrix;
-      return {x:position.e,y:position.f,opacity:Number(node.style.opacity),cargoOpacity:Number(cargo.style.opacity),parcelX:parcel.getScreenCTM().e,
+      return {x:position.e,y:position.f,opacity:Number(getComputedStyle(node).opacity),cargoOpacity:Number(getComputedStyle(cargo).opacity),parcelX:parcel.getScreenCTM().e,
         rect:{x:Math.ceil(bounds.x),y:Math.ceil(bounds.y),width:Math.floor(bounds.width),height:Math.floor(bounds.height)}};
     })()`);
     delivery.push({name,...frame});

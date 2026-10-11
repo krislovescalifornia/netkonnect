@@ -31,8 +31,9 @@ app.setPath('userData', join(localRoot, collectorMode ? 'companion-profile' : 'd
 const directory = join(localRoot, 'data');
 let window, tray, collector, exiting = false;
 app.commandLine.appendSwitch('disable-background-networking');
-// Software compositing avoids driver-dependent blank windows on Windows hosts.
-app.disableHardwareAcceleration();
+// Let Chromium use the GPU for the animated cities. Keep an explicit fallback
+// for machines whose graphics drivers cannot render the window correctly.
+if(process.argv.includes('--software-rendering'))app.disableHardwareAcceleration();
 app.commandLine.appendSwitch('disable-component-update');
 app.commandLine.appendSwitch('disable-domain-reliability');
 app.commandLine.appendSwitch('disable-sync');
@@ -55,7 +56,7 @@ else {
 }
 function launch(args) {
   const env={...process.env}; delete env.ELECTRON_RUN_AS_NODE;
-  const child = spawn(process.execPath, [...(app.isPackaged ? [] : [root]), ...args, ...(smokeTest ? ['--smoke-test'] : [])], { detached:true, windowsHide:true, stdio:'ignore', env });
+  const child = spawn(process.execPath, [...(app.isPackaged ? [] : [root]), ...args, ...(process.argv.includes('--software-rendering')?['--software-rendering']:[]), ...(smokeTest ? ['--smoke-test'] : [])], { detached:true, windowsHide:true, stdio:'ignore', env });
   child.on('error', () => {}); child.unref();
 }
 async function ensureCompanion() {

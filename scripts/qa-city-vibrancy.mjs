@@ -21,13 +21,33 @@ app.whenReady().then(async()=>{
   const change=(selector,value)=>run(`(()=>{const el=document.querySelector(${JSON.stringify(selector)});el.value=${JSON.stringify(value)};el.dispatchEvent(new Event('input'));el.dispatchEvent(new Event('change'));})()`);
   const positions=()=>run(`(()=>{const svg=document.querySelector('.application-city');return ${JSON.stringify(motionSelectors)}.map(selector=>({selector,items:[...svg.querySelectorAll(selector)].map(el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,transform:getComputedStyle(el).transform};})}));})()`);
   const motion=async()=>{
-    const before=await positions();await wait(1400);const after=await positions();
-    return before.map((group,i)=>({selector:group.selector,moved:group.items.filter((item,j)=>item.transform!==after[i].items[j].transform).length,maxPixels:Math.max(0,...group.items.map((item,j)=>Math.hypot(item.x-after[i].items[j].x,item.y-after[i].items[j].y)))}));
+    // Work-yard routes have authored pauses and return legs. Measure a sustained
+    // excursion; a pair of endpoints can coincide or both land in a rest stop.
+    const before=await positions(),moved=before.map(g=>new Set()),maxPixels=before.map(()=>0);
+    for(let sample=0;sample<15;sample++) {
+      await wait(200);const after=await positions();
+      before.forEach((group,i)=>group.items.forEach((item,j)=>{
+        if(item.transform!==after[i].items[j].transform)moved[i].add(j);
+        maxPixels[i]=Math.max(maxPixels[i],Math.hypot(item.x-after[i].items[j].x,item.y-after[i].items[j].y));
+      }));
+    }
+    return before.map((group,i)=>({selector:group.selector,moved:moved[i].size,maxPixels:maxPixels[i]}));
   };
   const capture=async name=>writeFile(resolve(output,name),(await window.webContents.capturePage()).toPNG());
+  const verifyScroll=async()=>{
+    window.setSize(460,700);await run('scrollTo(0,0)');await wait(700);
+    const offscreen=await run(`(()=>{const svg=[...document.querySelectorAll('.application-city')].at(-1);window.offscreenProbe={svg,node:svg.querySelector('.resident-walk')};offscreenProbe.animation=offscreenProbe.node.getAnimations()[0];offscreenProbe.time=offscreenProbe.animation.currentTime;return svg.hasAttribute('data-offscreen');})()`);
+    assert.equal(offscreen,true,'Cities outside the viewport skip painting');
+    await wait(1000);await run('offscreenProbe.svg.scrollIntoView({block:"center"})');await wait(700);
+    const restored=await run(`(()=>{const p=offscreenProbe;return {visible:!p.svg.hasAttribute('data-offscreen'),sameAnimation:p.node.getAnimations()[0]===p.animation,continued:p.animation.currentTime>p.time+1000};})()`);
+    console.log('SCROLL_CONTINUITY '+JSON.stringify(restored));
+    assert.equal(restored.visible,true);assert.equal(restored.sameAnimation,true);assert.equal(restored.continued,true);
+    return {offscreen,restored};
+  };
   try {
     await window.loadURL(`http://127.0.0.1:${server.address().port}/living-preview`);
     await run(`Promise.all([...new Set([...document.querySelectorAll('image')].map(el=>el.getAttribute('href')))].map(async path=>{const image=new Image();image.src=path;await image.decode();}))`);
+    if(process.argv.includes('--scroll-only')){await verifyScroll();assert.deepEqual(errors,[]);return;}
     await change('#lighting','21');
     await wait(13000);
     // Save references before polls, growth and responsive layout changes.
@@ -78,12 +98,7 @@ app.whenReady().then(async()=>{
     assert.ok(resting.filter(group=>group.selector!=='.resident-walk').every(group=>group.moved===0),'Construction waits for incoming data');
     const idleGrowth=await run(`[...document.querySelectorAll('.city-project')].map(el=>el.dataset.buildProgress)`);await wait(2100);
     assert.deepEqual(await run(`[...document.querySelectorAll('.city-project')].map(el=>el.dataset.buildProgress)`),idleGrowth,'Polls do not manufacture growth');
-    window.setSize(460,700);await run('scrollTo(0,0)');await wait(700);
-    const offscreen=await run(`(()=>{const svg=[...document.querySelectorAll('.application-city')].at(-1);window.offscreenProbe={svg,node:svg.querySelector('.resident-walk')};offscreenProbe.animation=offscreenProbe.node.getAnimations()[0];offscreenProbe.time=offscreenProbe.animation.currentTime;return svg.hasAttribute('data-offscreen');})()`);
-    assert.equal(offscreen,true,'Cities outside the viewport skip painting');
-    await wait(1000);await run('offscreenProbe.svg.scrollIntoView({block:"center"})');await wait(700);
-    const restored=await run(`(()=>{const p=offscreenProbe;return {visible:!p.svg.hasAttribute('data-offscreen'),sameAnimation:p.node.getAnimations()[0]===p.animation,continued:p.animation.currentTime>p.time+1000};})()`);
-    assert.equal(restored.visible,true);assert.equal(restored.sameAnimation,true);assert.equal(restored.continued,true);
+    const {offscreen,restored}=await verifyScroll();
     await capture('scrolled-city.png');
     assert.deepEqual(errors,[]);
     const report={sizes,lighting,growth,paused,disabled,reduced,resting,offscreen,restored,errors};

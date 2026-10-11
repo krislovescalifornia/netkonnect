@@ -53,12 +53,12 @@ app.whenReady().then(async()=>{
       const original=[...root.querySelectorAll('.transport-vehicle')];
       const fleetVariety=new Set(original.map(n=>n.querySelector('.supply-pickup').innerHTML)).size;
       for(let n=0;n<72;n++){now+=100;animator.tick();animator.draw();}
-      const unloaded=first.querySelector('.vehicle-cargo').style.opacity==='0';
+      const unloaded=getComputedStyle(first.querySelector('.vehicle-cargo')).opacity==='0';
       const emptyBed=!!first.querySelector('image[href="artwork/trucks/pickup-empty.png"]');
-      const bodyVisible=Number(first.style.opacity)>0;
+      const bodyVisible=Number(getComputedStyle(first).opacity)>0;
       const parcel=first.querySelector('.delivery-parcel');
       const illustratedParcel=!!parcel?.querySelector('image[href="artwork/details/delivery-parcel.png"]');
-      const parcelLanded=parcel?.style.opacity==='1' && parcel.getAttribute('transform')==='translate(-8 17)';
+      const parcelLanded=!!parcel && getComputedStyle(parcel).opacity==='1' && parcel.getAttribute('transform')==='translate(-8 17)';
       const geometricParcel=!!parcel?.querySelector('path,rect,circle,ellipse');
       animator.active=false;animator.resizeObserver?.disconnect();root.remove();
       return {stable,fleetVariety,fleetSize:original.length,transparentImages,assets:assets.length,unloaded,emptyBed,bodyVisible,illustratedParcel,parcelLanded,geometricParcel,overflow:document.documentElement.scrollWidth>innerWidth};

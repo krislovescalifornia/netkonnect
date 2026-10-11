@@ -143,8 +143,9 @@ export class RouteTrafficView {
     if (this.at !== null && (at < this.at || at - this.at > 30000)) this.lanes.clear();
     this.at = at;
     const seen = new Set();
+    const serviceRoutes=buildRoutes(snapshot.connections || [],{detail:'service',usageConnections:snapshot.traffic.usageConnections || []});
     for (const detail of ['application', 'service', 'endpoint']) {
-      const children = buildRoutes(snapshot.connections || [], {detail:detail === 'application' ? 'service' : detail, usageConnections:snapshot.traffic.usageConnections || []});
+      const children = detail==='endpoint'?buildRoutes(snapshot.connections || [],{detail,usageConnections:snapshot.traffic.usageConnections || []}):serviceRoutes;
       const routes = detail === 'application' ? groupApplicationRoutes(children) : children;
       for (const route of routes) for (const direction of ['receiveRate', 'sendRate']) {
         const key = `${detail}|${route.key}|${direction}`;

@@ -397,10 +397,20 @@
 }
 
 /* Permanent living-city rule: independent street life plus measured construction. */
-.resident-walk { animation:city-patrol var(--walk-duration) linear infinite; animation-delay:var(--walk-delay); }
+.resident-walk { animation:resident-patrol var(--walk-duration) linear infinite; animation-delay:var(--walk-delay); }
 .resident-facing { animation:city-face var(--walk-duration) steps(1,end) infinite; animation-delay:var(--walk-delay); }
+.resident-walk>.resident-facing { animation:none; }
+@keyframes resident-patrol {
+  0%,8% { transform:translateX(0) scaleX(-1); }
+  44%,55.999% { transform:translateX(calc(-1 * var(--walk-distance))) scaleX(-1); }
+  56% { transform:translateX(calc(-1 * var(--walk-distance))) scaleX(1); }
+  92%,99.999% { transform:translateX(0) scaleX(1); }
+  100% { transform:translateX(0) scaleX(-1); }
+}
 .resident-stride { animation:resident-stride .8s steps(4,end) infinite; animation-delay:var(--stride-delay); }
-@keyframes resident-stride { to { transform:translateX(-1536px); } }
+/* Discrete atlas poses change image geometry at five frames per second. A
+   transform animation promotes every tiny atlas into another GPU layer. */
+@keyframes resident-stride { to { x:-1536px; } }
 /* Pause and reduced motion apply to residents through the shared scene rules. */
 
 /* Night lamps are emissive; only the landscape and building pixels are graded. */
@@ -433,8 +443,9 @@
 @media(prefers-reduced-motion:reduce) { .worksite-dust,.worksite-sparks { display:none; } }
 
 
-/* Offscreen scenes keep their timelines and geometry without painting. */
-.application-city[data-offscreen] { visibility:hidden; }
+/* Keep the SVG's own sized box available to scrolling and observers while
+   skipping its offscreen contents. CSS animation clocks keep running. */
+.application-city[data-offscreen] { visibility:hidden; content-visibility:hidden; }
 /* Full-width city cards with identity on the scenery and a single footer row. */
 .transport-table .application-city-card { grid-template-columns:minmax(0,1fr); }
 .transport-table .application-city-card>.city-detail-card { border-radius:12px; }
@@ -470,8 +481,13 @@
 /* Independent sightings have long quiet intervals and stable per-city schedules. */
 .sky-visitor { opacity:0; pointer-events:none; transition:none; }
 .sky-bob { animation:sky-bobbing 6.7s ease-in-out infinite alternate; }
+.sky-visitor:not([data-sky-active]) .sky-bob { animation-play-state:paused; }
 .world-kite .sky-bob { animation-duration:5.4s; }
-.sky-star { animation:sky-twinkle 7s ease-in-out infinite; animation-delay:var(--star-delay); }
+.sky-star { opacity:.8; }
+/* One quiet sky shimmer, instead of forty independently composited stars. */
+.world-stars { animation:sky-twinkle 7s ease-in-out infinite; visibility:hidden; }
+.city-route-scene[data-time="night"] .world-stars { visibility:visible; }
+.city-route-scene:not([data-time="night"]) .world-stars { animation-play-state:paused; }
 @keyframes sky-bobbing { from { transform:translateY(-1px) rotate(-1deg); } to { transform:translateY(1px) rotate(1deg); } }
 @keyframes sky-twinkle { 0%,100% { opacity:.45; } 45% { opacity:1; } }
 .city-route-scene[data-time="night"] .world-kite,.city-route-scene[data-time="night"] .world-birds { visibility:hidden; }
@@ -494,7 +510,7 @@
 .living-transit .living-pose { animation-duration:1.8s; }
 .living-cycle-route,.living-transit { animation:city-patrol var(--walk-duration) linear infinite; animation-delay:var(--walk-delay); }
 .living-foliage { animation:living-breeze 5.3s ease-in-out infinite alternate; animation-delay:var(--nature-delay,0s); transform-box:fill-box; transform-origin:50% 100%; }
-@keyframes living-poses { to { transform:translateX(-1536px); } }
+@keyframes living-poses { to { x:-1536px; } }
 @keyframes living-breeze { from { transform:skewX(-1.5deg) rotate(-1deg); } to { transform:skewX(1.5deg) rotate(1deg); } }
 .living-diorama .parcel-completed,.living-diorama .building-illustration,.living-diorama .site-window-lights { transition:opacity 1s ease; }
 .living-diorama .parcel-reveal { transition:y 1s ease,height 1s ease; }
@@ -510,6 +526,7 @@
 @media(max-width:900px) { .transport-table .application-city-card { --city-scene-height:224px; } }
 @media(max-width:520px) { .transport-table .application-city-card { --city-scene-height:218px; } }
 .still .living-diorama *,.no-motion .living-diorama * { animation-play-state:paused !important; transition:none !important; }
+.visual-suspended .application-city * { animation-play-state:paused !important; transition:none !important; }
 @media(prefers-reduced-motion:reduce) {
   .application-city * { animation-play-state:paused !important; transition:none !important; }
 }

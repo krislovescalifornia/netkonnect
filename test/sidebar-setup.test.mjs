@@ -5,6 +5,19 @@ import { appVersion } from '../public/version.js';
 const ids = ['companion','startup','helper','firewall','snapshots','capture','history'];
 const ready = () => ({startupAvailable:true,version:appVersion,complete:true,
   checks:ids.map(id=>({id,label:id,ready:true}))});
+test('healthy setup checks run once a minute; failures retry and explicit checks remain immediate',async t=>{
+  const {ui,setStatus}=await renderer(t);
+  const originalNow=Date.now;t.after(()=>{Date.now=originalNow;});
+  let now=100000,calls=0;Date.now=()=>now;
+  const read=window.netKonnect.setupStatus;
+  window.netKonnect.setupStatus=async()=>{calls++;return read();};
+  setStatus(ready());await ui.refreshSetupStatus();assert.equal(calls,1);
+  now+=59000;await ui.refreshSetupStatus();assert.equal(calls,1);
+  now+=1000;await ui.refreshSetupStatus();assert.equal(calls,2);
+  setStatus({...ready(),complete:false});await ui.refreshSetupStatus(true);assert.equal(calls,3);
+  now+=9999;await ui.refreshSetupStatus();assert.equal(calls,3);
+  now++;await ui.refreshSetupStatus();assert.equal(calls,4);
+});
 async function renderer(t, initial = {}) {
   const saved = {window:globalThis.window,localStorage:globalThis.localStorage};
   t.after(()=>Object.assign(globalThis,saved));

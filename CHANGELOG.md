@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.17.1 — 2026-10-10
+
+- Reduce city stutter during two-second refreshes by skipping discarded scenery markup, caching scene references, avoiding unchanged DOM writes and sharing route grouping work.
+- Enable hardware acceleration by default, with an explicit `--software-rendering` fallback for graphics-driver issues. Reduce animation layers while retaining watercolor actors, material deliveries and measured construction.
+- Suspend dashboard polling and visual motion while minimized. Keep healthy setup checks off the traffic polling path and check them once a minute; explicit setup actions still check immediately.
+- Preserve animation clocks through polling, growth, sorting, resizing and offscreen scrolling, and honor pause, motion settings and reduced motion.
+- Add a repeatable ten-city performance audit. In the controlled fixture, compact CPU use fell about 39%, renderer memory about 29%, and minimized CPU use about 97%; dense full-width cities remain expensive. These figures exclude the real collector and do not measure power consumption.
+- Verify visible city activity and delivery continuity at desktop, compact and phone sizes. The separate original traffic artwork-sizing assertion remains unchanged and fails on the committed baseline as well.
+
 ## 1.17.0 — 2026-10-10
 
 - Give all twenty growth levels distinct, vivid watercolor architecture and street layouts, including the estate's formal gardens, the neighborhood's shared courtyard and the city's dense blocks and tram traffic.

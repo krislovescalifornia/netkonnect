@@ -225,10 +225,17 @@ export class SkySchedule {
   }
 }
 const skyWidths={birds:44,kite:15,drone:25,ufo:25};
+const skyNodes=new WeakMap();
 export function drawSkySighting(svg,now,schedule) {
   const event=schedule.sample(now,svg.dataset.time==='night');
-  for(const node of svg.querySelectorAll('.sky-visitor')) {
+  let nodes=skyNodes.get(svg);
+  if(!nodes){nodes=[...svg.querySelectorAll('.sky-visitor')].map(node=>({node,facing:node.querySelector('.sky-facing')}));skyNodes.set(svg,nodes);}
+  // Quiet gaps need no DOM reads or writes. Clear the previous visitor once.
+  if(!event&&!nodes.some(({node})=>node.hasAttribute('data-sky-active')))return;
+  for(const {node,facing} of nodes) {
     const visible=event?.kind===node.dataset.skyKind;
+    if(node.hasAttribute('data-sky-active')!==visible)node.toggleAttribute('data-sky-active',visible);
+    if(!visible&&node.style.opacity==='0')continue;
     node.style.opacity=visible?String(Math.min(.78,event.progress*12,(1-event.progress)*12)):0;
     if(!visible)continue;
     // Departure geometry stays stable through responsive layout changes.
@@ -236,7 +243,8 @@ export function drawSkySighting(svg,now,schedule) {
     const p=event.direction===1?event.progress:1-event.progress;
     const x=-40+(event.extent+80)*p,y=event.y+Math.sin(Math.PI*event.progress)*event.bend;
     node.setAttribute('transform','translate('+x.toFixed(3)+' '+y.toFixed(3)+')');
-    node.querySelector('.sky-facing').setAttribute('transform','scale('+event.direction+' 1)');
+    const transform='scale('+event.direction+' 1)';
+    if(facing.getAttribute('transform')!==transform)facing.setAttribute('transform',transform);
   }
 }
 export function worldSky(stage,end=655,key='catalog') {
@@ -253,9 +261,9 @@ export function updateWorldTime(svg,date=new Date()) {
   const time=worldTime(date);
   if(svg.dataset.time!==time.phase)svg.dataset.time=time.phase;
   const sun=svg.querySelector('.world-sun'),extent=(Number(svg.dataset.sceneEnd)||655)+245;
-  if(sun) {const daylight=clamp((time.hour-5)/15);sun.setAttribute('transform','translate('+extent*(.17+.65*daylight)+' '+(45-50*Math.sin(Math.PI*daylight))+')');}
+  if(sun) {const daylight=clamp((time.hour-5)/15),transform='translate('+extent*(.17+.65*daylight)+' '+(45-50*Math.sin(Math.PI*daylight))+')';if(sun.getAttribute('transform')!==transform)sun.setAttribute('transform',transform);}
   const label=svg.closest('.city-detail-card')?.querySelector('.city-world-clock');
-  if(label) {label.textContent=`${time.phase==='sunrise'?'Sunrise':time.phase==='sunset'?'Sunset':time.phase==='night'?'Night':'Day'} · ${time.label}`;label.title='Scenery follows your local clock · sunrise 05–08, day 08–17, sunset 17–20, night 20–05';}
+  if(label) {const text=`${time.phase==='sunrise'?'Sunrise':time.phase==='sunset'?'Sunset':time.phase==='night'?'Night':'Day'} · ${time.label}`;if(label.textContent!==text)label.textContent=text;const title='Scenery follows your local clock · sunrise 05–08, day 08–17, sunset 17–20, night 20–05';if(label.title!==title)label.title=title;}
 }
 // Both the HTML readings and vehicles use this exact route baseline.
 export function laneLabelPosition(type,direction) {
@@ -274,6 +282,7 @@ export function layoutWorld(svg,end,patch=(node,markup)=>{node.innerHTML=markup;
   replace('.world-infrastructure',worldRoads(stage,end,modes));
   replace('.world-decoration',worldNature(stage,end,modes));
   replace('.world-atmosphere',worldSky(stage,end,svg.dataset.cityKey));
+  skyNodes.delete(svg);
   if(svg.querySelector('.living-diorama'))layoutLivingCity(svg,end);
   else {
     svg.querySelector('.world-city')?.setAttribute('transform',`translate(${end-80} 28)`);

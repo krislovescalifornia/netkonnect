@@ -164,7 +164,7 @@ export function updateLivingGrowth(svg,build) {
     set(project.querySelector('.foundation-bricks'),'style',`clip-path:inset(0 ${Math.max(0,1-built/.18)*100}% 0 0)`);
     set(svg.querySelector(`[data-render-key="worksite-${i}"]`),'opacity',1-clamp((built-.94)/.06));
     set(project.closest('.construction-yard').querySelector('.city-site-vehicles'),'opacity',1-clamp((built-.97)/.03));
-    const title=project.querySelector('title');title.textContent=`${PROJECT_NAMES[Number(svg.dataset.stage)]} · ${site.phase.toLowerCase()}`;
+    const title=project.querySelector('title'),text=`${PROJECT_NAMES[Number(svg.dataset.stage)]} · ${site.phase.toLowerCase()}`;if(title.textContent!==text)title.textContent=text;
   });
 }
 

@@ -5,6 +5,9 @@ import {resolve} from 'node:path';
 import assert from 'node:assert/strict';
 import {createLivingCityPreview} from './preview-living-city.mjs';
 const output=resolve('test-results/city-traffic');
+// Scope a performance run to motion/continuity. The default also enforces the
+// separate artwork sizing contract, which currently fails on the baseline.
+const motionOnly=process.argv.includes('--motion-only');
 app.setPath('userData',resolve('test-results/city-traffic-profile'));
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 app.whenReady().then(async()=>{
@@ -54,8 +57,10 @@ app.whenReady().then(async()=>{
         return {name:${JSON.stringify(name)},person,semiHeight:h(semi),machineRatios:yards.map(yard=>h(yard.querySelector('.illustrated-site-machine image'))/h(yard.querySelector('.worksite-hauler .illustrated-person'))),depths:[...new Set(yards.map(el=>el.dataset.cityY))],depthMoves,roadViolations:violations,frames,maxFrameJumpPixels:maxJump,p95FrameMs:frameTimes.sort((a,b)=>a-b)[Math.floor(frameTimes.length*.95)],labels:[...svg.parentElement.querySelectorAll('.route-speeds>span')].map(el=>({text:el.textContent,color:getComputedStyle(el).color}))};
       })()`);
       console.log('TRAFFIC_SIZE '+JSON.stringify(report));
-      assert.ok(report.semiHeight>report.person*1.8,`${name}: semi is proportionally taller than residents`);
-      assert.ok(report.machineRatios.every(r=>r>1.5),`${name}: work machinery is larger than workers`);
+      if(!motionOnly) {
+        assert.ok(report.semiHeight>report.person*1.8,`${name}: semi is proportionally taller than residents`);
+        assert.ok(report.machineRatios.every(r=>r>1.5),`${name}: work machinery is larger than workers`);
+      }
       assert.equal(report.depths.length,3);assert.ok(report.depthMoves.some(m=>m.y>2),`${name}: machines move into and out of sites`);
       assert.equal(report.roadViolations,0,`${name}: construction and pedestrians stay off the data road`);
       assert.ok(report.frames>45,`${name}: rendered traffic keeps moving between polls`);
@@ -65,7 +70,7 @@ app.whenReady().then(async()=>{
     }
     window.setSize(1400,1100);await change('handcart');await wait(12500);
     const cart=await run(`(()=>{const el=document.querySelector('.transport-vehicle[data-transport="handcart"]');return {person:el.querySelector('.cart-handler image').getBoundingClientRect().height,cart:el.querySelector('.supply-pushcart>image').getBoundingClientRect().height};})()`);
-    assert.ok(cart.person>cart.cart*1.15,'Cart handlers are taller than their carts');await capture('handcarts.png');
+    if(!motionOnly)assert.ok(cart.person>cart.cart*1.15,'Cart handlers are taller than their carts');await capture('handcarts.png');
     const delivery=await run(`(async()=>{
       // Pick a fresh departure and follow the same DOM node through six polls.
       let el;while(!el){el=[...document.querySelectorAll('.incoming-fleet[data-transport="handcart"]')].find(el=>+el.dataset.progress<.05);if(!el)await new Promise(r=>setTimeout(r,40));}
@@ -89,7 +94,7 @@ app.whenReady().then(async()=>{
     await run(`document.querySelector('#motion').click()`);
     window.webContents.debugger.attach('1.3');await window.webContents.debugger.sendCommand('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});await wait(300);
     const reduced=await positions();await wait(700);assert.deepEqual(await positions(),reduced,'Reduced motion freezes data traffic');
-    assert.deepEqual(errors,[]);const report={sizes,cart,delivery,errors};
+    assert.deepEqual(errors,[]);const report={sizes,cart,delivery,scaleChecks:!motionOnly,errors};
     await writeFile(resolve(output,'results.json'),JSON.stringify(report,null,2));console.log('CITY_TRAFFIC_VERIFIED '+JSON.stringify(report));
   }finally{window.destroy();await new Promise(r=>server.close(r));app.quit();}
 }).catch(error=>{console.error(error);app.exit(1);});
