@@ -9,7 +9,7 @@ foreach($item in $processTable) {
     if($item.CommandLine -match '--type=([^ ]+)') {$role=$Matches[1]}
     elseif($item.CommandLine -match 'collector') {$role='companion'}
     else {$role='dashboard'}
-  } elseif($item.Name -eq 'powershell.exe' -and $item.CommandLine -match 'collector.ps1.*-Worker') {$role='snapshot-worker'}
+  } elseif($item.Name -eq 'powershell.exe' -and $item.CommandLine -match 'collector.ps1.*-Persistent') {$role='snapshot-worker'}
   $roles[[int]$item.ProcessId]=$role
 }
 $auditIds=[Collections.Generic.HashSet[int]]::new()

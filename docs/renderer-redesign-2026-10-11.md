@@ -4,8 +4,66 @@ The dense desktop fixture fell from **1.55 to 0.34 occupied CPU cores (78%)**;
 compact view fell from **0.91 to 0.27 cores (70%)**. The renderer now paints
 the existing watercolor city on one canvas per card, with cached scenery and
 30 FPS activity. People, builders, machinery, cranes, transit and deliveries
-remain animated. These changes are in the workspace; the installed app has
-not been replaced.
+remain animated. Version **1.17.3** was subsequently built, installed and checked
+with the real local profile. Its installed-app measurements follow below.
+
+## Installed application validation
+
+Source commit `bbeadf6` and release tag `v1.17.3` were pushed to `origin`.
+The release build passed 183 tests, syntax checks, native ETW and icon checks,
+SVG reference checks, canvas pixel checks and the packaged desktop smoke/setup
+tests. The installer completed successfully on October 11, 2026. Hash checks
+confirmed that the installed renderer, collector, worker, database code and
+package metadata match the verified build. Installer SHA-256:
+`42529e8fff056e45d2713b003d9153efdfa86d20c29a8887da40bdb23d593624`.
+
+The real installed acceptance test passed all seven readiness checks, restart
+recovery, collection with the dashboard closed, and launch through the actual
+configured sign-in command. It confirmed version 1.17.3, ten canvas cities and
+three visibly painted canvases in the 1444 × 941 dashboard viewport. This did
+not simulate a Windows sign-out or reboot. The app was reopened normally and
+left visible after acceptance.
+
+Windows process counters sampled the visible 1.17.2 installation for 20.14
+seconds before upgrading. After installation and acceptance, the normal
+1.17.3 dashboard warmed up for 20 seconds, followed by two independent samples
+of approximately 20.14 seconds each. These use actual traffic and saved cities,
+not the synthetic level-15 performance fixture.
+
+| Installed measurement | 1.17.2 before | 1.17.3 sample 1 | 1.17.3 sample 2 |
+| --- | ---: | ---: | ---: |
+| Measured process-tree CPU, occupied cores | 1.642 | 0.400 | 0.487 |
+| Share of this 16-thread machine's CPU | 10.26% | 2.50% | 3.04% |
+| Dashboard renderer CPU, cores | 1.168 | 0.199 | 0.237 |
+| Dashboard GPU-process CPU, cores | 0.328 | 0.099 | 0.113 |
+| Companion main CPU, cores | 0.050 | 0.022 | 0.033 |
+| Persistent snapshot worker CPU, cores | Not captured | 0.021 | 0.046 |
+| Dashboard 3D GPU engine busy | 0.601% | 0.614% | 0.564% |
+| Measured process-tree private working set, MiB | 921.0 | 858.0 | 816.1 |
+
+Measured CPU fell **70–76%**, averaging about **73%**, with GPU engine activity
+roughly unchanged. The CPU totals include the dashboard, companion, their
+Chromium children and descendants present at both sampling endpoints. The new
+persistent snapshot worker is included; the old short-lived snapshot processes
+were not captured by this method. Privileged capture helpers and WMI provider
+work are excluded. Thus this is a conservative operational comparison of the
+measured process tree, not a complete machine-energy measurement or identical
+replayed traffic. Changing real traffic and window visibility affect results.
+
+A checkpointed, closed 502,390,784-byte history backup passed SQLite's quick
+check before installation. After upgrading, all 6,788 existing lifetime city
+records remained, none had reduced measured totals, and three new records had
+been observed. The companion reported available measured traffic with no
+collector or storage error.
+
+Local evidence: `test-results/performance/installed-1.17.2-visible.json`,
+`installed-1.17.3-visible-1.json`, `installed-1.17.3-visible-2.json`, and
+`installed-1.17.3-history.json`; installation receipt at
+`test-results/installation-1.17.3.json`; installed acceptance and screenshot at
+`test-results/installed-2026-10-11T18-01-47-299Z/`. The two raw after samples label
+the worker `powershell.exe`; the profiler's role matcher was subsequently
+corrected to recognize the actual `-Persistent` worker argument. CPU values
+were unaffected.
 
 ## Measurement
 
