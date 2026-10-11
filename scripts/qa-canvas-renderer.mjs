@@ -49,6 +49,28 @@ app.whenReady().then(async()=>{
     window.setSize(1400,1100);await wait(500);
     const continuity=await run(`(()=>{const p=qa.painter,t=p.time,n=p.nodes.get(qa.svg.querySelector('.resident-walk'));document.querySelector('#sort').click();document.querySelector('#sort').click();livingPreview.render();return {samePainter:qa.animator.canvases.get(qa.svg)===p,sameActor:p.nodes.get(qa.svg.querySelector('.resident-walk'))===n,clock:p.time>=t};})()`);
     assert.deepEqual(continuity,{samePainter:true,sameActor:true,clock:true});
+    const traffic=await run(`(async()=>{
+      const p=qa.painter,svg=qa.svg,style=svg.getAttribute('style'),actor=p.nodes.get(svg.querySelector('.resident-walk'));
+      const original=p.refresh,paint=p.paint,paints=[];let rootRefreshes=0;
+      p.refresh=function(n){if(n===p.root)rootRefreshes++;return original.call(this,n);};
+      p.paint=function(...args){paints.push(performance.now());return paint.apply(this,args);};
+      const readRoad=()=>p.ctx.getImageData(0,Math.floor(p.canvas.height*.8),p.canvas.width,Math.floor(p.canvas.height*.2)).data;
+      const before=readRoad();await new Promise(r=>setTimeout(r,250));const after=readRoad();
+      let movingPixels=0;for(let i=0;i<before.length;i+=4)if(Math.abs(before[i]-after[i])+Math.abs(before[i+1]-after[i+1])+Math.abs(before[i+2]-after[i+2])>50)movingPixels++;
+      for(const type of ['semi','handcart','semi']){
+        const input=document.querySelector('#fleet');input.value=type;input.dispatchEvent(new Event('change'));
+        await new Promise(r=>setTimeout(r,2100));
+      }
+      p.refresh=original;p.paint=paint;
+      const intervals=paints.slice(1).map((t,i)=>t-paints[i]).sort((a,b)=>a-b);
+      return {movingPixels,rootRefreshes,styleRetained:style===svg.getAttribute('style'),actorRetained:actor===p.nodes.get(svg.querySelector('.resident-walk')),frames:paints.length,p95:intervals[Math.floor(intervals.length*.95)],max:intervals.at(-1)};
+    })()`);
+    assert.ok(traffic.movingPixels>20,'Road traffic changes actual painted pixels');
+    assert.equal(traffic.rootRefreshes,0,'Road vehicle changes and polls never refresh the entire scene');
+    assert.ok(traffic.styleRetained&&traffic.actorRetained,'Polling retains layout styles and actor timelines');
+    assert.ok(traffic.frames>300&&traffic.p95<25,'Traffic paints at display cadence through multiple polls');
+    assert.ok(traffic.max<50,'Polling and road vehicle changes do not stall painted traffic');
+    console.log('TRAFFIC_CONTINUITY '+JSON.stringify(traffic));
     await run(`document.querySelector('#motion').click()`);await wait(100);
     const paused=await run(`qa.painter.canvas.toDataURL()`);await wait(800);assert.equal(await run(`qa.painter.canvas.toDataURL()`),paused,'Pause freezes actual pixels');
     const growth=await run(`(()=>{const before=qa.painter.canvas.toDataURL(),input=document.querySelector('#growth');input.value=85;input.dispatchEvent(new Event('input'));return {changed:before!==qa.painter.canvas.toDataURL(),progress:[...qa.svg.querySelectorAll('.city-project')].map(n=>Number(n.dataset.buildProgress))};})()`);
@@ -65,6 +87,13 @@ app.whenReady().then(async()=>{
     const idle=await run(`({work:qa.painter.workTime,time:qa.painter.time,progress:[...qa.svg.querySelectorAll('.city-project')].map(n=>n.dataset.buildProgress)})`);await wait(1000);
     const idleAfter=await run(`({work:qa.painter.workTime,time:qa.painter.time,progress:[...qa.svg.querySelectorAll('.city-project')].map(n=>n.dataset.buildProgress)})`);
     assert.equal(idleAfter.work,idle.work,'Construction clock rests without deliveries');assert.ok(idleAfter.time>idle.time,'Residents remain active');assert.deepEqual(idleAfter.progress,idle.progress,'Ambient motion cannot grow the city');
+    await run(`document.querySelector('#lighting').value=12;document.querySelector('#lighting').dispatchEvent(new Event('change'));`);
+    for(const [name,width] of [['desktop',1400],['compact',820],['mobile',460]]) {
+      window.setSize(width,1100);await wait(400);
+      const footer=await run(`(()=>{const card=qa.svg.closest('.application-city-card'),label=card.querySelector('.city-idle-label'),button=card.querySelector('.route-expand'),caret=button.querySelector('.app-info-caret'),text=button.querySelector('strong'),b=button.getBoundingClientRect(),c=caret.getBoundingClientRect(),t=text.getBoundingClientRect();return {label:label.textContent,above:label.getBoundingClientRect().bottom<=b.top,gap:c.left-t.right,padding:b.right-c.right,caretWidth:c.width,overlay:!!card.querySelector('.application-scene .road-idle'),fits:card.scrollWidth<=card.clientWidth+1};})()`);
+      assert.equal(footer.label,'Idle');assert.ok(footer.above);assert.ok(footer.gap>=8);assert.ok(footer.padding>=6);assert.ok(footer.caretWidth>=18);assert.equal(footer.overlay,false);assert.ok(footer.fits);
+      await capture('idle-'+name);
+    }
     await run(`qa.svg.setAttribute('data-offscreen','');qa.paints=qa.painter.repaints`);await wait(500);assert.equal(await run('qa.painter.repaints'),await run('qa.paints'),'Offscreen city does not paint');
     await run(`qa.svg.removeAttribute('data-offscreen');qa.animator.draw()`);
     window.setSize(460,700);await wait(400);
@@ -79,9 +108,11 @@ app.whenReady().then(async()=>{
       await run(`Promise.all([...document.querySelectorAll('.application-city image')].map(el=>{const i=new Image();i.src=el.getAttribute('href');return i.decode();}))`);
       const check=await run(`(()=>{const p=qa.animator.canvases.get(document.querySelector('.application-city'));qa.animator.draw();const data=p.ctx.getImageData(0,0,p.canvas.width,p.canvas.height).data;let painted=0;for(let i=3;i<data.length;i+=4)if(data[i]>20)painted++;return {painted,samePainter:p===qa.painter,time:p.time};})()`);
       assert.ok(check.painted>10000,'Stage '+stage+' paints its original artwork');assert.ok(check.samePainter,'Tier change retains the painter');stages.push({stage,...check});
+      const backdrop=await run(`(async()=>{const {worldBackground}=await import('/world.js'),p=qa.painter,node=qa.svg.querySelector('.world-backdrop'),cache=p.nodes.get(node).cache;const pixels=cache.bitmap.getContext('2d').getImageData(0,0,cache.bitmap.width,Math.floor(cache.bitmap.height*.45)).data;let painted=0;for(let i=3;i<pixels.length;i+=4)if(pixels[i]>240)painted++;qa.animator.draw();return {source:qa.svg.querySelector('.world-panorama').getAttribute('href')===worldBackground(${stage}),painted,retained:p.nodes.get(node).cache===cache};})()`);
+      assert.ok(backdrop.source,'Measured tier selects the background');assert.ok(backdrop.painted>10000,'Distant scenery paints the previously empty sky');assert.ok(backdrop.retained,'Scenery reuses its raster cache across animation frames');
       if([0,5,10,14,19].includes(stage))await capture('tier-'+stage);
     }
-    assert.deepEqual(errors,[]);await writeFile(resolve(output,'results.json'),JSON.stringify({results,continuity,growth,idle,idleAfter,stages,errors},null,2));
+    assert.deepEqual(errors,[]);await writeFile(resolve(output,'results.json'),JSON.stringify({results,continuity,traffic,growth,idle,idleAfter,stages,errors},null,2));
     console.log('CANVAS_RENDERER_OK');
   }finally{window.destroy();server.close();app.quit();}
 }).catch(error=>{console.error(error);app.exit(1);});

@@ -177,3 +177,116 @@ Run profiles sequentially. The Windows Electron checks need execution outside
 the Codex process sandbox on this machine because of the existing executable
 ACL restriction; no ACLs were changed. `qa-city-vibrancy.mjs` still tests the
 legacy SVG reference explicitly; the default canvas has its own pixel checks.
+
+## Restored distant backgrounds
+
+The existing twenty watercolor panoramas now sit behind the modular live city.
+The panorama and ground share one raster cache, replacing the former ground-only
+cache without adding a per-frame scenery draw or compositor layer. Measured
+tier changes, resize and lighting invalidate it; ordinary motion reuses it.
+Idle/capture labels sit above App Info, whose caret has a fixed padded area.
+
+Sequential hardware-accelerated checks used the same ten-city fixture:
+
+| Measurement | Before / repeated original | After / repeated after |
+| --- | --- | --- |
+| Desktop occupied CPU cores | 0.377 / 0.364 | 0.382 / 0.371 |
+| Compact occupied CPU cores | 0.283 / 0.304 | 0.315 / 0.310 |
+| 3D GPU engine busy | 0.835% / 0.827% | 0.849% / 0.845% |
+| Compositor layers | 13 / 13 | 13 / 13 |
+| Paused / minimized city draws | 0 / 0 | 0 / 0 |
+
+The repeated original also exhibited the compact long task (217 ms maximum
+frame interval, versus 233 ms after); the first original run did not. Repeated
+CPU differs by about 2%, with GPU engine busy differing by 0.018 percentage
+points. These short samples support comparable rendering cost, not a guarantee
+of identical resource use. Artwork decoding still has a load-time cost.
+Evidence: `test-results/performance/background-{before,baseline-repeat,after,repeat}`
+JSON reports, GPU reports and desktop screenshots. The baseline fixture now
+includes the original `city-canvas.js` when comparing against HEAD.
+
+Canvas QA passed actual resident, machine, builder, hauler and crane motion;
+measured growth; pause and reduced motion; sorting, resizing and offscreen
+continuity; all twenty background sources and their painted coverage/cache
+reuse. Desktop, compact and phone screenshots verify the footer and caret.
+
+## Traffic stutter audit and correction
+
+The subsequent traffic audit supersedes the 30 FPS recommendation above. The
+city now paints on each display frame (60 Hz on this test machine), while
+retaining the journey clock, offscreen culling and static scenery caches.
+These changes were subsequently built into the verified 1.17.4 installer.
+The running 1.17.3 installation has not been replaced; the installer is provided
+for the user's visual acceptance test.
+
+The original ten-city synthetic fixture did not reproduce the reported polling
+hitch. A local snapshot contained 327 connections, 1,197 recent usage records
+and 6,792 lifetime records. A live collector run reproduced 63 ms and 75 ms
+main-thread tasks and a 66.7 ms browser frame gap. Profiling identified scene
+style refreshes during transport changes, rather than journey clock resets.
+
+The causes and corrections are:
+
+- Polling stripped the SVG's layout-owned palette style. A transport change
+  restored it, repeatedly resolving computed styles throughout the city.
+  Polling now preserves layout-owned scene styles.
+- The layout signature included individual vehicle types. Switching between
+  two trucks rebuilt road scenery, atmosphere and actor layout. The signature
+  now uses transport modes: road, rail, air and water. Actual corridor changes,
+  city tiers and viewport sizes still update the layout.
+- Working/resting and terminal activity classes caused broad style refreshes.
+  The painter handles their visual effects and clocks directly. Other style
+  changes are coalesced by subtree, and metadata does not invalidate artwork.
+- The deliberate 30 FPS cap made traffic visibly step between frames. It is
+  removed, and active polling updates are painted on the next display frame
+  instead of inserting an extra paint between animation frames.
+
+A repeatable stress run replayed the local snapshot while switching pickup
+and semi traffic every two seconds. The baseline uses HEAD's 1.17.3 renderer;
+the result also preserves the previously uncommitted restored backgrounds.
+Each active measurement lasted approximately 10.5 seconds with five polls.
+
+| Actual city paint measurement | Baseline desktop | Fixed desktop | Fixed compact |
+| --- | ---: | ---: | ---: |
+| Median interval, ms | 33.3 | 16.7 | 16.7 |
+| 95th percentile, ms | 48.7 | 16.8 | 16.8 |
+| Worst interval, ms | 153.6 | 28.9 | 28.9 |
+| Paint gaps over 50 ms | 14 | 0 | 0 |
+| Main-thread long tasks | 9 | 0 | 0 |
+| Whole-city style refreshes | 90 | 0 | 0 |
+| Occupied CPU cores, Electron process tree | 0.452 | 0.534 | 0.435 |
+
+The smoother cadence costs about 18% more CPU than this stuttering baseline;
+it doubles the regular paint frequency. The fixed process-tree CPU is about
+3.3% of this machine's 16 logical processors. GPU-process CPU rose from about
+0.103 to 0.198 cores; this is CPU time, not GPU engine utilization. No GPU
+engine, battery, high-refresh display or low-end hardware result is claimed.
+Paused and minimized runs produced zero city paints; minimized also performed
+zero display polls. Live collector measurements and replay measurements are
+kept separate because traffic and serialization workloads differ.
+The final live-data run also passed `--assert-smooth`: 16.8 ms p95, 31.1 ms
+worst paint gap, zero gaps over 50 ms and zero long tasks across five polls.
+
+Rendered regression checks observed 3,008 changed road pixels, retained actor
+identity and palette styles, zero whole-city refreshes across three transport
+changes, a 16.8 ms p95 paint interval and a 22.2 ms maximum. They also passed
+actual resident, builder, hauler, machine and crane motion at desktop, compact
+and mobile sizes; measured construction progression; all twenty city tiers;
+sorting, resizing and offscreen return; pause, motion disabled and OS reduced
+motion. Desktop and compact captures were visually inspected. The unit suite
+passed all 184 tests (the native Electron startup test required a rerun outside
+the Windows sandbox); JavaScript and PowerShell syntax checks passed.
+
+Evidence is under `test-results/performance/traffic-changes-{baseline,final}`,
+`traffic-live-{before,final}`, and `test-results/canvas-renderer/`. Local traffic
+snapshots and CPU profiles remain in ignored test output. The audit script now
+records actual city paint intervals and style refreshes, supports `--live` and
+`--snapshot=...`, and provides `--churn --assert-smooth` for the regression.
+
+The 1.17.4 release build passed all 184 tests, syntax checks, native ETW and
+Windows icon checks, rendered SVG/canvas checks and packaged desktop smoke
+tests. The packaged app reported v1.17.4, real local snapshots without collector
+or storage errors, blocked outbound renderer requests, and successful setup
+cancellation/retry/recheck fixtures. These fixtures do not establish installed
+UAC, reboot or upgrade acceptance. The release-run canvas continuity check
+recorded a 19.1 ms worst paint interval and zero whole-city style refreshes.

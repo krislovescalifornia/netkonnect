@@ -69,7 +69,7 @@ export class TransportAnimator {
     this.sceneNodes = new WeakMap();
     this.deliveryTimes = new WeakMap();
     this.skyScenes = new WeakMap();
-    this.canvases=new Map();this.lastPaint=-Infinity;
+    this.canvases=new Map();
     this.useCanvas=typeof document!=='undefined'&&new URLSearchParams(globalThis.location?.search).get('renderer')!=='svg';
     this.wallClock=wallClock;this.worldTimer=null;
     this.lastTime = this.clock(); this.active = false; this.frame = null;
@@ -93,7 +93,9 @@ export class TransportAnimator {
     const previous=this.sceneSizes.get(svg);
     const {width,height}=measure||!previous?svg.getBoundingClientRect():previous;
     if(!width||!height)return;
-    const signature=[width,height,svg.dataset.stage,svg.dataset.downloadType,svg.dataset.uploadType].join('|');
+    // Changing a truck's size does not change the road. Rebuild scenery only
+    // when its extent, city tier or transport corridor actually changes.
+    const signature=[width,height,svg.dataset.stage,transportSpec(svg.dataset.downloadType).mode,transportSpec(svg.dataset.uploadType).mode].join('|');
     if(previous?.signature===signature)return;
     this.sceneSizes.set(svg,{width,height,signature});
     const extent=Math.max(360,width/height*CITY_ROUTE_SCENE.height),end=extent-245;
@@ -132,7 +134,6 @@ export class TransportAnimator {
       this.visibilityObserver?.disconnect();
       for(const svg of this.svgs.values())for(const node of this.vehicleNodes.get(svg)?.values()||[]){node.group.remove();node.parcel?.remove();}
       this.queue = new JourneyQueue(); this.svgs.clear(); this.vehicleNodes=new WeakMap(); this.source = source;
-      this.lastPaint=-Infinity;
       this.skyScenes=new WeakMap();
     }
     this.active = active;
@@ -160,7 +161,9 @@ export class TransportAnimator {
     this.configurations=configurations;
     this.queue.configure(configurations);
     this.queue.advance(0,this.active || (this.queue.serial === 0 && this.queue.now === 0));
-    this.draw();
+    // Active scenes consume polling changes on their next display frame.
+    // An out-of-band poll paint would produce an uneven, partial frame step.
+    if(!this.active||this.frame===null)this.draw();
     if ((!this.active || !this.svgs.size) && this.frame !== null) { this.cancelFrame(this.frame); this.frame = null; }
     if (this.active && this.svgs.size && this.frame === null) this.schedule();
   }
@@ -168,7 +171,7 @@ export class TransportAnimator {
     this.frame = this.requestFrame(()=>{
       this.frame = null;
       this.tick();
-      if(!this.useCanvas||this.queue.now-this.lastPaint>=1000/30-1){this.draw();this.lastPaint=this.queue.now;}
+      this.draw();
       if (this.active && this.svgs.size) this.schedule();
     });
   }
@@ -340,9 +343,9 @@ export function renderNetworkMap({state,icon,rate,bytes,esc,scenes}) {
       const usage=(label,value,direction,css)=>`<span role="cell" class="route-usage ${css}"><span class="usage-reading"><small class="usage-label">${label} · 60 min</small>${bytes(value)}</span>${usageGraph(r.usageHistory,direction,value!==null)}</span>`;
       return `<article class="transport-route application-parent application-city-card" role="row">
         <div class="city-detail-card">
-        <div class="route-road route-city application-scene" role="cell"><div class="city-app-heading"><button class="route-origin" data-app="${esc(r.app)}">${brandBadge(appIdentity(r.app),'origin-mark')}<strong>${esc(appName(r.app))}</strong></button></div><div class="route-speeds" title="Smooth average · approximately 10 seconds"><span class="upload-rate" style="--lane-y:${laneLabelPosition(uploadType,'upload')}%" title="Upload travels left toward the app · ${transportSpec(uploadType).mode}"><small>Up</small>${roadSpeed(upload.rate)}</span><span class="download-rate" style="--lane-y:${laneLabelPosition(downloadType,'download')}%" title="Download travels right into the city · ${transportSpec(downloadType).mode}"><small>Down</small>${roadSpeed(download.rate)}</span></div>${renderCity({key:esc('application|'+r.key),bytes:cityBytes,busy:r.measured&&download.rate>0,date:state.worldDate,convoy,includeArtwork,trafficLabel:esc('Downloads travel from the app into its city on the right; uploads return to the app on the left; '+fleetLabel)})}${!r.measured?'<span class="road-idle">Awaiting byte-level capture</span>':!download.rate&&!upload.rate?`<span class="road-idle">${r.connections.length?'Idle':'No active connections'}</span>`:''}</div>
+        <div class="route-road route-city application-scene" role="cell"><div class="city-app-heading"><button class="route-origin" data-app="${esc(r.app)}">${brandBadge(appIdentity(r.app),'origin-mark')}<strong>${esc(appName(r.app))}</strong></button></div><div class="route-speeds" title="Smooth average · approximately 10 seconds"><span class="upload-rate" style="--lane-y:${laneLabelPosition(uploadType,'upload')}%" title="Upload travels left toward the app · ${transportSpec(uploadType).mode}"><small>Up</small>${roadSpeed(upload.rate)}</span><span class="download-rate" style="--lane-y:${laneLabelPosition(downloadType,'download')}%" title="Download travels right into the city · ${transportSpec(downloadType).mode}"><small>Down</small>${roadSpeed(download.rate)}</span></div>${renderCity({key:esc('application|'+r.key),bytes:cityBytes,busy:r.measured&&download.rate>0,date:state.worldDate,convoy,includeArtwork,trafficLabel:esc('Downloads travel from the app into its city on the right; uploads return to the app on the left; '+fleetLabel)})}</div>
         <div class="city-detail-footer"><div class="city-summary"><div class="city-caption" role="cell" title="${esc(`${level}${stage.name} · ${bytes(cityBytes)} downloaded · ${milestone}`.replace(/<[^>]*>/g,''))}"><strong>${level}${stage.name}</strong>${growth}</div>
-        </div><div class="city-services" role="cell"><button class="route-terminal route-expand" data-map-expand="${esc(r.key)}" aria-expanded="${expanded?'true':'false'}" aria-controls="${esc(childrenId)} ${esc(childrenId+'-info')}" aria-label="${expanded?'Hide':'Show'} App Info for ${esc(appName(r.app))}" title="${count} · ${r.addresses.size} IPs · ${r.connections.length} active connections"><span><strong>App Info</strong></span><span class="app-info-caret" aria-hidden="true">&#9662;</span></button></div>
+        </div><div class="city-services" role="cell">${!r.measured?'<span class="city-idle-label">Awaiting byte-level capture</span>':!download.rate&&!upload.rate?`<span class="city-idle-label">${r.connections.length?'Idle':'No active connections'}</span>`:''}<button class="route-terminal route-expand" data-map-expand="${esc(r.key)}" aria-expanded="${expanded?'true':'false'}" aria-controls="${esc(childrenId)} ${esc(childrenId+'-info')}" aria-label="${expanded?'Hide':'Show'} App Info for ${esc(appName(r.app))}" title="${count} · ${r.addresses.size} IPs · ${r.connections.length} active connections"><span><strong>App Info</strong></span><span class="app-info-caret" aria-hidden="true">&#9662;</span></button></div>
         </div>${expanded?`<div id="${esc(childrenId+'-info')}" class="city-info" role="cell"><div class="city-usage-graphs">${usage('Total',r.totalBytes60m,'total','route-total')}${usage('Download',r.receivedBytes60m,'received','download-rate')}${usage('Upload',r.sentBytes60m,'sent','upload-rate')}</div><div class="city-info-facts"><strong>${count}${state.mapDetail==='service'?' & destinations':''}</strong><span>${r.addresses.size} IP${r.addresses.size===1?'':'s'} · ${r.connections.length} active connection${r.connections.length===1?'':'s'}</span><span>PID ${esc([...r.pids].join(', '))}</span><span>${esc(protocols)}</span></div></div>`:''}</div></article>`;
     }
     return `<article class="transport-route application-child" data-render-key="${esc(state.mapDetail+'|'+r.key)}" role="row">

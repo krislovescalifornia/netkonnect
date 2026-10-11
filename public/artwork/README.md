@@ -323,3 +323,18 @@ All activity honors pause, motion settings and reduced motion. Landscape framing
 and capped skyline height preserve open sky at wide card sizes.
 Run `electron scripts/qa-sky-cards.mjs` to verify visible sky movement, layout,
 App Info graphs, night stars, timeline continuity and motion controls.
+
+Cached distant scenery
+----------------------
+
+Live cards reuse the twenty original `world/backgrounds/` paintings behind the
+modular buildings, residents, crews and measured construction. The selected
+panorama follows the measured city tier. The distant painting and foreground
+ground strip share one `world-backdrop` raster cache in the canvas renderer;
+animation frames reuse that bitmap, with the existing 30 FPS cap and offscreen
+skipping. This adds no animated scenery layers or runtime artwork generation.
+Lighting, tier changes and resize refresh the cache without resetting actors.
+
+The canvas renderer QA checks painted background coverage and cache reuse at
+all twenty tiers, alongside real resident/worksite motion and measured growth.
+Idle/capture status lives above App Info in the footer, with a padded caret.

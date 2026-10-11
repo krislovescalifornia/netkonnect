@@ -1,6 +1,6 @@
 {
   "name": "netkonnect",
-  "version": "1.17.3",
+  "version": "1.17.4",
   "private": true,
   "type": "module",
   "description": "An offline Windows desktop network observatory with an independent tray companion.",

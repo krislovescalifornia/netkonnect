@@ -5,14 +5,16 @@ const key = node => node.nodeType === 1 && (node.getAttribute('data-render-key')
 const compatible = (a,b) => a.nodeType === b.nodeType && (a.nodeType !== 1 || (a.tagName === b.tagName && a.namespaceURI === b.namespaceURI && key(a) === key(b) && (key(a) || a.classList[0] === b.classList[0])));
 
 function attributes(current,next,scene=false) {
+  // Scene styles hold layout-owned palette variables. Polling templates do
+  // not own them; removing them dirties the entire retained painter.
   for(const attr of [...current.attributes]) {
-    if(scene && ['viewBox','data-scene-end','data-time','data-offscreen'].includes(attr.name))continue;
+    if(scene && ['viewBox','style','data-scene-end','data-time','data-offscreen'].includes(attr.name))continue;
     if(attr.name==='transform'&&current.matches('.city-activity-anchor,.city-route-scene .city-buildings'))continue;
     if(current.matches('.sky-visitor')&&['style','transform','data-sky-active'].includes(attr.name))continue;
     if(!next.hasAttribute(attr.name))current.removeAttribute(attr.name);
   }
   for(const attr of next.attributes) {
-    if(scene && ['viewBox','data-time','data-offscreen'].includes(attr.name))continue;
+    if(scene && ['viewBox','style','data-time','data-offscreen'].includes(attr.name))continue;
     if(attr.name==='transform'&&current.matches('.city-activity-anchor,.city-route-scene .city-buildings'))continue;
     if(current.matches('.sky-visitor')&&['style','transform'].includes(attr.name))continue;
     let value=attr.value;

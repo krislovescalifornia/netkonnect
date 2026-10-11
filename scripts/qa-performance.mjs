@@ -11,14 +11,20 @@ const software=process.argv.includes('--software');
 app.commandLine.appendSwitch('disable-features','CalculateNativeWinOcclusion');
 const label=process.argv.find(a=>a.startsWith('--label='))?.slice(8)||'current';
 const baseline=process.argv.includes('--baseline');
-const originals=new Map(baseline?['app.js','cities.js','map.js','render.js','world.js','transport.css','companion-ui.js','routes.js','living-city.js'].map(name=>[name,execFileSync('git',['show','HEAD:public/'+name])]):[]);
+const originals=new Map(baseline?['app.js','cities.js','city-canvas.js','map.js','render.js','world.js','transport.css','companion-ui.js','routes.js','living-city.js'].map(name=>[name,execFileSync('git',['show','HEAD:public/'+name])]):[]);
 const output=resolve('test-results/performance');
 protocol.registerSchemesAsPrivileged([{scheme:'perf',privileges:{standard:true,secure:true,supportFetchAPI:true}}]);
 app.setPath('userData',resolve(output,'profile-'+label));
 if(software)app.disableHardwareAcceleration();
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 let sample=0;
+const replayPath=process.argv.find(a=>a.startsWith('--snapshot='))?.slice(11);
+const replay=replayPath?JSON.parse(await readFile(resolve(replayPath),'utf8')):null;
+const live=process.argv.includes('--live');
+const {callCompanion}=await import('../desktop/pipe.mjs');
 const snapshot=()=>{
+  if(live){sample++;return callCompanion(resolve(process.env.LOCALAPPDATA,'netKonnect','data'),'snapshot');}
+  if(replay){sample++;replay.snapshot.timestamp=new Date().toISOString();replay.snapshot.traffic.timestamp=replay.snapshot.timestamp;return replay;}
   const s=demoSnapshot(),connection=s.connections.find(c=>c.scope==='Internet'&&c.pid!==0);
   sample++;
   s.timestamp=new Date().toISOString();s.traffic.timestamp=s.timestamp;
@@ -35,7 +41,7 @@ app.whenReady().then(async()=>{
   protocol.handle('perf',async request=>{
     const url=new URL(request.url);
     if(url.hostname!=='fixture')return new Response('Denied',{status:403});
-    if(url.pathname==='/api/snapshot')return Response.json(snapshot());
+    if(url.pathname==='/api/snapshot')return Response.json(await snapshot());
     const path=resolve('public','.'+(url.pathname==='/'?'/index.html':url.pathname));
     if(!path.startsWith(resolve('public')+'\\'))return new Response('Denied',{status:403});
     const type={'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.svg':'image/svg+xml'}[extname(path)];
@@ -77,10 +83,16 @@ app.whenReady().then(async()=>{
     await cdp.sendCommand('LayerTree.disable');
     console.log('LAYERS '+JSON.stringify(layers));
     if(process.argv.includes('--census')){assert.deepEqual(errors,[]);return;}
+    if(process.argv.includes('--churn'))await run(`window.churn=setInterval(()=>{const el=document.querySelector('#map-vehicle');el.value=el.value==='pickup'?'semi':'pickup';el.dispatchEvent(new Event('change',{bubbles:true}));},2000)`);
     const measure=async(name,ms=10500)=>{
       await run(`(async()=>{
         const {TransportAnimator}=await import('/map.js');
+        const {CityCanvas}=await import('/city-canvas.js');
         const p=window.performanceProbe={frames:[],longTasks:[],draws:0,drawMs:0,parses:0,parseChars:0,parseMs:0,queries:0,attributes:0};
+        p.paints=[];p.paint=CityCanvas.prototype.paint;
+        CityCanvas.prototype.paint=function(...args){if(!p.city)p.city=this;if(p.city===this)p.paints.push(performance.now());return p.paint.apply(this,args);};
+        p.refresh=CityCanvas.prototype.refresh;p.refreshes={};let refreshing=false;
+        CityCanvas.prototype.refresh=function(n){const root=!refreshing,t=performance.now();refreshing=true;try{return p.refresh.call(this,n);}finally{if(root){refreshing=false;const key=n.attrs.class||n.tag,r=p.refreshes[key]??={count:0,ms:0};r.count++;r.ms+=performance.now()-t;}}};
         p.draw=TransportAnimator.prototype.draw;
         TransportAnimator.prototype.draw=function(...args){const t=performance.now();try{return p.draw.apply(this,args);}finally{p.draws++;p.drawMs+=performance.now()-t;}};
         p.html=Object.getOwnPropertyDescriptor(Element.prototype,'innerHTML');
@@ -97,18 +109,28 @@ app.whenReady().then(async()=>{
       const elapsed=(performance.now()-began)/1000,after=app.getAppMetrics(),metricsAfter=await cdp.sendCommand('Performance.getMetrics');
       const report=await run(`(async()=>{
         const {TransportAnimator}=await import('/map.js');const p=window.performanceProbe;
+        const {CityCanvas}=await import('/city-canvas.js');CityCanvas.prototype.paint=p.paint;
+        CityCanvas.prototype.refresh=p.refresh;
         cancelAnimationFrame(p.frame);p.observer.disconnect();TransportAnimator.prototype.draw=p.draw;
         Object.defineProperty(Element.prototype,'innerHTML',p.html);Element.prototype.querySelector=p.query;Element.prototype.querySelectorAll=p.queryAll;Element.prototype.setAttribute=p.attr;
         const gaps=p.frames.slice(1).sort((a,b)=>a-b);
-        return {frames:gaps.length,medianFrameMs:gaps[Math.floor(gaps.length*.5)],p95FrameMs:gaps[Math.floor(gaps.length*.95)],maxFrameMs:gaps.at(-1),longTasks:p.longTasks,draws:p.draws,drawMs:p.drawMs,parses:p.parses,parseChars:p.parseChars,parseMs:p.parseMs,queries:p.queries,attributes:p.attributes,visibleCities:document.querySelectorAll('.application-city:not([data-offscreen])').length,cities:document.querySelectorAll('.application-city').length,vehicles:document.querySelectorAll('.transport-vehicle').length};
+        const paints=p.paints.slice(1).map((t,i)=>t-p.paints[i]).sort((a,b)=>a-b);
+        return {cityPaints:paints.length,medianPaintMs:paints[Math.floor(paints.length*.5)],p95PaintMs:paints[Math.floor(paints.length*.95)],maxPaintMs:paints.at(-1),paintHitches:paints.filter(t=>t>50).length,frames:gaps.length,medianFrameMs:gaps[Math.floor(gaps.length*.5)],p95FrameMs:gaps[Math.floor(gaps.length*.95)],maxFrameMs:gaps.at(-1),longTasks:p.longTasks,draws:p.draws,drawMs:p.drawMs,parses:p.parses,parseChars:p.parseChars,parseMs:p.parseMs,queries:p.queries,attributes:p.attributes,visibleCities:document.querySelectorAll('.application-city:not([data-offscreen])').length,cities:document.querySelectorAll('.application-city').length,vehicles:document.querySelectorAll('.transport-vehicle').length};
       })()`);
       const processes=after.map(p=>({type:p.type,cpuSeconds:(p.cpu.cumulativeCPUUsage||0)-(before.find(b=>b.pid===p.pid)?.cpu.cumulativeCPUUsage||0),workingSetKB:p.memory.workingSetSize}));
       const metrics=Object.fromEntries(metricsAfter.metrics.filter(m=>['TaskDuration','ScriptDuration','LayoutDuration','RecalcStyleDuration'].includes(m.name)).map(m=>[m.name,m.value-(metricsBefore.metrics.find(b=>b.name===m.name)?.value||0)]));
-      const result={name,elapsed,polls:sample-polls,...report,processes,totalCpuSeconds:processes.reduce((sum,p)=>sum+p.cpuSeconds,0),metrics};
+      const refreshes=await run('performanceProbe.refreshes');
+      const result={name,elapsed,polls:sample-polls,...report,refreshes,processes,totalCpuSeconds:processes.reduce((sum,p)=>sum+p.cpuSeconds,0),metrics};
+      if(process.argv.includes('--assert-smooth')&&['desktop','compact'].includes(name)){
+        assert.ok(result.cityPaints>=result.frames*.9,`${name}: city follows display cadence`);
+        assert.ok(result.maxPaintMs<50,`${name}: no traffic paint stalls of 50 ms or more`);
+      }
       console.log('PERFORMANCE '+JSON.stringify({...result,longTasks:result.longTasks.length}));return result;
     };
     if(process.argv.includes('--trace'))await cdp.sendCommand('Tracing.start',{categories:'devtools.timeline,disabled-by-default-devtools.timeline,blink,cc',transferMode:'ReturnAsStream'});
+    if(process.argv.includes('--profile')){await cdp.sendCommand('Profiler.enable');await cdp.sendCommand('Profiler.start');}
     const reports=[await measure('desktop')];
+    if(process.argv.includes('--profile')){const {profile}=await cdp.sendCommand('Profiler.stop');await writeFile(resolve(output,label+'-cpu.json'),JSON.stringify(profile));}
     if(process.argv.includes('--gpu-counters')){
       const {stdout}=await promisify(execFile)('powershell.exe',['-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File','scripts/qa-resources.ps1','-RootPid',String(process.pid),'-Seconds','10','-Output',resolve(output,label+'-gpu.json')],{windowsHide:true});
       console.log('GPU_COUNTERS '+stdout.trim());
@@ -149,6 +171,7 @@ app.whenReady().then(async()=>{
     }
     window.setSize(900,700);await run('scrollTo(0,0)');await wait(1200);
     reports.push(await measure('compact'));
+    await run('clearInterval(window.churn)');
     await run(`document.querySelector('[data-action="pause"]').click()`);await wait(500);
     reports.push(await measure('paused',4500));
     await run(`document.querySelector('[data-action="pause"]').click()`);await wait(500);

@@ -73,7 +73,7 @@ test('watercolor world assets retain their source pixels and load through the lo
   assert.deepEqual([sprite.readUInt32BE(16),sprite.readUInt32BE(20)],[1536,1024]);
 });
 
-test('legacy panoramas remain available but live cards use modular watercolor places',async()=>{
+test('stage panoramas support the independent live modular city',async()=>{
   assert.equal(WORLD_BACKGROUNDS.length,20);
   assert.deepEqual(WORLD_BACKGROUNDS.map(b=>b.name),CITY_STAGES.map(s=>s.name));
   const hashes=new Set();
@@ -87,8 +87,9 @@ test('legacy panoramas remain available but live cards use modular watercolor pl
     assert.ok(Math.abs(png.readUInt32BE(16)/png.readUInt32BE(20)-3)<.1);
     hashes.add(createHash('sha256').update(png).digest('hex'));
     const markup=renderCity({key:'stage-'+stage,bytes:CITY_STAGES[stage].at,convoy:'data-route-key="stage-'+stage+'"'});
-    assert.ok(!markup.includes('href="'+background.file+'"'),'static panoramas do not replace the live city');
+    assert.ok(markup.includes('href="'+background.file+'"'),'the measured tier supplies its distant scenery');
     assert.match(markup,/living-diorama/);
+    assert.match(markup,/city-residents/);assert.match(markup,/city-projects/);
   }
   assert.equal(hashes.size,20,'all twenty levels have different source artwork');
   assert.notEqual(worldBackground(1),worldBackground(14),'level 2 and level 15 have separate scenery');

@@ -49,6 +49,7 @@ export class CityCanvas {
   }
   destroy(){this.observer.disconnect();if(this.pendingImagePaint)cancelAnimationFrame(this.pendingImagePaint);this.surface.remove();this.canvas.width=0;this.svg.classList.remove('canvas-city');}
   changes(records) {
+    const refreshes=new Set();
     for(const change of records) {
       if(change.target===this.surface||this.surface.contains(change.target))continue;
       const n=this.nodes.get(change.target);if(!n)continue;
@@ -57,12 +58,16 @@ export class CityCanvas {
         const value=change.target.getAttribute(change.attributeName);
         if(n.attrs[change.attributeName]===value)continue;
         const previous=n.attrs[change.attributeName];
-        // Delivery pulses do not affect this painter's static scenery. Resting
-        // changes do affect worksite visibility; lighting changes affect all art.
-        if(n===this.root&&change.attributeName==='class'&&String(previous).includes('city-resting')===String(value).includes('city-resting')){n.attrs.class=value;continue;}
+        // Work state is handled by the animation clock and painter. These
+        // runtime classes must not re-resolve every resident and building.
+        if(change.attributeName==='class') {
+          const stable=classes=>String(classes||'').split(/\s+/).filter(c=>!['city-working','city-resting','city-delivering','terminal-unloading'].includes(c)).sort().join(' ');
+          if(stable(previous)===stable(value)){n.attrs.class=value;n.classes=new Set(change.target.classList);continue;}
+        }
+        if((change.attributeName.startsWith('data-')&&change.attributeName!=='data-time')||['aria-label','role'].includes(change.attributeName)){n.attrs[change.attributeName]=value;continue;}
         this.dirty(n);
         n.attrs[change.attributeName]=value;
-        if(['style','class','data-time'].includes(change.attributeName))this.refresh(n);
+        if(['style','class','data-time'].includes(change.attributeName))refreshes.add(n);
         else if(change.attributeName==='opacity'){
           n.style.opacity=value===null?1:Number(value);
           if(n.has('material-transfer')||n.has('transfer-carrier')||n.has('transfer-installer'))n.style.visibility=Number(value)===0?'hidden':'visible';
@@ -70,6 +75,9 @@ export class CityCanvas {
         else if(!change.attributeName.startsWith('data-'))this.geometry(n);
       }
     }
+    // A layout update can touch both an ancestor and several descendants.
+    // Resolve the final styles once, after all mutations have been collected.
+    for(const n of refreshes){let parent=n.parent;while(parent&&!refreshes.has(parent))parent=parent.parent;if(!parent)this.refresh(n);}
   }
   compile(el) {
     if(this.nodes.has(el))return this.nodes.get(el);
@@ -84,13 +92,15 @@ export class CityCanvas {
     n.style={opacity:Number(s.opacity),fill:s.fill,stroke:s.stroke,strokeWidth:parseFloat(s.strokeWidth)||0,visibility:s.visibility,
       transform:n.el.style.transform,clip:s.clipPath,filter:s.filter};
     n.classes=new Set(n.el.classList);n.has=c=>n.classes.has(c);
+    if(n.has('construction-site'))n.style.opacity=Number(n.attrs.opacity??1);
+    if(n.has('worksite-dust')||n.has('worksite-sparks'))n.style.visibility='visible';
     n.motion=[...n.classes].some(c=>motionClasses.has(c));
     n.animatedOpacity=n.has('worksite-dust')||n.has('worksite-sparks');
     n.vars=Object.fromEntries(['walk-duration','walk-delay','walk-distance','stride-delay','pose-delay','machine-duration','machine-delay','yard-span','hoist-duration','hoist-delay','hoist-rest','hoist-lift','nature-delay','cloud-delay','cloud-duration','work-delay'].map(k=>[k,prop(k)]));
     n.work=!!n.el.closest('.construction-yard,.city-helpers,.crew-carrier,.crew-receiver,.crane-rig,.transfer-installer,.transfer-carrier');
-    n.cacheable=['city-buildings','world-infrastructure','world-terrain','terminal-art','world-air-terminal'].some(n.has);
+    n.cacheable=['city-buildings','world-infrastructure','world-backdrop','terminal-art','world-air-terminal'].some(n.has);
     n.gardener=!!n.el.closest('.living-gardener');n.tram=!!n.el.closest('.living-transit');
-    n.terminalActive=!!n.el.closest('.terminal-unloading');
+    n.terminal=n.has('terminal-worker')?n.el.closest('.freight-terminal'):null;
     n.clipNode=n.style.clip.includes('#')?this.svg.querySelector('[id="'+n.style.clip.split('#')[1].split('"')[0].split(')')[0]+'"]'):null;
   }
   geometry(n) {
@@ -121,7 +131,7 @@ export class CityCanvas {
     if(has('transfer-carrier'))ctx.translate(0,-.7*(.5-.5*Math.cos(t/650*Math.PI)));
     if(has('transfer-installer'))ctx.rotate(Math.sin(t/1700*Math.PI*2)*.06);
     if(has('terminal-worker')){
-      if(n.terminalActive)n.terminalTime=(n.terminalTime||0)+Math.max(0,time-(n.lastTerminalTime??time));
+      if(n.terminal?.classList.contains('terminal-unloading'))n.terminalTime=(n.terminalTime||0)+Math.max(0,time-(n.lastTerminalTime??time));
       n.lastTerminalTime=time;ctx.translate(0,-.5+.5*Math.cos((n.terminalTime||0)/2000*Math.PI*2));
     }
     if(has('worksite-dust'))ctx.globalAlpha*=this.working?.25*(1-Math.cos(t/1900*Math.PI)):0;
@@ -138,6 +148,7 @@ export class CityCanvas {
       ctx.save();ctx.resetTransform();ctx.globalAlpha=1;ctx.drawImage(n.cache.bitmap,0,0);ctx.restore();return;
     }
     ctx.save();ctx.globalAlpha*=n.animatedOpacity?1:s.opacity;
+    if(n.has('construction-site')&&!this.working)ctx.globalAlpha*=.65;
     if(n.matrix){const {a,b,c,d,e,f}=n.matrix;ctx.transform(a,b,c,d,e,f);}this.animate(n,ctx,time);
     if(s.filter&&s.filter!=='none')ctx.filter=s.filter;
     if(n.clipNode){const clip=this.nodes.get(n.clipNode);if(clip?.children[0])ctx.clip(clip.children[0].path);}

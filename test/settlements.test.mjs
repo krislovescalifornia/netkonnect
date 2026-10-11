@@ -16,7 +16,8 @@ test('all twenty live cities assemble distinct transparent architecture at natur
     assert.ok(markup.includes('data-place="'+LIVING_PROFILES[stage].id+'"'));
     assert.match(markup,/class="world-landscape"/);
     assert.match(markup,/city-established" opacity="1"/);
-    assert.doesNotMatch(markup,/city-rising|world\/backgrounds|world\/settlements\/settlements/);
+    assert.doesNotMatch(markup,/city-rising|world\/settlements\/settlements/);
+    assert.match(markup,/class="world-terrain world-panorama"/);
     for(const [column,frame] of modules.entries()) {
     const png=await readFile(new URL('../public/'+frame.file,import.meta.url));
     assert.equal(png[25],6,'genuine RGBA source');

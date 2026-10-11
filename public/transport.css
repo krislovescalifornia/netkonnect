@@ -548,7 +548,10 @@
 }
 @media(max-width:900px) { .city-detail-footer>.city-summary { gap:7px; } }
 
-.application-city-card .route-expand .app-info-caret { display:block; font-size:12px; line-height:1; transform-origin:center; }
+.city-idle-label { display:block; margin:0 0 2px; color:#526751; font-size:9px; line-height:1.4; white-space:normal; }
+.transport-table .application-city-card .city-services { max-width:145px; }
+.transport-table .application-city-card .route-expand { gap:8px; padding:4px 6px 4px 0; }
+.application-city-card .route-expand .app-info-caret { display:grid; place-items:center; flex:0 0 18px; width:18px; height:18px; font-size:14px; line-height:1; color:#334b3a; transform-origin:center; }
 .application-city-card .route-expand[aria-expanded="true"] .app-info-caret { transform:rotate(180deg); }
 .transport-table .application-city-card .city-caption { flex:1; min-width:0; }
 .application-city-card .city-download-progress { flex:1; min-width:0; }

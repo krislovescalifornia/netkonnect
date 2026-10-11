@@ -255,7 +255,10 @@ export function worldSky(stage,end=655,key='catalog') {
     '<g class="world-stars">'+Array.from({length:40},(_,i)=>skySprite('star',(15+random()*(extent-30)).toFixed(2),(-16+random()*48).toFixed(2),i%5===0?2.6:1.7,'class="sky-star" data-render-key="star-'+i+'" style="--star-delay:-'+(random()*7).toFixed(2)+'s"')).join('')+'</g></g>'+cityStreetLights(stage,extent);
 }
 export function worldBackdrop(stage=0) {
-  return livingBackdrop(Math.max(0,Math.min(19,Math.floor(stage)||0)));
+  stage=Math.max(0,Math.min(19,Math.floor(stage)||0));
+  // Reuse the authored distant landscape behind the live foreground. Both
+  // layers share one raster cache, so steady-state painting stays one blit.
+  return `<g class="world-backdrop"><image class="world-terrain world-panorama" href="${worldBackground(stage)}" x="0" y="-20" width="900" height="280" preserveAspectRatio="none"/>${livingBackdrop(stage)}</g>`;
 }
 export function updateWorldTime(svg,date=new Date()) {
   const time=worldTime(date);

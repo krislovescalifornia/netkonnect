@@ -199,10 +199,23 @@ test('a stalled paint resumes without jumping forward through the journey',()=>{
   animator.active=false;time=3016;animator.tick();assert.equal(animator.queue.now,66);
 });
 
-test('switching data source resets the canvas cadence with the journey clock',()=>{
+test('switching data source resets the journey clock',()=>{
   const animator=new TransportAnimator({clock:()=>0});
-  animator.source='old';animator.lastPaint=60000;
+  animator.source='old';animator.queue.now=60000;
   animator.mount({querySelectorAll:()=>[]},{source:'new',active:false});
   assert.equal(animator.queue.now,0);
-  assert.equal(animator.lastPaint,-Infinity,'New journeys must paint immediately instead of waiting for the old clock');
+});
+
+test('canvas traffic paints every display frame, including across a poll',()=>{
+  let time=0,callback,paints=0;
+  const animator=new TransportAnimator({clock:()=>time,requestFrame:fn=>{callback=fn;return 1;}});
+  animator.active=true;animator.useCanvas=true;animator.svgs.set('city',{});
+  animator.draw=()=>paints++;animator.schedule();
+  for(let i=0;i<300;i++){
+    time+=1000/60;
+    if(i===120)animator.tick(); // A polling mount can tick between frames.
+    callback();
+  }
+  assert.equal(paints,300,'No artificial 30 FPS cap or dropped cadence at polling');
+  assert.ok(Math.abs(animator.queue.now-5000)<.001);
 });
