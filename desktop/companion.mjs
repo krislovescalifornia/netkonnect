@@ -15,6 +15,7 @@ import {EvidenceStore} from '../lib/evidence.mjs';
 import {EnhancedLookup} from '../lib/enhanced-lookup.mjs';
 import { AppIcons, windowsIconReader } from '../lib/app-icons.mjs';
 import { IconWishlist } from '../lib/icon-wishlist.mjs';
+import { SnapshotWorker } from '../lib/snapshot-worker.mjs';
 
 export async function startCompanion({ directory, root, version, packaged, onSmokeStop = null, onQuit = null, getFileIcon = null }) {
   await mkdir(directory, { recursive: true, mode: 0o700 });
@@ -27,7 +28,8 @@ export async function startCompanion({ directory, root, version, packaged, onSmo
   const evidence=new EvidenceStore({browserEnabled:enrichment.browser,browsers:enrichment}),lookup=new EnhancedLookup(root);
   lookup.setEnabled(enrichment.enhancedLookup);
   const enriched=(c,now)=>lookup.annotate(evidence.annotate(c,now));
-  let snapshot = null, collecting = false, error = null, stopping = false, snapshotWorker, trafficWorker, traceSocket;
+  let snapshot = null, collecting = false, error = null, stopping = false, trafficWorker, traceSocket;
+  const snapshotWorker = new SnapshotWorker(root);
   let instanceId = randomUUID(), traffic = new TrafficStore(), lastSnapshot = Date.now(), retryAt = 0, lastLost = 0, lastBuffersLost = 0;
   const sightings = new Map(), startedAt = Date.now();
   const endpoint = { pipe: pipeName(), token: randomBytes(32).toString('hex'), pid: process.pid };
@@ -91,9 +93,7 @@ export async function startCompanion({ directory, root, version, packaged, onSmo
     if (collecting || stopping) return;
     collecting = true;
     try {
-      const raw = await new Promise((resolve, reject) => {
-        snapshotWorker = execFile('powershell.exe', ['-NoLogo','-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',join(root,'collector.ps1')], { windowsHide:true, timeout:25000, maxBuffer:12 * 1024 * 1024, encoding:'utf8' }, (e, stdout) => e ? reject(e) : resolve(JSON.parse(stdout.replace(/^\uFEFF/, '').trim())));
-      });
+      const raw = await snapshotWorker.collect();
       if (stopping) return;
       snapshot = evidence.snapshot(enrichSnapshot(raw, snapshot, snapshot?.history || [], sightings));
       icons.observe(snapshot);wishlist.observe(snapshot,Math.min(8,(Date.now()-lastSnapshot)/1000));
@@ -165,7 +165,7 @@ export async function startCompanion({ directory, root, version, packaged, onSmo
       if (stopping) return; stopping = true;
       lookup.setEnabled(false);
       for (const timer of [collectTimer, saveTimer, retryTimer]) clearInterval(timer);
-      snapshotWorker?.kill();
+      snapshotWorker.stop();
       await ipc.close();
       const ended = [];
       if (trafficWorker?.exitCode === null) ended.push(new Promise(resolve => { trafficWorker.once('exit', resolve); trafficWorker.stdin.end('stop\n'); }));

@@ -19,7 +19,7 @@ function attributes(current,next,scene=false) {
     if(scene && attr.name==='class' && current.matches('.convoy-svg')) {
       // Working/resting and deliveries belong to the live journey animator.
       // Do not briefly reset them before a resize flushes style/layout.
-      const runtime=['city-working','city-resting','city-delivering'];
+      const runtime=['city-working','city-resting','city-delivering','canvas-city'];
       value=[...next.classList].filter(name=>!runtime.includes(name)).concat(runtime.filter(name=>current.classList.contains(name))).join(' ');
     }
     if(current.getAttribute(attr.name) !== value)current.setAttribute(attr.name,value);

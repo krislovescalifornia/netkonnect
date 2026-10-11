@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'node:url';
-import { execFile, spawn } from 'node:child_process';
+import { spawn } from 'node:child_process';
+import { SnapshotWorker } from './lib/snapshot-worker.mjs';
 import { createInterface } from 'node:readline';
 import { enrichSnapshot } from './lib/network.mjs';
 import { TrafficStore } from './lib/traffic.mjs';
@@ -13,7 +14,7 @@ import { createAppServer } from './lib/http.mjs';
 import { prepareRestart } from './lib/restart.mjs';
 
 const instanceId = randomUUID();
-let restarting = false, stopping = false, snapshotWorker;
+let restarting = false, stopping = false;
 const portArgument = process.argv.indexOf('--port');
 const port = Number(portArgument >= 0 ? process.argv[portArgument + 1] : process.env.PORT || 4317);
 if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('Choose a port between 1 and 65535.');
@@ -24,6 +25,7 @@ const evidence = new EvidenceStore();
 const analytics = new AnalyticsStore(fileURLToPath(new URL('./data/analytics/', import.meta.url)));
 await analytics.load();
 const root=fileURLToPath(new URL('./',import.meta.url));
+const snapshotWorker=new SnapshotWorker(root);
 const icons=new AppIcons(analytics.directory,{readIcons:windowsIconReader(root)}),wishlist=new IconWishlist(analytics.directory);
 await Promise.all([icons.load(),wishlist.load()]);
 let lastObservation=Date.now();
@@ -53,11 +55,8 @@ async function collect() {
   busy = true;
   try {
     if (process.platform !== 'win32') throw new Error('Live monitoring requires Windows. The sample network is available from the interface.');
-    const { stdout } = await new Promise((resolve, reject) => {
-      snapshotWorker = execFile('powershell.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', fileURLToPath(new URL('./collector.ps1', import.meta.url))], { windowsHide: true, timeout: 25000, maxBuffer: 12 * 1024 * 1024, encoding: 'utf8' }, (error, stdout) => error ? reject(error) : resolve({ stdout }));
-    });
+    const raw = await snapshotWorker.collect();
     if (stopping) return;
-    const raw = JSON.parse(stdout.replace(/^\uFEFF/, '').trim());
     snapshot = enrichSnapshot(raw, snapshot, snapshot?.history || [], sightings);
     icons.observe(snapshot);wishlist.observe(snapshot,Math.min(8,(Date.now()-lastObservation)/1000));lastObservation=Date.now();
     collectorError = null;
@@ -89,7 +88,7 @@ function stop() {
   stopping = true;
   clearInterval(timer);
   clearInterval(historyTimer);
-  snapshotWorker?.kill();
+  snapshotWorker.stop();
   const closed = new Promise(resolve => server.close(resolve));
   server.closeAllConnections();
   const traceStopped = new Promise(resolve => {

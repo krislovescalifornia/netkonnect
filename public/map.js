@@ -9,6 +9,7 @@ import {evidenceDetails} from './enrichment.js';
 import {worldRoute,routePoint,layoutWorld,updateWorldTime,infrastructure,laneLabelPosition,SkySchedule,drawSkySighting} from './world.js';
 import {updateSVGMarkup} from './render.js';
 import {livingDestination} from './living-city.js';
+import {CityCanvas} from './city-canvas.js';
 export {vehicle} from './vehicles.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -68,6 +69,8 @@ export class TransportAnimator {
     this.sceneNodes = new WeakMap();
     this.deliveryTimes = new WeakMap();
     this.skyScenes = new WeakMap();
+    this.canvases=new Map();this.lastPaint=-Infinity;
+    this.useCanvas=typeof document!=='undefined'&&new URLSearchParams(globalThis.location?.search).get('renderer')!=='svg';
     this.wallClock=wallClock;this.worldTimer=null;
     this.lastTime = this.clock(); this.active = false; this.frame = null;
     // Skip paints for cities outside the viewport, without pausing or recreating
@@ -124,10 +127,12 @@ export class TransportAnimator {
   mount(root,{source,active}) {
     this.tick();
     if (source !== this.source) {
+      for(const painter of this.canvases.values())painter.destroy();this.canvases.clear();
       this.resizeObserver?.disconnect();
       this.visibilityObserver?.disconnect();
       for(const svg of this.svgs.values())for(const node of this.vehicleNodes.get(svg)?.values()||[]){node.group.remove();node.parcel?.remove();}
       this.queue = new JourneyQueue(); this.svgs.clear(); this.vehicleNodes=new WeakMap(); this.source = source;
+      this.lastPaint=-Infinity;
       this.skyScenes=new WeakMap();
     }
     this.active = active;
@@ -137,6 +142,7 @@ export class TransportAnimator {
       const newScene=this.svgs.get(key)!==svg;
       this.resizeCityScene(svg,newScene);
       this.cacheScene(svg);
+      if(this.useCanvas&&svg.classList.contains('city-route-scene')&&!this.canvases.has(svg))this.canvases.set(svg,new CityCanvas(svg,()=>this.draw()));
       const capacity=this.sceneCapacity(svg);
       for (const [direction,incoming] of [['download',true],['upload',false]]) {
         configurations.push({key:`${key}|${direction}`,routeKey:key, incoming,
@@ -146,7 +152,7 @@ export class TransportAnimator {
       visible.set(key,svg);
       if(svg.classList.contains('city-route-scene') && newScene) {this.resizeObserver?.observe(svg);this.visibilityObserver?.observe(svg);}
     }
-    for(const [key,svg] of this.svgs)if(visible.get(key)!==svg) {this.resizeObserver?.unobserve(svg);this.visibilityObserver?.unobserve(svg);}
+    for(const [key,svg] of this.svgs)if(visible.get(key)!==svg) {this.resizeObserver?.unobserve(svg);this.visibilityObserver?.unobserve(svg);this.canvases.get(svg)?.destroy();this.canvases.delete(svg);}
     this.svgs = visible;
     this.updateWorldClock();
     if(this.svgs.size&&!this.worldTimer)this.worldTimer=setInterval(()=>this.updateWorldClock(),30000);
@@ -161,7 +167,8 @@ export class TransportAnimator {
   schedule() {
     this.frame = this.requestFrame(()=>{
       this.frame = null;
-      this.tick(); this.draw();
+      this.tick();
+      if(!this.useCanvas||this.queue.now-this.lastPaint>=1000/30-1){this.draw();this.lastPaint=this.queue.now;}
       if (this.active && this.svgs.size) this.schedule();
     });
   }
@@ -279,6 +286,7 @@ export class TransportAnimator {
       }
       const idle = scene.idle,hidden=journeys.length>0;
       if (idle&&idle.hidden!==hidden) idle.hidden=hidden;
+      this.canvases.get(svg)?.paint(this.queue.now,this.sceneSizes.get(svg),svg.classList.contains('city-working'));
     }
   }
 }

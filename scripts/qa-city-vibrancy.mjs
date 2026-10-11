@@ -1,4 +1,5 @@
-// Run: electron scripts/qa-city-vibrancy.mjs
+// Legacy SVG reference: electron scripts/qa-city-vibrancy.mjs
+// Default canvas renderer: npm run test:renderer
 // Checks rendered motion across the city, stable timelines, measured growth,
 // night illumination, paused/motion-disabled scenes and reduced motion.
 import {app,BrowserWindow} from 'electron';
@@ -45,7 +46,7 @@ app.whenReady().then(async()=>{
     return {offscreen,restored};
   };
   try {
-    await window.loadURL(`http://127.0.0.1:${server.address().port}/living-preview`);
+    await window.loadURL(`http://127.0.0.1:${server.address().port}/living-preview?renderer=svg`);
     await run(`Promise.all([...new Set([...document.querySelectorAll('image')].map(el=>el.getAttribute('href')))].map(async path=>{const image=new Image();image.src=path;await image.decode();}))`);
     if(process.argv.includes('--scroll-only')){await verifyScroll();assert.deepEqual(errors,[]);return;}
     await change('#lighting','21');

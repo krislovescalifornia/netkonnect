@@ -57,6 +57,26 @@ test('failed SQLite checkpoint rolls back all records and retains dirty interval
   store.saveRecord=save;await store.flush();assert.equal(store.db.prepare('SELECT COUNT(*) AS n FROM hourly_usage').get().n,2);
   await store.close();
 });
+
+test('SQLite checkpoints write changed endpoints only, retaining earlier hours and idle coverage',async t=>{
+  const d=await directory(t),store=new SQLiteHistory(d);await store.load(now);
+  const batch=flows=>({type:'traffic',elapsed:2,flows});
+  store.ingest(batch(Array.from({length:100},(_,i)=>({...flow,remotePort:1000+i}))),now,snapshot);
+  await store.flush();
+  const writes=[],save=store.saveRecord.bind(store);
+  store.saveRecord=record=>{writes.push(record.key);save(record);};
+  store.ingest(batch([{...flow,remotePort:1001}]),now+2000,snapshot);await store.flush();
+  assert.equal(writes.length,1,'one changed endpoint must not rewrite all 100');
+  writes.length=0;
+  store.ingest(batch([]),now+4000,snapshot);await store.flush();
+  assert.equal(writes.length,0,'idle coverage needs no usage rewrites');
+  store.ingest(batch([flow]),now+3600000,snapshot);await store.close();
+  const reopened=new SQLiteHistory(d);await reopened.load(now+3600000);
+  assert.equal(reopened.db.prepare('SELECT COUNT(*) AS n FROM hourly_usage').get().n,101);
+  assert.equal(reopened.query({range:'all'},now+3600000).total,102*150);
+  assert.equal(reopened.timeline(now-1).reduce((sum,row)=>sum+row.captureSeconds,0),8);
+  await reopened.close();
+});
 test('legacy JSON import is idempotent and malformed imports do not destroy SQLite history',async t=>{
   const d=await directory(t), legacy=join(d,'legacy');await mkdir(legacy);
   const source=new SQLiteHistory(join(d,'source'));await source.load(now);source.ingest({type:'traffic',elapsed:2,flows:[flow]},now,snapshot);

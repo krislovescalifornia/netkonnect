@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.17.3 — 2026-10-11
+
+- Reuse one request-driven Windows snapshot worker, with fresh observations every eight seconds, bounded responses, timeout/crash recovery and parent-pipe shutdown. Batch process identities and adapter queries and read each executable's version once per snapshot.
+- Checkpoint only changed SQLite usage rows and coverage hours, reuse prepared writes, and skip empty ETW sighting transactions. Preserve transactional retries, lifetime city totals and capture coverage.
+- Audit installed CPU/GPU use and dense city rendering. Snapshot profiling fell from 4.13 CPU-seconds per read to 0.27–0.45 after warmup. See `docs/performance-audit-2026-10-11.md` for scope and measurements.
+- Paint live cities on a retained canvas with cached scenery, cropped sprite sheets and 30 FPS activity. Preserve original watercolor artwork, measured construction, deliveries, ambient residents and motion controls. Dense desktop renderer-fixture CPU fell from 1.55 to 0.34 cores (78%); compact fell from 0.91 to 0.27 (70%). Hardware GPU 3D activity rose slightly, remaining below 1% in these samples. See `docs/renderer-redesign-2026-10-11.md` for repeat runs, memory and responsiveness tradeoffs, and rendered checks across all twenty tiers.
+
 ## 1.17.1 — 2026-10-10
 
 - Reduce city stutter during two-second refreshes by skipping discarded scenery markup, caching scene references, avoiding unchanged DOM writes and sharing route grouping work.

@@ -198,3 +198,11 @@ test('a stalled paint resumes without jumping forward through the journey',()=>{
   time=1016;animator.tick();assert.equal(animator.queue.now,66);
   animator.active=false;time=3016;animator.tick();assert.equal(animator.queue.now,66);
 });
+
+test('switching data source resets the canvas cadence with the journey clock',()=>{
+  const animator=new TransportAnimator({clock:()=>0});
+  animator.source='old';animator.lastPaint=60000;
+  animator.mount({querySelectorAll:()=>[]},{source:'new',active:false});
+  assert.equal(animator.queue.now,0);
+  assert.equal(animator.lastPaint,-Infinity,'New journeys must paint immediately instead of waiting for the old clock');
+});

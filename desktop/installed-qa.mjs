@@ -47,5 +47,16 @@ export async function checkInstalledSetupUI(window, saveScreenshot) {
   // Wait across multiple real collector intervals and UI refreshes.
   for(let i=0;i<3;i++) { await new Promise(resolve=>setTimeout(resolve,4000));result=await evidence();assertReady(result); }
   await saveScreenshot('installed-after-restart-ready.png');
-  return { ...result, restartRecovered:true, stableChecks:true, checkpoint:true, fixtures:false };
+  await evaluate(`document.querySelector('.drawer [data-action="close"]').click();document.querySelector('[data-page="overview"]').click();`);
+  await until(`document.querySelectorAll('.canvas-city canvas').length>0`, 'Installed city canvas did not mount');
+  await new Promise(resolve=>setTimeout(resolve,1500));
+  const renderer=await evaluate(`(()=>{
+    const cities=[...document.querySelectorAll('.application-city')],visible=cities.filter(svg=>!svg.hasAttribute('data-offscreen'));
+    return {version:document.querySelector('[data-app-version]')?.textContent,cities:cities.length,visibleCities:visible.length,
+      canvasCities:document.querySelectorAll('.canvas-city canvas').length,width:innerWidth,height:innerHeight,
+      paintedCanvases:visible.filter(svg=>{const c=svg.querySelector('canvas');return c?.width&&c?.height&&c.getContext('2d').getImageData(0,0,c.width,c.height).data.some((value,i)=>i%4===3&&value>20);}).length};
+  })()`);
+  if(renderer.canvasCities!==renderer.cities||renderer.paintedCanvases!==renderer.visibleCities||!renderer.visibleCities)throw new Error('Installed canvas artwork was not painted: '+JSON.stringify(renderer));
+  await saveScreenshot('installed-canvas-dashboard.png');
+  return { ...result, renderer, restartRecovered:true, stableChecks:true, checkpoint:true, fixtures:false };
 }

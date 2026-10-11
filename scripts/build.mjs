@@ -29,6 +29,7 @@ if(!(iconQA.verifiedAt>=iconQAStarted))throw new Error('Icon visual QA did not p
 await run('scripts/qa-transport-world.mjs', [], join(root,'node_modules','electron','dist','electron.exe'));
 await run('scripts/qa-settlements.mjs', [], join(root,'node_modules','electron','dist','electron.exe'));
 await run('scripts/qa-animation.mjs', ['--growing'], join(root,'node_modules','electron','dist','electron.exe'));
+await run('scripts/qa-canvas-renderer.mjs', [], join(root,'node_modules','electron','dist','electron.exe'));
 await run('scripts/icon.mjs');
 await run('node_modules/electron-builder/out/cli/cli.js', ['--win', ...(process.argv.includes('--dir') ? ['--dir'] : ['nsis']), `--config.directories.output=${output}`, `--config.electronDist=${join(root,'node_modules','electron','dist')}`]);
 await verifyPackage(join(output, 'win-unpacked'));

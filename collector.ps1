@@ -1,6 +1,8 @@
+param([switch]$Persistent)
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+function Read-NetworkSnapshot {
 $issues = [System.Collections.Generic.List[string]]::new()
 $collectionSources = @{}
 function Source-Status($name, $available, $count, $source, $message = '') {
@@ -8,36 +10,40 @@ function Source-Status($name, $available, $count, $source, $message = '') {
 }
 $processes = @{}
 $processDetails = @{}
-Get-Process -ErrorAction SilentlyContinue | ForEach-Object {
-  $processes[[int]$_.Id] = $_.ProcessName
-  $detail=@{pid=[int]$_.Id;name=$_.ProcessName;startedAt=$null;path=$null;product=$null;company=$null;fileVersion=$null}
-  try {$detail.startedAt=$_.StartTime.ToUniversalTime().ToString('o')}catch{}
-  try {$detail.path=$_.Path}catch{}
-  try {
-    if ($detail.path -match '^[a-zA-Z]:\\' -and ([IO.DriveInfo]::new([IO.Path]::GetPathRoot($detail.path))).DriveType -eq [IO.DriveType]::Fixed) {
-      $versionInfo=[Diagnostics.FileVersionInfo]::GetVersionInfo($detail.path);$detail.product=$versionInfo.ProductName;$detail.company=$versionInfo.CompanyName;$detail.fileVersion=$versionInfo.FileVersion
-    }
-  }catch{}
-  $processDetails[[string]$_.Id]=$detail
-}
+$executableVersions = @{}
 try {
-  Get-CimInstance Win32_Process -Property ProcessId,ParentProcessId,SessionId,ExecutablePath,CreationDate -ErrorAction Stop | ForEach-Object {
-    $detail=$processDetails[[string]$_.ProcessId]
-    if ($detail) {
-      $detail.parentPid=[int]$_.ParentProcessId; $detail.sessionId=[int]$_.SessionId
-      if (!$detail.path) { $detail.path=$_.ExecutablePath }
-      if (!$detail.startedAt -and $_.CreationDate) { $detail.startedAt=$_.CreationDate.ToUniversalTime().ToString('o') }
-    }
+  # A single process table includes identity and creation time. Opening every
+  # process again through Get-Process.Path/StartTime is particularly expensive.
+  Get-CimInstance Win32_Process -Property Name,ProcessId,ParentProcessId,SessionId,ExecutablePath,CreationDate -ErrorAction Stop | ForEach-Object {
+    $name=[IO.Path]::GetFileNameWithoutExtension($_.Name)
+    $processes[[int]$_.ProcessId]=$name
+    $startedAt=$null; if ($_.CreationDate) { $startedAt=$_.CreationDate.ToUniversalTime().ToString('o') }
+    $processDetails[[string]$_.ProcessId]=@{pid=[int]$_.ProcessId;name=$name;startedAt=$startedAt;path=$_.ExecutablePath;parentPid=[int]$_.ParentProcessId;sessionId=[int]$_.SessionId;product=$null;company=$null;fileVersion=$null}
   }
-} catch { $issues.Add('Some process identity fields are unavailable.') }
+} catch {
+  $issues.Add('Some process identity fields are unavailable.')
+  Get-Process -ErrorAction SilentlyContinue | ForEach-Object {
+    $processes[[int]$_.Id]=$_.ProcessName
+    $detail=@{pid=[int]$_.Id;name=$_.ProcessName;startedAt=$null;path=$null;product=$null;company=$null;fileVersion=$null}
+    try {$detail.startedAt=$_.StartTime.ToUniversalTime().ToString('o')}catch{}
+    try {$detail.path=$_.Path}catch{}
+    $processDetails[[string]$_.Id]=$detail
+  }
+}
 foreach ($detail in $processDetails.Values) {
   $detail.localPath=$false
   try {
+    if ($detail.path -match '^\\\\\?\\[a-zA-Z]:\\') { $detail.path=$detail.path.Substring(4) }
     if ($detail.path -match '^[a-zA-Z]:\\') { $detail.localPath=([IO.DriveInfo]::new([IO.Path]::GetPathRoot($detail.path))).DriveType -eq [IO.DriveType]::Fixed }
+    if ($detail.localPath) {
+      # Per-snapshot cache: dozens of browser processes share one executable.
+      if (!$executableVersions.ContainsKey($detail.path)) { $executableVersions[$detail.path]=[Diagnostics.FileVersionInfo]::GetVersionInfo($detail.path) }
+      $versionInfo=$executableVersions[$detail.path];$detail.product=$versionInfo.ProductName;$detail.company=$versionInfo.CompanyName;$detail.fileVersion=$versionInfo.FileVersion
+    }
   } catch {}
 }
 try {
-  $services=@(Get-CimInstance Win32_Service -Property Name,DisplayName,ProcessId,State -ErrorAction Stop | Where-Object {$_.ProcessId -gt 0 -and $_.State -eq 'Running'})
+  $services=@(Get-CimInstance Win32_Service -Filter "ProcessId > 0 AND State = 'Running'" -Property Name,DisplayName,ProcessId,State -ErrorAction Stop)
   foreach ($service in $services) {
     $detail=$processDetails[[string]$service.ProcessId]
     if ($detail) { $detail.services=@($detail.services | Where-Object {$_}) + @(@{name=$service.Name;displayName=$service.DisplayName}) }
@@ -104,12 +110,18 @@ Source-Status 'tcp-table' $tcpAvailable @($connections | Where-Object {$_.protoc
 Source-Status 'udp-table' $udpAvailable @($connections | Where-Object {$_.protocol -eq 'UDP'}).Count 'Get-NetUDPEndpoint / netstat -ano' 'UDP tables expose bindings, not remote peers.'
 $adapters = @()
 try {
-  $configs = @(Get-NetIPConfiguration -All -ErrorAction SilentlyContinue)
+  # Read each table once. Get-NetIPConfiguration re-queries multiple tables for
+  # every interface; the UI only needs these specific address/DNS/route fields.
+  $adapterAddresses = @(Get-NetIPAddress -ErrorAction SilentlyContinue)
+  $adapterDns = @(Get-DnsClientServerAddress -ErrorAction SilentlyContinue)
+  $adapterGateways = @(Get-NetRoute -DestinationPrefix '0.0.0.0/0','::/0' -ErrorAction SilentlyContinue)
+  $adapterStatistics = @{}
+  Get-NetAdapterStatistics -IncludeHidden -ErrorAction SilentlyContinue | ForEach-Object { $adapterStatistics[$_.Name]=$_ }
   $interfaces = @(Get-NetIPInterface -ErrorAction SilentlyContinue)
   $adapters = @(Get-NetAdapter -IncludeHidden -ErrorAction Stop | ForEach-Object {
     $adapter = $_
-    $stats = $adapter | Get-NetAdapterStatistics -ErrorAction SilentlyContinue
-    $config = $configs | Where-Object { $_.InterfaceIndex -eq $adapter.ifIndex } | Select-Object -First 1
+    $stats = $adapterStatistics[$adapter.Name]
+    $addresses = @($adapterAddresses | Where-Object { $_.InterfaceIndex -eq $adapter.ifIndex })
     @{
       id=[string]$adapter.InterfaceGuid; interfaceIndex=[int]$adapter.ifIndex; name=$adapter.Name; description=$adapter.InterfaceDescription; status=[string]$adapter.Status; speed=$adapter.LinkSpeed; mac=$adapter.MacAddress
       hardware=[bool]$adapter.HardwareInterface; virtual=[bool]$adapter.Virtual; hidden=[bool]$adapter.Hidden
@@ -117,8 +129,8 @@ try {
       receivedErrors=$(if($stats){[double]$stats.ReceivedPacketErrors}else{$null}); sentErrors=$(if($stats){[double]$stats.OutboundPacketErrors}else{$null})
       receivedDiscards=$(if($stats){[double]$stats.ReceivedDiscardedPackets}else{$null}); sentDiscards=$(if($stats){[double]$stats.OutboundDiscardedPackets}else{$null})
       receivedPackets=$(if($stats){[double]$stats.ReceivedUnicastPackets+[double]$stats.ReceivedMulticastPackets+[double]$stats.ReceivedBroadcastPackets}else{$null}); sentPackets=$(if($stats){[double]$stats.SentUnicastPackets+[double]$stats.SentMulticastPackets+[double]$stats.SentBroadcastPackets}else{$null})
-      ipv4=@($config.IPv4Address.IPAddress | Where-Object { $_ }); ipv6=@(@($config.IPv6Address.IPAddress)+@($config.IPv6LinkLocalAddress.IPAddress) | Where-Object { $_ } | Select-Object -Unique)
-      gateway=@(@($config.IPv4DefaultGateway.NextHop)+@($config.IPv6DefaultGateway.NextHop) | Where-Object { $_ }); dns=@($config.DNSServer.ServerAddresses | Where-Object { $_ })
+      ipv4=@($addresses | Where-Object { $_.AddressFamily -eq 'IPv4' } | ForEach-Object { $_.IPAddress }); ipv6=@($addresses | Where-Object { $_.AddressFamily -eq 'IPv6' } | ForEach-Object { $_.IPAddress } | Select-Object -Unique)
+      gateway=@($adapterGateways | Where-Object { $_.InterfaceIndex -eq $adapter.ifIndex } | ForEach-Object { $_.NextHop } | Select-Object -Unique); dns=@($adapterDns | Where-Object { $_.InterfaceIndex -eq $adapter.ifIndex } | ForEach-Object { $_.ServerAddresses } | Where-Object { $_ } | Select-Object -Unique)
       ipInterfaces=@($interfaces | Where-Object {$_.InterfaceIndex -eq $adapter.ifIndex} | ForEach-Object {@{family=[string]$_.AddressFamily;mtu=[int]$_.NlMtu;metric=[int]$_.InterfaceMetric;dhcp=[string]$_.Dhcp;forwarding=[string]$_.Forwarding;connectionState=[string]$_.ConnectionState}})
     }
   })
@@ -196,3 +208,12 @@ try {
   }
 } catch {}
 @{ timestamp=[DateTime]::UtcNow.ToString('o'); computer=$env:COMPUTERNAME; processes=$processNames; processDetails=$processDetails; connections=$connections; adapters=$adapters; routes=$routes; neighbors=$neighbors; dns=$dns; hosts=$hosts; netbiosCache=$netbiosCache; networkStatistics=$networkStatistics; collectionSources=$collectionSources; systemProxy=$systemProxy; issues=@($issues.ToArray()) } | ConvertTo-Json -Depth 9 -Compress
+}
+if ($Persistent) {
+  # The parent owns the cadence. EOF exits when it closes or crashes; there is
+  # no autonomous polling loop or retained snapshot/identity cache here.
+  while (($snapshotCommand = [Console]::ReadLine()) -ne $null) {
+    if ($snapshotCommand -ne 'collect') { break }
+    Read-NetworkSnapshot
+  }
+} else { Read-NetworkSnapshot }

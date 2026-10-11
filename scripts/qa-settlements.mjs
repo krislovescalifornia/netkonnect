@@ -10,7 +10,7 @@ app.whenReady().then(async()=>{
 const output=resolve('test-results/settlements');await mkdir(output,{recursive:true});
 const assets=createAppServer({getSnapshot:()=>({})});
 const html=`<!doctype html><meta charset="utf-8"><title>Integrated city landscapes</title><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/transport.css"><style>body{display:block;margin:0;padding:20px;background:#f4f5eb;font-family:Segoe UI;color:#294737;overflow:auto}h1{font-size:24px;margin:0 0 6px}p{margin:0 0 18px;font-size:13px}#gallery{max-width:1240px}.application-city *{transition:none!important}</style><h1>Every byte builds</h1><p>Illustrative traffic · Integrated landscapes and direction readings</p><div id="gallery"></div>`;
-const server=createServer((req,res)=>{if(req.url==='/preview'){res.writeHead(200,{'Content-Type':'text/html'});res.end(html);}else assets.emit('request',req,res);});
+const server=createServer((req,res)=>{if(req.url.split('?')[0]==='/preview'){res.writeHead(200,{'Content-Type':'text/html'});res.end(html);}else assets.emit('request',req,res);});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const window=new BrowserWindow({show:false,width:1280,height:1180,webPreferences:{sandbox:true,contextIsolation:true,nodeIntegration:false,offscreen:true,backgroundThrottling:false}});
 // Offscreen Chromium can reject a capture while committing a resize/animation
@@ -23,7 +23,8 @@ const capture=async(rect)=>{
 };
 const errors=[];window.webContents.on('console-message',event=>{if(event.level==='error'||event.level===3){errors.push(event.message);console.error('RENDERER',event.message);}});
 try {
-  await window.loadURL('http://127.0.0.1:'+server.address().port+'/preview');
+  // Native SVG geometry/timeline reference; the build also gates on canvas pixels.
+  await window.loadURL('http://127.0.0.1:'+server.address().port+'/preview?renderer=svg');
   const initial=await window.webContents.executeJavaScript(`(async()=>{
     const {renderNetworkMap,TransportAnimator}=await import('/map.js');
     const {CITY_STAGES}=await import('/cities.js');

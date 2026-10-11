@@ -3,7 +3,8 @@
 import {app,BrowserWindow,protocol} from 'electron';
 import {mkdir,writeFile,readFile} from 'node:fs/promises';
 import {resolve,extname} from 'node:path';
-import {execFileSync} from 'node:child_process';
+import {execFileSync,execFile} from 'node:child_process';
+import {promisify} from 'node:util';
 import assert from 'node:assert/strict';
 import {demoSnapshot} from '../public/demo.js';
 const software=process.argv.includes('--software');
@@ -47,7 +48,7 @@ app.whenReady().then(async()=>{
   const cdp=window.webContents.debugger;
   try {
     console.log('PERFORMANCE_LOADING');
-    await window.loadURL('perf://fixture/');
+    await window.loadURL('perf://fixture/'+(process.argv.includes('--svg')?'?renderer=svg':''));
     window.focus();
     console.log('PERFORMANCE_LOADED');
     cdp.attach('1.3');await cdp.sendCommand('Performance.enable');
@@ -108,6 +109,10 @@ app.whenReady().then(async()=>{
     };
     if(process.argv.includes('--trace'))await cdp.sendCommand('Tracing.start',{categories:'devtools.timeline,disabled-by-default-devtools.timeline,blink,cc',transferMode:'ReturnAsStream'});
     const reports=[await measure('desktop')];
+    if(process.argv.includes('--gpu-counters')){
+      const {stdout}=await promisify(execFile)('powershell.exe',['-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File','scripts/qa-resources.ps1','-RootPid',String(process.pid),'-Seconds','10','-Output',resolve(output,label+'-gpu.json')],{windowsHide:true});
+      console.log('GPU_COUNTERS '+stdout.trim());
+    }
     if(process.argv.includes('--trace')) {
       const finished=new Promise(r=>cdp.on('message',(_event,method,params)=>{if(method==='Tracing.tracingComplete')r(params.stream);}));
       await cdp.sendCommand('Tracing.end');const stream=await finished;let json='';
@@ -117,6 +122,16 @@ app.whenReady().then(async()=>{
       console.log('TRACE '+JSON.stringify([...durations].sort((a,b)=>b[1]-a[1]).slice(0,35)));
     }
     await writeFile(resolve(output,label+'-desktop.png'),(await window.webContents.capturePage()).toPNG());
+    if(process.argv.includes('--draw-experiments')) {
+      await run(`(async()=>{const {TransportAnimator}=await import('/map.js');window.originalDraw=TransportAnimator.prototype.draw;TransportAnimator.prototype.draw=function(){};})()`);
+      reports.push(await measure('without-vehicle-draw',5500));
+      await run(`(async()=>{const {TransportAnimator}=await import('/map.js');TransportAnimator.prototype.draw=window.originalDraw;})()`);
+      const key=await window.webContents.insertCSS('.application-city * {animation-play-state:paused !important; transition:none !important;}');
+      reports.push(await measure('vehicle-draw-only',5500));
+      await window.webContents.removeInsertedCSS(key);
+      await writeFile(resolve(output,label+'.json'),JSON.stringify({label,software,layers,reports,errors},null,2));
+      assert.deepEqual(errors,[]);return;
+    }
     if(process.argv.includes('--desktop-only')) {
       assert.deepEqual(errors,[]);
       await writeFile(resolve(output,label+'.json'),JSON.stringify({label,software,gpu:app.getGPUFeatureStatus(),layers,reports,errors},null,2));return;

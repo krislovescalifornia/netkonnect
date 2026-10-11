@@ -68,7 +68,7 @@ test('city scene has full-bleed offline artwork, an independent return route and
 });
 test('watercolor world assets retain their source pixels and load through the local allowlist',async t=>{
   const server=createAppServer({getSnapshot:()=>({})});await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>new Promise(r=>server.close(r)));
-  for(const file of ['world.js',...WORLD_ASSETS])assert.equal((await fetch('http://127.0.0.1:'+server.address().port+'/'+file)).status,200,file);
+  for(const file of ['city-canvas.js','world.js',...WORLD_ASSETS])assert.equal((await fetch('http://127.0.0.1:'+server.address().port+'/'+file)).status,200,file);
   const sprite=await readFile(new URL('../public/artwork/world/environment-v1.png',import.meta.url));assert.equal(sprite[25],6);
   assert.deepEqual([sprite.readUInt32BE(16),sprite.readUInt32BE(20)],[1536,1024]);
 });

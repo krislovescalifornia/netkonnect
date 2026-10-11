@@ -514,6 +514,10 @@
 .living-diorama .city-established { opacity:1; }
 .living-architecture-pixels { filter:none; }
 .living-pose { animation:living-poses 1.2s steps(4,end) infinite; animation-delay:var(--pose-delay,0s); }
+/* The SVG is retained as a growth/layout model; one canvas paints each city. */
+.canvas-city > :not(.city-canvas-surface) { display:none !important; }
+.canvas-city * { animation:none !important; transition:none !important; }
+.application-city.canvas-city[data-offscreen] { visibility:visible; content-visibility:hidden; }
 /* The illustrated four-pose builder already bends, lays bricks and swings a
    hammer. Its outer viewport need not also rotate on a separate layer. */
 .living-diorama .crew-builder .living-actor { animation:none; }

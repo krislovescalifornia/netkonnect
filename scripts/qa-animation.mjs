@@ -25,7 +25,8 @@ app.whenReady().then(async()=>{
   const window=new BrowserWindow({show:false,width:1440,height:1340,webPreferences:{sandbox:true,contextIsolation:true,nodeIntegration:false,backgroundThrottling:false,offscreen:true}});
   window.webContents.on('console-message',event=>{if(event.level==='error'||event.level===3)errors.push(event.message);});
   try {
-    await window.loadURL(`http://127.0.0.1:${server.address().port}`);
+    // Legacy CSS timeline reference; qa-canvas-renderer verifies painted canvas motion.
+    await window.loadURL(`http://127.0.0.1:${server.address().port}/?renderer=svg`);
     await new Promise(resolve=>setTimeout(resolve,1500));
     const continuity=await window.webContents.executeJavaScript(`(async()=>{
       const {TransportAnimator}=await import('/map.js');
