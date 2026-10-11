@@ -45,9 +45,16 @@ export function livingBackdrop(stage) {
 }
 function residents(stage) {
   const count=Math.min(50,12+stage*2);
-  return '<g class="city-residents">'+Array.from({length:count},(_,i)=>{
-    const x=.035+(i+.5)/count*.92,y=[151,181,201][i%3];
-    return `<g ${anchor('resident-'+i,x,y,i%3===0?.82:1).replace('city-activity-anchor','city-activity-anchor resident-home')} data-population-index="${i}" transform="translate(${x*900} ${y})"><g class="resident-walk" style="--walk-distance:${28+i%5*9}px;--walk-duration:${8+i%7}s;--walk-delay:-${i*1.21}s;--stride-delay:-${i*.17}s"><g class="resident-facing"><g transform="scale(1.6)">${illustratedResident(i)}</g></g></g></g>`;
+  // Neighboring residents share up to seven moving layers while retaining
+  // individual anchors, scales and strides. Fixed membership preserves their
+  // animation nodes as the population grows through later city tiers.
+  return '<g class="city-residents">'+Array.from({length:7},(_,rhythm)=>{
+    const people=Array.from({length:count},(_,i)=>{
+      if(Math.floor(i/8)!==rhythm)return '';
+      const x=.035+(i+.5)/count*.92,y=[151,181,201][i%3];
+      return `<g ${anchor('resident-'+i,x,y,i%3===0?.82:1).replace('city-activity-anchor','city-activity-anchor resident-home')} data-population-index="${i}" transform="translate(${x*900} ${y})" style="--stride-delay:-${i*.17}s"><g class="resident-facing"><g transform="scale(1.6)">${illustratedResident(i)}</g></g></g>`;
+    }).join('');
+    return people?`<g class="resident-walk resident-batch" data-render-key="resident-rhythm-${rhythm}" style="--walk-distance:${28+rhythm%5*9}px;--walk-duration:${8+rhythm}s;--walk-delay:-${rhythm*1.21}s">${people}</g>`:'';
   }).join('')+'</g>';
 }
 function streetLife(stage) {

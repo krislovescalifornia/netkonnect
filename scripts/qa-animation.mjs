@@ -44,6 +44,22 @@ app.whenReady().then(async()=>{
           }
         }
       }
+      // New population tiers must add residents without moving existing
+      // people into different parents and restarting their stride clocks.
+      const populationRoot=document.createElement('div');populationRoot.style.cssText='position:absolute;width:900px;opacity:0;pointer-events:none';document.body.append(populationRoot);
+      const residents=new Map();
+      try {
+        for(let stage=0;stage<CITY_STAGES.length;stage++) {
+          updateMarkup(populationRoot,renderCity({key:'population-probe',bytes:CITY_STAGES[stage].at,convoy:'data-route-key="population-probe"'}));
+          for(const node of populationRoot.querySelectorAll('.resident-home')) {
+            const stride=node.querySelector('.resident-stride'),animation=stride.getAnimations()[0],prior=residents.get(node.dataset.populationIndex);
+            if(prior&&(prior.node!==node||prior.stride!==stride||prior.animation!==animation))throw new Error('Population growth restarted resident '+node.dataset.populationIndex+' at tier '+stage);
+            if(!animation)throw new Error('Resident stride is missing at tier '+stage);
+            residents.set(node.dataset.populationIndex,{node,stride,animation});
+          }
+        }
+        if(residents.size!==50)throw new Error('Population growth lost residents');
+      }finally{populationRoot.remove();}
       const svg=document.querySelector('.application-city').cloneNode(true);
       svg.querySelectorAll('.transport-vehicle').forEach(n=>n.remove());
       const root=document.createElement('div');root.append(svg);
@@ -57,7 +73,7 @@ app.whenReady().then(async()=>{
       const vehicle=svg.querySelector('.transport-vehicle'),before=vehicle.getAttribute('transform');
       svg.dataset.sceneEnd=Number(svg.dataset.sceneEnd)+120;
       animator.mount(root,{source:'probe',active:true});
-      const result={samePosition:vehicle.getAttribute('transform')===before,scheduled,cancelled,growthTiers:CITY_STAGES.length};
+      const result={samePosition:vehicle.getAttribute('transform')===before,scheduled,cancelled,growthTiers:CITY_STAGES.length,populationTimelines:residents.size};
       animator.mount(root,{source:'probe',active:false});animator.resizeObserver?.disconnect();
       return result;
     })()`);

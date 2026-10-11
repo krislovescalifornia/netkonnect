@@ -38,6 +38,15 @@ test('every fleet type anchors both speed readings to its actual journey contact
   }
 });
 
+test('paint grouping retains the complete resident population at every city tier',()=>{
+  const expected=[12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50];
+  for(const [stage,count] of expected.entries()) {
+    const markup=renderCity({key:'population-'+stage,bytes:CITY_STAGES[stage].at,convoy:'data-route-key="population"'});
+    const identities=[...markup.matchAll(/data-population-index="(\d+)"/g)].map(match=>Number(match[1])).sort((a,b)=>a-b);
+    assert.deepEqual(identities,Array.from({length:count},(_,i)=>i),'No person is dropped or duplicated at tier '+stage);
+  }
+});
+
 
 test('every measured city retains street life and localized measured construction without fading established buildings',async()=>{
   const png=await readFile(new URL('../public/artwork/world/settlements/residents-v1.png',import.meta.url));

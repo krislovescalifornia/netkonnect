@@ -7,6 +7,7 @@ import {execFileSync} from 'node:child_process';
 import assert from 'node:assert/strict';
 import {demoSnapshot} from '../public/demo.js';
 const software=process.argv.includes('--software');
+app.commandLine.appendSwitch('disable-features','CalculateNativeWinOcclusion');
 const label=process.argv.find(a=>a.startsWith('--label='))?.slice(8)||'current';
 const baseline=process.argv.includes('--baseline');
 const originals=new Map(baseline?['app.js','cities.js','map.js','render.js','world.js','transport.css','companion-ui.js','routes.js','living-city.js'].map(name=>[name,execFileSync('git',['show','HEAD:public/'+name])]):[]);
@@ -47,9 +48,34 @@ app.whenReady().then(async()=>{
   try {
     console.log('PERFORMANCE_LOADING');
     await window.loadURL('perf://fixture/');
+    window.focus();
     console.log('PERFORMANCE_LOADED');
     cdp.attach('1.3');await cdp.sendCommand('Performance.enable');
     await wait(3500);
+    let layerTree=[];
+    cdp.on('message',(_event,method,params)=>{if(method==='LayerTree.layerTreeDidChange'&&params.layers)layerTree=params.layers;});
+    await cdp.sendCommand('LayerTree.enable');await wait(500);
+    const initialLayers=layerTree;
+    const layerReasons={};
+    for(const layer of initialLayers) {
+      const result=await cdp.sendCommand('LayerTree.compositingReasons',{layerId:layer.layerId}).catch(()=>({compositingReasons:[]}));
+      for(const reason of result.compositingReasons)layerReasons[reason]=(layerReasons[reason]||0)+1;
+    }
+    const layers={count:initialLayers.length,drawing:initialLayers.filter(layer=>layer.drawsContent).length,reasons:layerReasons};
+    layers.animations=await run(`(()=>{const counts={};for(const animation of document.getAnimations()){const svg=animation.effect?.target?.closest('.application-city');if(!svg)continue;const key=(svg.hasAttribute('data-offscreen')?'offscreen:':'visible:')+(animation.animationName||animation.constructor.name);counts[key]=(counts[key]||0)+1;}return counts;})()`);
+    if(process.argv.includes('--census')) {
+      const nodes={};
+      for(const layer of initialLayers)if(layer.backendNodeId) {
+        const {node}=await cdp.sendCommand('DOM.describeNode',{backendNodeId:layer.backendNodeId}).catch(()=>({node:{}}));
+        const attributes=node.attributes||[],classAt=attributes.indexOf('class'),key=classAt>=0?attributes[classAt+1]:node.nodeName||'unknown';
+        nodes[key]=(nodes[key]||0)+1;
+      }
+      layers.nodes=nodes;
+      await writeFile(resolve(output,label+'-layers.json'),JSON.stringify(layers,null,2));
+    }
+    await cdp.sendCommand('LayerTree.disable');
+    console.log('LAYERS '+JSON.stringify(layers));
+    if(process.argv.includes('--census')){assert.deepEqual(errors,[]);return;}
     const measure=async(name,ms=10500)=>{
       await run(`(async()=>{
         const {TransportAnimator}=await import('/map.js');
@@ -91,12 +117,17 @@ app.whenReady().then(async()=>{
       console.log('TRACE '+JSON.stringify([...durations].sort((a,b)=>b[1]-a[1]).slice(0,35)));
     }
     await writeFile(resolve(output,label+'-desktop.png'),(await window.webContents.capturePage()).toPNG());
+    if(process.argv.includes('--desktop-only')) {
+      assert.deepEqual(errors,[]);
+      await writeFile(resolve(output,label+'.json'),JSON.stringify({label,software,gpu:app.getGPUFeatureStatus(),layers,reports,errors},null,2));return;
+    }
     if(process.argv.includes('--layers')) {
       for(const [name,css] of [
         ['without-filters','.application-city * {filter:none !important;}'],
-        ['without-resident-motion','.resident-walk,.resident-facing,.resident-stride {animation-play-state:paused !important;}'],
-        ['without-actor-poses','.resident-stride,.living-pose {animation-play-state:paused !important;}'],
-        ['without-stars','.sky-star,.world-stars {animation-play-state:paused !important;}']
+        ['without-resident-motion','.resident-walk,.resident-facing,.resident-stride {animation:none !important;}'],
+        ['without-actor-poses','.resident-stride,.living-pose {animation:none !important;}'],
+        ['without-foliage','.living-foliage {animation:none !important;}'],
+        ['without-css-motion','.application-city * {animation:none !important;transition:none !important;}']
       ]) {
         const key=await window.webContents.insertCSS(css);await wait(1000);reports.push(await measure(name,6000));await window.webContents.removeInsertedCSS(key);
       }
@@ -108,7 +139,7 @@ app.whenReady().then(async()=>{
     await run(`document.querySelector('[data-action="pause"]').click()`);await wait(500);
     window.webContents.setBackgroundThrottling(true);window.minimize();await wait(1500);reports.push(await measure('minimized',4500));
     assert.deepEqual(errors,[]);
-    const result={label,software,gpu:app.getGPUFeatureStatus(),reports,errors};
+    const result={label,software,gpu:app.getGPUFeatureStatus(),layers,reports,errors};
     await writeFile(resolve(output,label+'.json'),JSON.stringify(result,null,2));
   }finally{clearTimeout(deadline);window.destroy();app.quit();}
 }).catch(error=>{console.error(error);app.exit(1);});

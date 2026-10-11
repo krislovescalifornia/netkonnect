@@ -9,7 +9,7 @@ import {createLivingCityPreview} from './preview-living-city.mjs';
 const output=resolve('test-results/city-vibrancy');
 app.setPath('userData',resolve('test-results/city-vibrancy-profile'));
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
-const motionSelectors=['.resident-walk','.crane-load','.site-vehicle','.crew-builder .illustrated-person','.worksite-hauler .crew-walker'];
+const motionSelectors=['.resident-walk','.crane-load','.site-vehicle','.crew-builder .living-pose','.worksite-hauler .crew-walker'];
 app.whenReady().then(async()=>{
   await mkdir(output,{recursive:true});
   const server=createLivingCityPreview();
@@ -19,7 +19,7 @@ app.whenReady().then(async()=>{
   const errors=[];
   window.webContents.on('console-message',event=>{if(event.level==='error'||event.level===3)errors.push(event.message);});
   const change=(selector,value)=>run(`(()=>{const el=document.querySelector(${JSON.stringify(selector)});el.value=${JSON.stringify(value)};el.dispatchEvent(new Event('input'));el.dispatchEvent(new Event('change'));})()`);
-  const positions=()=>run(`(()=>{const svg=document.querySelector('.application-city');return ${JSON.stringify(motionSelectors)}.map(selector=>({selector,items:[...svg.querySelectorAll(selector)].map(el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,transform:getComputedStyle(el).transform};})}));})()`);
+  const positions=()=>run(`(()=>{const svg=document.querySelector('.application-city');return ${JSON.stringify(motionSelectors)}.map(selector=>({selector,items:[...svg.querySelectorAll(selector)].map(el=>{const r=el.getBoundingClientRect(),style=getComputedStyle(el);return {x:r.x,y:r.y,transform:style.transform+';x:'+style.x};})}));})()`);
   const motion=async()=>{
     // Work-yard routes have authored pauses and return legs. Measure a sustained
     // excursion; a pair of endpoints can coincide or both land in a rest stop.

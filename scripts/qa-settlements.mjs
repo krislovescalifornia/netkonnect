@@ -113,7 +113,7 @@ try {
     const svg=document.querySelector('.application-city'),resident=svg.querySelector('.resident-walk'),animation=resident.getAnimations()[0],crane=svg.querySelector('.crane-load');
     svg.classList.remove('city-working');svg.classList.add('city-resting');
     if(getComputedStyle(crane).animationPlayState!=='paused')throw new Error('Idle construction is not paused');
-    if(getComputedStyle(resident).animationPlayState!=='running')throw new Error('Idle city lost its ambient street life');
+    if(getComputedStyle(resident).animationPlayState.split(',').some(state=>state.trim()!=='running'))throw new Error('Idle city lost its ambient street life');
     svg.classList.remove('city-resting');svg.classList.add('city-working');
     const project=svg.querySelector('.city-project'),projectProgress=Number(project.dataset.buildProgress),clip=project.querySelector('.parcel-reveal'),clipHeight=Number(clip.getAttribute('height'));
     window.settlementQA.render([9,9,9,9],.65);
@@ -123,7 +123,7 @@ try {
     window.settlementQA.render([9,9,9,9],.65);
     if(unchangedProgress!==Number(svg.querySelector('.city-project').dataset.buildProgress))throw new Error('Polling manufactured construction');
     const table=svg.closest('.transport-table');table.classList.add('still');
-    if([...svg.querySelectorAll('.resident-walk,.resident-facing,.resident-stride,.site-vehicle,.crane-load')].some(n=>getComputedStyle(n).animationPlayState!=='paused'))throw new Error('Pause did not freeze all activity');
+    if([...svg.querySelectorAll('.resident-walk,.resident-facing,.resident-stride,.site-vehicle,.crane-load')].some(n=>getComputedStyle(n).animationPlayState.split(',').some(state=>state.trim()!=='paused')))throw new Error('Pause did not freeze all activity');
     table.classList.remove('still');
     return {timelinesAdvance:true,nodesRetained:true,walkPosesChange:true,idleResidentsActive:true,idleConstructionPaused:true,pauseFreezesAll:true,measuredConstructionAdvances:true,growthPreservesActors:true};
   })()`);

@@ -397,16 +397,21 @@
 }
 
 /* Permanent living-city rule: independent street life plus measured construction. */
-.resident-walk { animation:resident-patrol var(--walk-duration) linear infinite; animation-delay:var(--walk-delay); }
+@property --resident-direction {
+  syntax:"<number>";
+  inherits:true;
+  initial-value:-1;
+}
+.resident-walk { animation:resident-patrol var(--walk-duration) linear infinite,resident-direction var(--walk-duration) steps(1,end) infinite; animation-delay:var(--walk-delay); }
 .resident-facing { animation:city-face var(--walk-duration) steps(1,end) infinite; animation-delay:var(--walk-delay); }
 .resident-walk>.resident-facing { animation:none; }
+.resident-batch .resident-facing { animation:none; transform:scaleX(var(--resident-direction)); }
 @keyframes resident-patrol {
-  0%,8% { transform:translateX(0) scaleX(-1); }
-  44%,55.999% { transform:translateX(calc(-1 * var(--walk-distance))) scaleX(-1); }
-  56% { transform:translateX(calc(-1 * var(--walk-distance))) scaleX(1); }
-  92%,99.999% { transform:translateX(0) scaleX(1); }
-  100% { transform:translateX(0) scaleX(-1); }
+  0%,8%,100% { transform:translateX(0); }
+  44%,56% { transform:translateX(calc(-1 * var(--walk-distance))); }
+  92% { transform:translateX(0); }
 }
+@keyframes resident-direction { 0%,100% { --resident-direction:-1; } 56% { --resident-direction:1; } }
 .resident-stride { animation:resident-stride .8s steps(4,end) infinite; animation-delay:var(--stride-delay); }
 /* Discrete atlas poses change image geometry at five frames per second. A
    transform animation promotes every tiny atlas into another GPU layer. */
@@ -439,6 +444,9 @@
 .transfer-carrier { animation:material-cart-step .65s ease-in-out infinite alternate; }
 .transfer-installer { animation:illustrated-build 1.7s ease-in-out infinite; }
 .material-transfer,.vehicle-material,.site-stock { pointer-events:none; }
+/* Invisible delivery actors need no drawing layers. Their clocks stay active
+   so the same staff and cargo reappear at the correct transfer phase. */
+.material-transfer[opacity="0"],.transfer-carrier[opacity="0"],.transfer-installer[opacity="0"] { visibility:hidden; }
 @keyframes material-cart-step { to { transform:translateY(-.7px) rotate(-1deg); } }
 @media(prefers-reduced-motion:reduce) { .worksite-dust,.worksite-sparks { display:none; } }
 
@@ -506,6 +514,10 @@
 .living-diorama .city-established { opacity:1; }
 .living-architecture-pixels { filter:none; }
 .living-pose { animation:living-poses 1.2s steps(4,end) infinite; animation-delay:var(--pose-delay,0s); }
+/* The illustrated four-pose builder already bends, lays bricks and swings a
+   hammer. Its outer viewport need not also rotate on a separate layer. */
+.living-diorama .crew-builder .living-actor { animation:none; }
+.living-diorama .crew-builder { --pose-delay:var(--work-delay,0s); }
 .living-gardener .living-pose { animation-duration:2s; }
 .living-transit .living-pose { animation-duration:1.8s; }
 .living-cycle-route,.living-transit { animation:city-patrol var(--walk-duration) linear infinite; animation-delay:var(--walk-delay); }
