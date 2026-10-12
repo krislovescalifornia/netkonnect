@@ -1,12 +1,13 @@
 import {CITY_ART,FLEET_ART,PROP_ART,CONSTRUCTION_ART,DETAIL_ART,ILLUSTRATION_ASSETS as SOURCE_ASSETS} from './artwork/manifest.js';
 import {CONSTRUCTION_ASSETS} from './construction-art.js';
+import {CRANE_ASSETS} from './crane-art.js';
 export {CITY_ART,FLEET_ART,PROP_ART,CONSTRUCTION_ART,DETAIL_ART} from './artwork/manifest.js';
 export const CITY_ART_IDS=['shack','cabin','house','homestead','mansion','estate','neighborhood','suburb','village','town','city','regional-city','metropolis','capital','megacity','green-megacity','smart-metropolis','arcology','orbital-gateway','space-age-metropolis'];
 
 
 export const ACTIVITY_ASSETS=[...PROP_ART.crew.frames.map((_,i)=>'artwork/fleet/activity/crew-'+i+'.png'),...Object.entries(CONSTRUCTION_ART).flatMap(([id,art])=>art.frames.map((_,i)=>'artwork/construction/activity/'+id+'-'+i+'.png'))];
 export const FLEET_TEXTURE_ASSETS=Object.entries(FLEET_ART).flatMap(([id,art])=>art.frames.flatMap((_,i)=>[`artwork/fleet/traffic/${id}-${i}.png`,...(art.empty?[`artwork/fleet/traffic/${id}-empty-${i}.png`]:[])]));
-export const ILLUSTRATION_ASSETS=[...SOURCE_ASSETS,...ACTIVITY_ASSETS,...FLEET_TEXTURE_ASSETS,...CONSTRUCTION_ASSETS];
+export const ILLUSTRATION_ASSETS=[...SOURCE_ASSETS,...ACTIVITY_ASSETS,...FLEET_TEXTURE_ASSETS,...CONSTRUCTION_ASSETS,...CRANE_ASSETS];
 // Match atlas padding and proportions; isolate textures for frequent work poses.
 function activitySprite(folder,id,art,variant,width,baseline,maxHeight) {
   const [,,w,h]=art.frames[variant],scale=Math.min(width/(w+4),maxHeight/(h+4));
@@ -37,6 +38,9 @@ export function illustratedVehicle(spec,appearance) {
     return `<image data-art-source="artwork/fleet/${id}.png" href="artwork/fleet/traffic/${id}-${variant}.png" x="${-width/2}" y="${11-displayHeight}" width="${width}" height="${displayHeight}"/>`;
   };
   const loaded=texture(spec.id,art);
+  // Aircraft freight travels in the hold. Reuse the authored clean fuselage
+  // instead of the older external sling-load illustration in either state.
+  if(['helicopter','tiltrotor'].includes(spec.id))return {body:texture(spec.id+'-empty',art.empty),cargo:''};
   return art.empty?{body:texture(spec.id+'-empty',art.empty),cargo:loaded}:{body:loaded,cargo:''};
 }
 export function illustratedCity(stage) {

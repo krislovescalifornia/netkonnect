@@ -2,6 +2,7 @@ import {LIVING_FRAMES} from './artwork/living/frames.js';
 import {illustratedResident} from './settlement-art.js';
 import {illustratedWorker,illustratedConstructionVehicle} from './illustration-art.js';
 import {projectArtwork,deliveryMaterial,PROJECT_NAMES} from './construction-art.js';
+import {craneForSite,craneArtwork} from './crane-art.js';
 
 // Each level is an authored place: its architecture, street pattern and work
 // parcels change together. All positions use normalized horizontal anchors.
@@ -107,11 +108,12 @@ function districts(build,stage,key) {
     </g>`;
   }).join('')+'</g>';
 }
-function cranes(build,stage) {
+function cranes(build,stage,key) {
   return '<g class="construction-site">'+Array.from({length:build.cranes},(_,i)=>{
-    const x=.11+i*.80/Math.max(1,build.cranes-1),h=stage<8?110:166+(i%2)*12,w=h*2/3,rig={x:w*.30,y:190-h+h*.20,rest:h*.43,lift:h*.05};
+    const x=.11+i*.80/Math.max(1,build.cranes-1),h=stage<8?110:166+(i%2)*12;
+    const art=craneArtwork(craneForSite(stage,i,key),h),{rig}=art;
     return `<g class="site-crane city-activity-anchor" data-render-key="crane-${i}" data-city-x="${x*1000}" data-city-y="0" transform="translate(${x*900} 0)" style="--hoist-delay:-${i*2.3}s;--hoist-duration:${7+i%3*1.5}s;--hoist-rest:${rig.rest};--hoist-lift:${rig.lift}">
-      <image class="living-crane-pixels" href="artwork/living/crane.png" x="${-w/2}" y="${190-h}" width="${w}" height="${h}"/>
+      ${art.image}
       <g class="crane-hoist-anchor" transform="translate(${rig.x} ${rig.y})"><path class="crane-cable" d="M0 0V1" fill="none" stroke="#4f6572" stroke-width="1.5" vector-effect="non-scaling-stroke"/><g class="crane-load" data-crane-material="${deliveryMaterial(stage,i)}" opacity="0"></g></g>
     </g>`;
   }).join('')+'</g>';
@@ -130,7 +132,7 @@ export function livingCityArtwork(stage,build,key,end=655) {
   }).join('');
   return `<g class="city-linework living-diorama" data-render-key="living-diorama" data-place="${p.id}">
     <g class="city-buildings"><g class="city-established" opacity="1">${architecture}</g></g>
-    ${cranes(build,stage)}${districts(build,stage,key)}${nature(stage)}${streetLife(stage)}${residents(stage)}
+    ${cranes(build,stage,key)}${districts(build,stage,key)}${nature(stage)}${streetLife(stage)}${residents(stage)}
     <g class="city-helpers">${[0,1,2].map(i=>`<g ${anchor('helper-'+i,.18+i*.32,200)} transform="translate(${(.18+i*.32)*extent} 200)"><g class="crew-walker" style="--walk-distance:48px;--walk-duration:${10+i*3}s;--walk-delay:-${i*4}s">${illustratedWorker({woman:!!(i%2),carry:true,size:13})}</g></g>`).join('')}</g>
     <g class="site-supplies"><g class="delivery-stock"></g></g><g ${anchor('receiver',.89,203)} transform="translate(${extent*.89} 203)"><g class="crew-carrier">${illustratedWorker({woman:true,carry:true,size:13})}</g></g>
   </g>`;
@@ -141,7 +143,16 @@ export function layoutLivingCity(svg,end) {
   svg.querySelector('.living-diorama').dataset.place=p.id;
   svg.querySelector('.world-city')?.setAttribute('transform','translate(0 0)');
   for(const node of svg.querySelectorAll('.world-city .city-activity-anchor')) {
-    const x=Number(node.dataset.cityX)/1000*extent,y=Number(node.dataset.cityY),s=Number(node.dataset.cityScale)||1;
+    let x=Number(node.dataset.cityX)/1000*extent;
+    let y=Number(node.dataset.cityY),s=Number(node.dataset.cityScale)||1;
+    if(node.classList.contains('site-crane')){
+      const width=Number(node.querySelector('.living-crane-pixels')?.getAttribute('width'));
+      // Keep broad booms inside a phone card without crowding all the work
+      // into its center. Scale around the ground baseline, retaining the rig.
+      s=Math.min(s,extent*.38/width);y+=190*(1-s);
+      const halfWidth=width*s/2;
+      x=Math.max(halfWidth+8,Math.min(extent-halfWidth-8,x));
+    }
     node.setAttribute('transform',`translate(${f(x)} ${y}) scale(${s})`);
     if(node.dataset.module) {
       const image=node.querySelector('image'),frame=LIVING_FRAMES[stage][Number(node.dataset.module)];

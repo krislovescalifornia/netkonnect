@@ -49,14 +49,18 @@ test('loaded and empty side-profile fleet keeps scale and clips separate rows',(
 test('fleet variants remain deterministic and cart unloading retains an empty body',()=>{
   for(const id of Object.keys(FLEET_ART)){
     assert.equal(new Set([0,1,2].map(seed=>vehicle(id,false,seed))).size,3);
-    for(const incoming of [true,false])assert.match(vehicle(id,incoming,2),new RegExp(`artwork/fleet/${id}\\.png`));
+    for(const incoming of [true,false])assert.match(vehicle(id,incoming,2),new RegExp(`artwork/fleet/${id}${['helicopter','tiltrotor'].includes(id)?'-empty':''}\\.png`));
     assert.equal(vehicle(id,false,-2),vehicle(id,false,2));
     assert.doesNotMatch(vehicle(id,false,Infinity),/NaN|undefined/);
   }
-  for(const id of ['wheelbarrow','handcart','cargo-bicycle','cargo-trike','scooter','freight-train','helicopter','tiltrotor','barge','freighter','mega-ship']) {
+  for(const id of ['wheelbarrow','handcart','cargo-bicycle','cargo-trike','scooter','freight-train','barge','freighter','mega-ship']) {
     assert.ok(FLEET_ART[id].empty,'open cargo must unload: '+id);
     assert.match(vehicle(id,true,0),new RegExp(id+'-empty\\.png'));
     assert.match(vehicle(id,true,0),/class="vehicle-cargo"><image/);
+  }
+  for(const id of ['helicopter','tiltrotor']){
+    assert.match(vehicle(id,true,0),new RegExp(`href="artwork/fleet/traffic/${id}-empty-0.png"`));
+    assert.doesNotMatch(vehicle(id,true,0),new RegExp(`href="artwork/fleet/traffic/${id}-0.png"`),'Cargo stays inside the fuselage');
   }
   for(let i=0;i<CITY_STAGES.length;i++)assert.match(cityArtwork(i),new RegExp(`artwork/cities/${CITY_ART_IDS[i]}\\.png`));
 });

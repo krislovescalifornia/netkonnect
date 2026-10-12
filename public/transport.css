@@ -443,7 +443,7 @@
 .terminal-unloading .terminal-worker { animation-play-state:running; }
 .transfer-carrier { animation:material-cart-step .65s ease-in-out infinite alternate; }
 .transfer-installer { animation:illustrated-build 1.7s ease-in-out infinite; }
-.material-transfer,.vehicle-material,.site-stock { pointer-events:none; }
+.material-transfer,.site-stock { pointer-events:none; }
 /* Invisible delivery actors need no drawing layers. Their clocks stay active
    so the same staff and cargo reappear at the correct transfer phase. */
 .material-transfer[opacity="0"],.transfer-carrier[opacity="0"],.transfer-installer[opacity="0"] { visibility:hidden; }

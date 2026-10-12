@@ -1,4 +1,5 @@
-import {illustratedCity,illustratedWorker,illustratedProp,illustratedConstructionVehicle,craneHoistGeometry} from './illustration-art.js';
+import {illustratedCity,illustratedWorker,illustratedConstructionVehicle} from './illustration-art.js';
+import {craneForSite,craneArtwork} from './crane-art.js';
 import {illustratedSettlement,settlementTransform,illustratedResident,settlementHeight} from './settlement-art.js';
 import {worldBackdrop,worldRoads,worldNature,worldSky,worldTime,infrastructure} from './world.js';
 import {projectArtwork,PROJECT_NAMES,materialArtwork,deliveryMaterial,logisticsArtwork} from './construction-art.js';
@@ -117,9 +118,9 @@ export function cityArtwork(stage,progress=0,sceneKey='catalog',landscape=false,
   const clipId='city-rise-'+stage+'-'+encodeURIComponent(sceneKey).replace(/%/g,'_');
   const cranes=Array.from({length:build.cranes},(_,i)=>{
     const x=build.cranes===1?286:42+i*244/(build.cranes-1),height=61+(i%3)*21;
-    const rig=craneHoistGeometry(height);
+    const art=craneArtwork(craneForSite(stage,i,sceneKey),height,126),{rig}=art;
     return `<g class="site-crane${landscape?' city-activity-anchor':''}"${landscape?` data-city-x="${x}" data-city-y="-38"`:""} data-render-key="crane-${i}" transform="translate(${x} 0)" style="--hoist-delay:-${i*2.3}s;--hoist-duration:${6+i%3*1.5}s;--hoist-rest:${rig.rest};--hoist-lift:${rig.lift}">
-      ${illustratedProp('crane',height*.65,126,height)}
+      ${art.image}
       <g class="crane-hoist-anchor" transform="translate(${rig.x} ${rig.y})">
         <path class="crane-cable" d="M0 0V1" fill="none" stroke="#526a79" stroke-width="1" vector-effect="non-scaling-stroke"/>
         <g class="crane-load" data-crane-material="${deliveryMaterial(stage,i)}" opacity="0">${materialArtwork(deliveryMaterial(stage,i),18,rig.loadHeight)}</g>

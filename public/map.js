@@ -205,20 +205,29 @@ export class TransportAnimator {
             :`<ellipse class="vehicle-contact" cx="0" cy="${11*scale}" rx="${spec.width*scale*.43}" ry="1.1"/>`:'';
           const headlights=cityScene&&spec.mode==='road'?`<g class="vehicle-lights night-light" transform="translate(${(journey.incoming?1:-1)*spec.width*scale*.43} -4) scale(${journey.incoming?1:-1} 1)"><path d="M0 0L36 -3v10L0 2z" fill="#ffe8a2" stroke="none" opacity=".18"/><ellipse cx="0" cy="1" rx="2.3" ry="1.4" fill="#fff1c3" stroke="none"/></g>`:'';
           const material=deliveryMaterial(Number(svg.dataset.stage)||0,journey.id);
-          group.innerHTML = `${headlights}${contact}<g transform="scale(${facing} ${scale})">${vehicle(journey.type,journey.incoming,journey.id)}</g>${cityScene&&journey.incoming?`<g class="vehicle-material" transform="translate(-8 -10)">${materialArtwork(material,19)}</g>`:''}`;
+          // The authored loaded/empty pair owns all cargo in transit. Enclosed
+          // trailers carry their freight inside; never pin a parcel to the roof.
+          group.innerHTML = `${headlights}${contact}<g transform="scale(${facing} ${scale})">${vehicle(journey.type,journey.incoming,journey.id)}</g>`;
           svg.append(group);
           // Speed labels can resize the road on every sample. A journey keeps
           // its departure geometry so a resize cannot teleport its vehicle.
           const parcel=cityScene&&journey.incoming?svg.ownerDocument.createElementNS(SVG_NS,'g'):null;
           if(parcel){
             parcel.setAttribute('class','delivery-parcel material-transfer');parcel.dataset.material=material;parcel.dataset.journeyId=journey.id;
-            parcel.innerHTML=`<title>${material} delivered to construction yard</title><path class="unloading-cable" fill="none" stroke="#526a79" stroke-width="1"/><g class="transfer-carrier">${logisticsArtwork('material-trolley',34,19)}</g><g class="transfer-load">${materialArtwork(material,19,-6)}</g><g class="transfer-installer">${logisticsArtwork('bricklayer',11,18)}</g>`;
+            const loadWidth=Math.min(19,Math.max(7,spec.width*scale*.3));
+            parcel.innerHTML=`<title>${material} delivered to construction yard</title><path class="unloading-cable" fill="none" stroke="#526a79" stroke-width="1"/><g class="transfer-carrier">${logisticsArtwork('material-trolley',34,19)}</g><g class="transfer-load">${materialArtwork(material,loadWidth,-6)}</g><g class="transfer-installer">${logisticsArtwork('bricklayer',11,18)}</g>`;
             svg.append(parcel);
           }
-          record={group,cargo:group.querySelector('.vehicle-cargo'),materialCargo:group.querySelector('.vehicle-material'),parcel,material,mode:spec.mode,sceneEnd:Number(svg.dataset.sceneEnd)||655};
+          record={group,cargo:group.querySelector('.vehicle-cargo'),parcel,material,mode:spec.mode,sceneEnd:Number(svg.dataset.sceneEnd)||655};
           if(parcel){record.carrier=parcel.querySelector('.transfer-carrier');record.installer=parcel.querySelector('.transfer-installer');record.cable=parcel.querySelector('.unloading-cable');}
           if(cityScene)record.route=journeyRoute(journey,record.sceneEnd);
           if(parcel){
+            const stopped=journeyPose(journey,.65,true,record.sceneEnd,record.route);
+            // Road freight emerges at the rear unloading bay, at ground level.
+            // Keep the handoff fixed as the empty vehicle pulls away.
+            record.unloadFrom=spec.mode==='road'
+              ?{x:stopped.x-spec.width*scale*.5-5,y:stopped.y+11*scale}
+              :{x:stopped.deliveryX-8,y:stopped.deliveryY-10};
             const sites=[...svg.querySelectorAll('.construction-yard')];
             record.siteIndex=journey.id%Math.max(1,sites.length);
             const site=sites[record.siteIndex];
@@ -237,9 +246,8 @@ export class TransportAnimator {
         setAttribute(group,'transform',`translate(${pose.x.toFixed(3)} ${pose.y.toFixed(3)}) rotate(${pose.angle||0})`);
         setOpacity(group,pose.opacity);
         const {cargo,parcel}=record;setOpacity(cargo,1-pose.unloaded);
-        setOpacity(record.materialCargo,1-pose.unloaded);
         if(parcel) {
-          const from={x:pose.deliveryX-8,y:pose.deliveryY-10};
+          const from=record.unloadFrom;
           const transfer=materialTransferPose(progress,{mode:record.mode,from,to:record.destination,hoist:record.hoist});
           setOpacity(parcel,transfer.opacity);
           setAttribute(parcel,'data-transfer-progress',transfer.t.toFixed(4));

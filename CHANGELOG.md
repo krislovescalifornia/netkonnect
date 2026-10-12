@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.18.0 — 2026-10-12
+
+- Add ten original imagegen watercolor cranes, from timber derricks and compact mobile cranes to colorful tower, gantry and heavy-lift equipment. Choose stable, varied equipment across work yards and keep animated cables attached to each design's hoist.
+- Remove floating packages above delivery vehicles. Use the authored loaded and empty cargo beds, unload road freight behind the stopped vehicle, and keep enclosed vehicle and aircraft freight inside their holds.
+- Fit wide crane booms inside compact city cards while preserving residents, construction progress, animation continuity and motion controls. Bundle every new illustration offline and add rendered crane and delivery checks.
+
 ## 1.17.3 — 2026-10-11
 
 - Reuse one request-driven Windows snapshot worker, with fresh observations every eight seconds, bounded responses, timeout/crash recovery and parent-pipe shutdown. Batch process identities and adapter queries and read each executable's version once per snapshot.
