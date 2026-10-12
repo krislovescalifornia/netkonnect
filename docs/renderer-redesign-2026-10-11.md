@@ -350,3 +350,32 @@ and packaged desktop/setup smoke checks. Packaged version 1.17.5 loaded 188
 real connections through the text bridge with no capture or storage error.
 Setup OS mutations were simulated; this did not install or replace the user's
 running app. The packaged runtime files match the tested source by SHA-256.
+
+### October 12: 1.17.5 installer integrity failure
+
+The user's downloaded 1.17.5 installer exactly matched the published/local
+SHA-256 (`7345745a20902e51d2eac875d86630198859bc4e5d79aab4e8c1d503cf2fa197`).
+It was nevertheless invalid: NSIS stored CRC32 `381a27e3`, while recomputing
+the range checked by its loader produced `9c1897fb`. The known-working 1.17.4
+installer passed the same calculation (`cc6415b9`). Extracting the outer
+NSIS container succeeded, but testing its embedded `app-64.7z` reported a data
+error in `netKonnect.exe`. The failure is in the shipped package; the exact
+cause of the damaged bytes during its production is not established.
+
+The earlier smoke test ran the pre-compression `win-unpacked` application.
+That and the published SHA-256 did not validate the installable archive.
+Release 1.17.6 retains the traffic fix and rebuilds the installer. New build
+gates verify the native NSIS checksum, reject disabled checks or truncation,
+test the embedded application archive, verify the uninstaller checksum, and
+compare every extracted application file with the tested unpacked build.
+The CRC check follows NSIS 3's loader boundaries (first 512 bytes excluded,
+CRC located by the aligned first header, appended signing bytes excluded):
+https://github.com/kichik/nsis/blob/v304/Source/exehead/fileform.c
+No installer integrity check is disabled or bypassed.
+
+The rebuilt 1.17.6 installer passed its native CRC (`d7fbd1d2`), embedded
+archive test and uninstaller CRC. All 676 extracted application files matched
+the tested unpacked build. All 191 tests and packaged smoke checks passed;
+the traffic regression completed 11 polls with no paint gaps over 50 ms
+(46.1 ms maximum). The user's installed application was not replaced during
+these checks. Payload evidence: `test-results/installer/verified-wj5HSE`.

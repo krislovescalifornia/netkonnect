@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
 import { verifyPackage } from './verify-package.mjs';
+import { verifyInstaller } from './verify-installer.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const { version } = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
@@ -33,6 +34,8 @@ await run('scripts/qa-canvas-renderer.mjs', [], join(root,'node_modules','electr
 await run('scripts/qa-performance.mjs', ['--history-load','--desktop-only','--assert-smooth','--duration=22000','--label=release-ipc'], join(root,'node_modules','electron','dist','electron.exe'));
 await run('scripts/icon.mjs');
 await run('node_modules/electron-builder/out/cli/cli.js', ['--win', ...(process.argv.includes('--dir') ? ['--dir'] : ['nsis']), `--config.directories.output=${output}`, `--config.electronDist=${join(root,'node_modules','electron','dist')}`]);
+if(!process.argv.includes('--dir'))console.log('INSTALLER_INTEGRITY_VERIFIED '+JSON.stringify(await verifyInstaller(join(output,`netKonnect-Setup-${version}.exe`))));
+if(!process.argv.includes('--dir'))await run('scripts/qa-installer.mjs',[join(output,`netKonnect-Setup-${version}.exe`),join(output,'win-unpacked')]);
 await verifyPackage(join(output, 'win-unpacked'));
 await run('scripts/qa-release.mjs', [join(output, 'win-unpacked')]);
 await mkdir(join(root, 'dist'), { recursive:true });
