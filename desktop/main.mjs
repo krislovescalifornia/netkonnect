@@ -4,7 +4,7 @@ import { join, resolve, extname } from 'node:path';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { spawn, execFile } from 'node:child_process';
 import { APP_ORIGIN, isLocalAsset, configureOfflineSession, installNodeOfflineGuard } from './offline.mjs';
-import { callCompanion } from './pipe.mjs';
+import { callCompanion, callCompanionText } from './pipe.mjs';
 import { createSetup, setupChecks } from './setup.mjs';
 import { verifyBundle, isProtectedInstall } from './bundle.mjs';
 import { createHash } from 'node:crypto';
@@ -191,6 +191,9 @@ async function start() {
     return fn(...args);
   });
   handle('nk:snapshot',()=>callCompanion(directory,'snapshot'));
+  // A primitive crosses contextBridge without recursively copying/freezing
+  // thousands of history objects on the renderer's animation thread.
+  handle('nk:snapshot-text',()=>callCompanionText(directory,'snapshot'));
   handle('nk:analytics',options=>callCompanion(directory,'analytics',options));
   handle('nk:restart',()=>callCompanion(directory,'restart'));
   handle('nk:settings',settings);
@@ -242,7 +245,10 @@ async function start() {
     await new Promise(resolve=>setTimeout(resolve,1000));
     const deadline=Date.now()+30000;
     while(Date.now()<deadline && !(await callCompanion(directory,'snapshot')).snapshot) await new Promise(resolve=>setTimeout(resolve,500));
-    const result = await window.webContents.executeJavaScript(`(async()=>({title:document.title,version:document.querySelector('[data-app-version]')?.textContent,bridge:!!window.netKonnect,snapshot:await window.netKonnect.snapshot(),cards:document.querySelectorAll('.metric').length}))()`);
+    const result = await window.webContents.executeJavaScript(`(async()=>{
+      const {localRequest}=await import('/client.js');
+      return {title:document.title,version:document.querySelector('[data-app-version]')?.textContent,bridge:typeof window.netKonnect?.snapshotText==='function',snapshot:await (await localRequest('/api/snapshot')).json(),cards:document.querySelectorAll('.metric').length};
+    })()`);
     console.log('DESKTOP_SMOKE '+JSON.stringify({title:result.title,version:result.version,bridge:result.bridge,cards:result.cards,collectorPid:result.snapshot.service.pid,connections:result.snapshot.snapshot?.connections.length,error:result.snapshot.error,storageError:result.snapshot.service.storageError}));
     if (result.version !== `v${app.getVersion()}`) throw new Error('Dashboard version does not match the desktop release.');
     if (!result.bridge || result.cards!==4 || !result.snapshot.snapshot || result.snapshot.error || result.snapshot.service.storageError) throw new Error('Desktop data smoke check failed.');

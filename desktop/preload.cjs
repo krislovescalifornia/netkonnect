@@ -2,6 +2,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 // Deliberately narrow bridge. No generic IPC, file, shell, or network access.
 contextBridge.exposeInMainWorld('netKonnect', Object.freeze({
   snapshot: () => ipcRenderer.invoke('nk:snapshot'),
+  snapshotText: () => ipcRenderer.invoke('nk:snapshot-text'),
   analytics: options => ipcRenderer.invoke('nk:analytics', options),
   restart: () => ipcRenderer.invoke('nk:restart'),
   settings: () => ipcRenderer.invoke('nk:settings'),

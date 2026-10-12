@@ -290,3 +290,63 @@ or storage errors, blocked outbound renderer requests, and successful setup
 cancellation/retry/recheck fixtures. These fixtures do not establish installed
 UAC, reboot or upgrade acceptance. The release-run canvas continuity check
 recorded a 19.1 ms worst paint interval and zero whole-city style refreshes.
+
+## October 12: installed desktop bridge freeze
+
+The user reported that 1.17.4 still froze all moving objects together. The
+October 11 audit was incomplete: even its live-data mode fetched JSON through
+a local protocol and did not exercise the installed app's isolated Electron
+context bridge. Its successful timing checks did not establish smooth motion
+in the installed application.
+
+The corrected audit loads the actual sandboxed preload with context isolation
+and the same snapshot IPC handlers as the desktop. The installed map, painter
+and markup files were confirmed identical to the workspace's 1.17.4 source.
+Window capture timed out, so this investigation does not claim a successful
+direct recording of the user's running window.
+
+A local snapshot contained 271 connections, 369 recent usage records and 6,872
+lifetime records (5,833,297 JSON characters). Replaying it through the object
+bridge reproduced **11 paint gaps over 50 ms across 11 polls in 22 seconds**,
+with a worst gap of **112.5 ms** and three long tasks. No whole-city style
+refreshes occurred. This isolates an additional cause beyond the earlier
+scenery fixes: copying/freezing a large object graph across contextBridge on
+the renderer thread.
+
+The 1.17.5 change adds a fixed snapshot-text IPC operation. It carries the
+authenticated companion reply as a string and parses it after the bridge in
+the page world. The desktop process forwards the wire reply without parsing
+and re-encoding it. Pipe input is assembled from decoded chunks rather than
+repeatedly scanning the growing full reply. Authentication, frame-size limits,
+error handling and the legacy object API remain intact. Collection, saved
+history, measured totals, journey logic and artwork are unchanged.
+
+An intermediate text bridge removed the per-poll stalls but a longer live test
+still caught one 52.7 ms gap. The final wire-text path passed a 45-second live
+desktop run with 22 polls: **16.8 ms p95, 49.6 ms maximum, zero gaps over 50 ms,
+and zero long tasks**. Compact passed five polls with a 44.7 ms maximum and no
+long tasks. Paused and minimized states made zero city paints. These are finite
+measurements, not a promise of zero missed frames or a substitute for the
+user's visual acceptance. The installed 1.17.4 app remains unmodified.
+
+Performance audits now use the desktop bridge by default; `--fetch` retains
+the old path solely for comparison. `--history-load` adds 7,000 lifetime
+records and 400 recent history records using synthetic data. The release
+build now requires this workload to pass the paint-cadence checks. New tests
+cover exact snapshot totals, bridge errors, legacy callers, fragmented UTF-8
+and truncated pipe frames. The packaged smoke test uses the same text path as
+normal polling. Local evidence: `test-results/performance/ipc-before`,
+`ipc-after`, `ipc-live-investigate`, `ipc-live-wire`, and `release-ipc`.
+
+The synthetic large-history comparison reproduced 11 stalls across 11 polls
+with the 1.17.4 client (115.9 ms maximum). The 1.17.5 release gate completed
+the same 22-second workload with 11 polls, zero stalls over 50 ms, zero long
+tasks, 16.9 ms p95 and a 48.9 ms maximum paint gap. Both runs used the isolated
+desktop bridge. Evidence: `ipc-history-valid-baseline` and `release-ipc`.
+
+Release verification passed all 188 tests, native capture/icon checks, rendered
+city activity and construction checks, the large-history performance gate,
+and packaged desktop/setup smoke checks. Packaged version 1.17.5 loaded 188
+real connections through the text bridge with no capture or storage error.
+Setup OS mutations were simulated; this did not install or replace the user's
+running app. The packaged runtime files match the tested source by SHA-256.

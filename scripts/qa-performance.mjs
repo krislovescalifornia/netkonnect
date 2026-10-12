@@ -1,6 +1,6 @@
 // Repeatable renderer audit: electron scripts/qa-performance.mjs --software --label=before
 // CPU is reported in core-seconds, not Task Manager's machine-wide percentage.
-import {app,BrowserWindow,protocol} from 'electron';
+import {app,BrowserWindow,protocol,ipcMain} from 'electron';
 import {mkdir,writeFile,readFile} from 'node:fs/promises';
 import {resolve,extname} from 'node:path';
 import {execFileSync,execFile} from 'node:child_process';
@@ -11,7 +11,7 @@ const software=process.argv.includes('--software');
 app.commandLine.appendSwitch('disable-features','CalculateNativeWinOcclusion');
 const label=process.argv.find(a=>a.startsWith('--label='))?.slice(8)||'current';
 const baseline=process.argv.includes('--baseline');
-const originals=new Map(baseline?['app.js','cities.js','city-canvas.js','map.js','render.js','world.js','transport.css','companion-ui.js','routes.js','living-city.js'].map(name=>[name,execFileSync('git',['show','HEAD:public/'+name])]):[]);
+const originals=new Map(baseline?['app.js','client.js','cities.js','city-canvas.js','map.js','render.js','world.js','transport.css','companion-ui.js','routes.js','living-city.js'].map(name=>[name,execFileSync('git',['show','HEAD:public/'+name])]):[]);
 const output=resolve('test-results/performance');
 protocol.registerSchemesAsPrivileged([{scheme:'perf',privileges:{standard:true,secure:true,supportFetchAPI:true}}]);
 app.setPath('userData',resolve(output,'profile-'+label));
@@ -21,7 +21,11 @@ let sample=0;
 const replayPath=process.argv.find(a=>a.startsWith('--snapshot='))?.slice(11);
 const replay=replayPath?JSON.parse(await readFile(resolve(replayPath),'utf8')):null;
 const live=process.argv.includes('--live');
-const {callCompanion}=await import('../desktop/pipe.mjs');
+// The installed app uses an isolated Electron bridge, not fetch. Keep that
+// boundary in the default audit; --fetch is only a diagnostic comparison.
+const desktopIPC=!process.argv.includes('--fetch');
+const historyLoad=process.argv.includes('--history-load');
+const {callCompanion,callCompanionText}=await import('../desktop/pipe.mjs');
 const snapshot=()=>{
   if(live){sample++;return callCompanion(resolve(process.env.LOCALAPPDATA,'netKonnect','data'),'snapshot');}
   if(replay){sample++;replay.snapshot.timestamp=new Date().toISOString();replay.snapshot.traffic.timestamp=replay.snapshot.timestamp;return replay;}
@@ -31,6 +35,13 @@ const snapshot=()=>{
   s.connections=Array.from({length:10},(_,i)=>({...connection,id:`perf-${i}`,app:`perf-${i}`,pid:100+i,receiveRate:800*1024,sendRate:100*1024}));
   s.traffic.cityUsage=s.connections.map(c=>({...c,receivedBytesTotal:512*1024**3+sample*2*1024**3,sentBytesTotal:0}));
   s.traffic.usageConnections=[];
+  if(historyLoad){
+    const service={key:'fixture.example',label:'Fixture',kind:'hostname',hint:'fixture.example',confidence:'DNS clue',explanation:'Illustrative retained destination evidence. '.repeat(5),network:{name:'Fixture network',cidr:'192.0.2.0/24',source:'fixture',checkedAt:'2026-10-12'}};
+    // Lifetime records do not contain minute-history arrays. Match their real
+    // schema instead of multiplying a connection's 60-minute graph 7,000 times.
+    s.traffic.cityUsage=Array.from({length:7000},(_,i)=>({key:`history-${i}`,app:`perf-${i%10}`,pid:100+i%10,scope:'Internet',service:{...service,network:{...service.network}},domainCandidates:['fixture.example'],remoteAddress:`192.0.2.${i%250+1}`,protocol:'TCP',remotePort:443,receivedBytesTotal:(512*1024**3+sample*2*1024**3)/700,sentBytesTotal:0}));
+    s.traffic.usageConnections=Array.from({length:400},(_,i)=>({...connection,app:`perf-${i%10}`,pid:100+i%10,scope:'Internet',receiveRate:0,sendRate:0,receivedBytes60m:6000,sentBytes60m:600,usageHistory:Array.from({length:60},()=>({received:100,sent:10}))}));
+  }
   return {snapshot:s,interval:2000,collecting:false,error:null};
 };
 app.whenReady().then(async()=>{
@@ -48,7 +59,15 @@ app.whenReady().then(async()=>{
     try{return new Response(originals.get(url.pathname.slice(1))||await readFile(path),{headers:{'Content-Type':type||'application/octet-stream'}});}catch{return new Response('Missing',{status:404});}
   });
   // Normal onscreen compositing; offscreen capture has a separate bitmap cost.
-  const window=new BrowserWindow({show:true,width:1440,height:1100,webPreferences:{sandbox:true,contextIsolation:true,nodeIntegration:false,backgroundThrottling:false}});
+  if(desktopIPC){
+    ipcMain.handle('nk:snapshot',()=>snapshot());
+    ipcMain.handle('nk:snapshot-text',async()=>{
+      if(live){sample++;return callCompanionText(resolve(process.env.LOCALAPPDATA,'netKonnect','data'),'snapshot');}
+      return JSON.stringify({result:await snapshot()});
+    });
+    ipcMain.handle('nk:setup-status',()=>({complete:true,checks:[],version:'audit',startupAvailable:true}));
+  }
+  const window=new BrowserWindow({show:true,width:1440,height:1100,webPreferences:{...(desktopIPC?{preload:resolve('desktop/preload.cjs')}:{}),sandbox:true,contextIsolation:true,nodeIntegration:false,backgroundThrottling:false}});
   const run=code=>window.webContents.executeJavaScript(code);
   const errors=[];window.webContents.on('console-message',event=>{if(event.level==='error'||event.level===3)errors.push(event.message);});
   const cdp=window.webContents.debugger;
@@ -121,6 +140,7 @@ app.whenReady().then(async()=>{
       const metrics=Object.fromEntries(metricsAfter.metrics.filter(m=>['TaskDuration','ScriptDuration','LayoutDuration','RecalcStyleDuration'].includes(m.name)).map(m=>[m.name,m.value-(metricsBefore.metrics.find(b=>b.name===m.name)?.value||0)]));
       const refreshes=await run('performanceProbe.refreshes');
       const result={name,elapsed,polls:sample-polls,...report,refreshes,processes,totalCpuSeconds:processes.reduce((sum,p)=>sum+p.cpuSeconds,0),metrics};
+      await writeFile(resolve(output,label+'-'+name+'-measurement.json'),JSON.stringify(result,null,2));
       if(process.argv.includes('--assert-smooth')&&['desktop','compact'].includes(name)){
         assert.ok(result.cityPaints>=result.frames*.9,`${name}: city follows display cadence`);
         assert.ok(result.maxPaintMs<50,`${name}: no traffic paint stalls of 50 ms or more`);
@@ -129,7 +149,7 @@ app.whenReady().then(async()=>{
     };
     if(process.argv.includes('--trace'))await cdp.sendCommand('Tracing.start',{categories:'devtools.timeline,disabled-by-default-devtools.timeline,blink,cc',transferMode:'ReturnAsStream'});
     if(process.argv.includes('--profile')){await cdp.sendCommand('Profiler.enable');await cdp.sendCommand('Profiler.start');}
-    const reports=[await measure('desktop')];
+    const reports=[await measure('desktop',Number(process.argv.find(a=>a.startsWith('--duration='))?.slice(11))||10500)];
     if(process.argv.includes('--profile')){const {profile}=await cdp.sendCommand('Profiler.stop');await writeFile(resolve(output,label+'-cpu.json'),JSON.stringify(profile));}
     if(process.argv.includes('--gpu-counters')){
       const {stdout}=await promisify(execFile)('powershell.exe',['-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File','scripts/qa-resources.ps1','-RootPid',String(process.pid),'-Seconds','10','-Output',resolve(output,label+'-gpu.json')],{windowsHide:true});
@@ -156,7 +176,7 @@ app.whenReady().then(async()=>{
     }
     if(process.argv.includes('--desktop-only')) {
       assert.deepEqual(errors,[]);
-      await writeFile(resolve(output,label+'.json'),JSON.stringify({label,software,gpu:app.getGPUFeatureStatus(),layers,reports,errors},null,2));return;
+      await writeFile(resolve(output,label+'.json'),JSON.stringify({label,software,desktopIPC,historyLoad,gpu:app.getGPUFeatureStatus(),layers,reports,errors},null,2));return;
     }
     if(process.argv.includes('--layers')) {
       for(const [name,css] of [
@@ -177,7 +197,7 @@ app.whenReady().then(async()=>{
     await run(`document.querySelector('[data-action="pause"]').click()`);await wait(500);
     window.webContents.setBackgroundThrottling(true);window.minimize();await wait(1500);reports.push(await measure('minimized',4500));
     assert.deepEqual(errors,[]);
-    const result={label,software,gpu:app.getGPUFeatureStatus(),layers,reports,errors};
+    const result={label,software,desktopIPC,historyLoad,gpu:app.getGPUFeatureStatus(),layers,reports,errors};
     await writeFile(resolve(output,label+'.json'),JSON.stringify(result,null,2));
   }finally{clearTimeout(deadline);window.destroy();app.quit();}
 }).catch(error=>{console.error(error);app.exit(1);});

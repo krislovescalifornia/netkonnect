@@ -7,7 +7,7 @@ import { once } from 'node:events';
 import { execFileSync, spawn } from 'node:child_process';
 import net from 'node:net';
 import { SQLiteHistory } from '../lib/sqlite-history.mjs';
-import { pipeName, servePipe, writeEndpoint, callCompanion } from '../desktop/pipe.mjs';
+import { pipeName, servePipe, writeEndpoint, callCompanion, callCompanionText } from '../desktop/pipe.mjs';
 import { isLocalAsset, configureOfflineSession } from '../desktop/offline.mjs';
 import { validateQuery, queryHistory } from '../desktop/query.mjs';
 import { coverageRibbon } from '../public/companion-ui.js';
@@ -94,8 +94,27 @@ test('local companion IPC authenticates capabilities, rejects invalid methods an
   const ipc=servePipe(endpoint,(method,params)=>{if(method==='snapshot')return {alive:true,params};throw new Error('Unknown local operation');});
   ipc.server.listen(endpoint.pipe);await once(ipc.server,'listening');t.after(()=>ipc.close());
   await writeEndpoint(d,endpoint);assert.deepEqual(await callCompanion(d,'snapshot',{hello:1}),{alive:true,params:{hello:1}});
+  assert.deepEqual(JSON.parse(await callCompanionText(d,'snapshot',{hello:'街 🚚'})),{result:{alive:true,params:{hello:'街 🚚'}}});
+  assert.deepEqual(JSON.parse(await callCompanionText(d,'shell')),{error:'Unknown local operation'});
   await assert.rejects(callCompanion(d,'shell'),/Unknown local operation/);
   await writeEndpoint(d,{...endpoint,token:'b'.repeat(64)});await assert.rejects(callCompanion(d,'snapshot'),/access denied/);
+  assert.match(JSON.parse(await callCompanionText(d,'snapshot')).error,/access denied/);
+});
+
+test('snapshot text preserves fragmented UTF-8 replies and rejects an incomplete frame',async t=>{
+  const d=await directory(t),endpoint={pipe:pipeName(),token:'a'.repeat(64)};
+  const result={label:'街 🚚'.repeat(1000),received:2**43+123};
+  const text=JSON.stringify({result}),payload=Buffer.from(text+'\n');let truncated=false;
+  const server=net.createServer(socket=>socket.once('data',async()=>{
+    // Force boundaries inside UTF-8 characters and before the frame delimiter.
+    for(let i=0;i<80;i++){socket.write(payload.subarray(i,i+1));await new Promise(r=>setImmediate(r));}
+    socket.end(payload.subarray(80,truncated?payload.length-1:payload.length));
+  }));
+  server.listen(endpoint.pipe);await once(server,'listening');t.after(()=>new Promise(r=>server.close(r)));
+  await writeEndpoint(d,endpoint);
+  assert.equal(await callCompanionText(d,'snapshot'),text);
+  assert.deepEqual(await callCompanion(d,'snapshot'),result);
+  truncated=true;await assert.rejects(callCompanionText(d,'snapshot'),/closed the request/);
 });
 
 test('installed helper writes intervals while its duplex control thread waits for stop', {skip:process.platform!=='win32',timeout:15000},async t=>{

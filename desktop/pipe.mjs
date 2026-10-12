@@ -43,19 +43,27 @@ export function servePipe(endpoint, dispatch) {
   return { server, close: () => new Promise(resolve => { for (const socket of sockets) socket.destroy(); server.close(resolve); }) };
 }
 export async function callCompanion(directory, method, params = {}) {
+  const data=JSON.parse(await callCompanionText(directory,method,params));
+  if(data.error)throw new Error(data.error);
+  return data.result;
+}
+
+// Preserve the authenticated JSON reply for the desktop bridge. High-volume
+// snapshots need not be decoded and re-encoded on the window's main process.
+// Consumers of this form must check the same {result}/{error} envelope.
+export async function callCompanionText(directory, method, params = {}) {
   const endpoint = await readEndpoint(directory);
   return new Promise((resolve, reject) => {
-    const socket = net.createConnection(endpoint.pipe); let input = '', bytes = 0;const decoder=new StringDecoder('utf8');
+    const socket = net.createConnection(endpoint.pipe); const parts=[];let bytes=0,complete=false;const decoder=new StringDecoder('utf8');
     socket.setTimeout(20000, () => socket.destroy(new Error('The tray companion did not respond.')));
     socket.on('error', reject);
     socket.once('connect', () => socket.write(JSON.stringify({ token: endpoint.token, method, params }) + '\n'));
     socket.on('data', chunk => {
       bytes += chunk.length; if (bytes > MAX_FRAME) { socket.destroy(new Error('Local result is too large.')); return; }
-      input += decoder.write(chunk);
-      if (!input.includes('\n')) return;
-      try { const data = JSON.parse(input.slice(0, input.indexOf('\n'))); socket.destroy(); data.error ? reject(new Error(data.error)) : resolve(data.result); }
-      catch (error) { socket.destroy(); reject(error); }
+      const part=decoder.write(chunk),end=part.indexOf('\n');
+      if(end<0){parts.push(part);return;}
+      parts.push(part.slice(0,end));complete=true;socket.destroy();resolve(parts.join(''));
     });
-    socket.once('end', () => { if (!input.includes('\n')) reject(new Error('The tray companion closed the request.')); });
+    socket.once('end', () => { if (!complete) reject(new Error('The tray companion closed the request.')); });
   });
 }

@@ -53,6 +53,9 @@ app.whenReady().then(async()=>{
         const vehicle=svg.querySelector('[data-transport="'+mode+'"]');
         const position=vehicle.getAttribute('transform');
         updateMarkup(probe,card(0,'pickup','pickup','probe'));runner.mount(probe,{source:mode,active:true});
+        // This fixture stubs requestAnimationFrame. Flush the next paint just
+        // as the active renderer does when consuming a polling update.
+        runner.draw();
         if(vehicle.getAttribute('transform')!==position)throw new Error('Existing journey jumped on fleet change');
         if(svg.querySelector(selector).getAttribute('opacity')!=='1')throw new Error('Active corridor disappeared');
         // Advance through real frame intervals: the animator bounds each step
